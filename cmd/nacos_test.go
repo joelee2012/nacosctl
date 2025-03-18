@@ -71,6 +71,7 @@ func TestCreateNamespace(t *testing.T) {
 	defer ts.Close()
 
 	n := NewNacos(ts.URL, "user", "password")
+	n.Token = &Token{AccessToken: "test-token"}
 	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
 	if err != nil {
 		t.Errorf("CreateNamespace() failed with error: %v", err)
@@ -84,6 +85,7 @@ func TestDeleteNamespace(t *testing.T) {
 	defer ts.Close()
 
 	n := NewNacos(ts.URL, "user", "password")
+	n.Token = &Token{AccessToken: "test-token"}
 	err := n.DeleteNamespace("test-id")
 	if err != nil {
 		t.Errorf("DeleteNamespace() failed with error: %v", err)
@@ -97,6 +99,7 @@ func TestUpdateNamespace(t *testing.T) {
 	defer ts.Close()
 
 	n := NewNacos(ts.URL, "user", "password")
+	n.Token = &Token{AccessToken: "test-token"}
 	err := n.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
 	if err != nil {
 		t.Errorf("UpdateNamespace() failed with error: %v", err)
@@ -127,6 +130,7 @@ func TestCreateConfig(t *testing.T) {
 	defer ts.Close()
 
 	n := NewNacos(ts.URL, "user", "password")
+	n.Token = &Token{AccessToken: "test-token"}
 	err := n.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Tenant: "test-tenant", Type: "properties"})
 	if err != nil {
 		t.Errorf("CreateConfig() failed with error: %v", err)
@@ -140,6 +144,7 @@ func TestDeleteConfig(t *testing.T) {
 	defer ts.Close()
 
 	n := NewNacos(ts.URL, "user", "password")
+	n.Token = &Token{AccessToken: "test-token"}
 	err := n.DeleteConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
 	if err != nil {
 		t.Errorf("DeleteConfig() failed with error: %v", err)

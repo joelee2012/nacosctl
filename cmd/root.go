@@ -1,5 +1,5 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 Joe Lee <lj_2005@163.com>
 */
 package cmd
 
@@ -17,7 +17,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "nactl",
+	Use:   "nacosctl",
 	Short: "Command line tools for Nacos",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:

@@ -14,7 +14,7 @@ var version = "dev"
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of nactl",
+	Short: "Print the version number",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Client version:", version)
 		n, err := NewNacosClient()

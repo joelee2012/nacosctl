@@ -307,7 +307,6 @@ func (n *Nacos) DeleteConfig(opts *CreateCSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
 	url := fmt.Sprintf("%s/nacos/v1/cs/configs?%s", n.URL, v.Encode())
-	fmt.Println(url)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err
