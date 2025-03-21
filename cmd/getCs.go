@@ -34,7 +34,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace-id", "n", "", "namespace id")
+	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "ns-id", "n", "", "namespace id")
 	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "DEFAULT_GROUP", "group name")
 	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "P", 1, "page number")
 	getCsCmd.Flags().IntVarP(&listOpts.PageSize, "page-size", "s", 10, "page size")

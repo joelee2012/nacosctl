@@ -44,7 +44,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// createCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	createCsCmd.Flags().StringVarP(&createOpts.Tenant, "namespace-id", "n", "", "namespace id")
+	createCsCmd.Flags().StringVarP(&createOpts.Tenant, "ns-id", "n", "", "namespace id")
 	createCsCmd.Flags().StringVarP(&createOpts.Group, "group", "g", "DEFAULT_GROUP", "group of configuration")
 	createCsCmd.Flags().StringVarP(&createOpts.Content, "content", "c", "", "content of configuration")
 	createCsCmd.MarkFlagRequired("content")
