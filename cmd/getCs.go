@@ -4,14 +4,10 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"slices"
 
-	"github.com/ghodss/yaml"
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/spf13/cobra"
 )
 
@@ -63,36 +59,6 @@ func GetCs(args []string) {
 		}
 		configs.PageItems = items
 	}
-	switch output {
-	case "json":
-		y, err := json.Marshal(configs)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(y))
-	case "yaml":
-		y, err := yaml.Marshal(configs)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(y))
-	default:
-		printCS(configs.PageItems)
-	}
+	PrintResources(configs, os.Stdout, output)
 
-}
-
-func printCS(css []*Config) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Data Id", "Group", "Application", "type"})
-	for _, cs := range css {
-		t.AppendRow(table.Row{cs.DataID, cs.Group, cs.AppName, cs.Type})
-	}
-	t.SortBy([]table.SortBy{{Name: "Group", Mode: table.Asc}, {Name: "Data Id", Mode: table.Asc}})
-
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	t.SetStyle(s)
-	t.Render()
 }

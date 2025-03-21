@@ -34,15 +34,6 @@ func Execute() {
 	}
 }
 
-// type NacosOpts struct {
-// 	URL      string
-// 	User     string
-// 	Password string
-// 	Output   string
-// }
-
-// var naClient = &Nacos{}
-
 func init() {
 	cobra.OnInitialize(initConfig)
 	// Here you will define your flags and configuration settings.

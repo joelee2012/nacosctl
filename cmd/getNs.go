@@ -4,13 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 	"slices"
 
-	"github.com/ghodss/yaml"
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/spf13/cobra"
 )
 
@@ -56,48 +52,5 @@ func GetNamespace(args []string) error {
 		}
 		nss.Items = items
 	}
-	switch output {
-	case "json":
-		y, err := json.Marshal(nss)
-		if err != nil {
-			return err
-		}
-		fmt.Println(string(y))
-	case "yaml":
-		y, err := yaml.Marshal(nss)
-		if err != nil {
-			return err
-		}
-		fmt.Println(string(y))
-	default:
-		printTable(nss.Items)
-	}
-
-	// marshalFunc := json.Marshal
-
-	// if output == "yaml" {
-	// 	marshalFunc = yaml.Marshal
-	// }
-	// y, err := marshalFunc(nss)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// fmt.Println(string(y))
-	return nil
-}
-
-func printTable(nss []*Namespace) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"NAMESPACE", "ID", "Description", "Number"})
-	for _, ns := range nss {
-		t.AppendRow(table.Row{ns.ShowName, ns.Name, ns.Desc, ns.ConfigCount})
-	}
-	t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	t.SetStyle(s)
-	t.Render()
+	return PrintResources(nss, os.Stdout, output)
 }
