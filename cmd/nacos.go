@@ -9,7 +9,7 @@ import (
 )
 
 type NsList struct {
-	Code    int64        `json:"code"`
+	Code    int          `json:"code"`
 	Message interface{}  `json:"message"`
 	Items   []*Namespace `json:"data"`
 }
@@ -18,15 +18,15 @@ type Namespace struct {
 	Name        string `json:"namespace"`
 	ShowName    string `json:"namespaceShowName"`
 	Desc        string `json:"namespaceDesc"`
-	Quota       int64  `json:"quota"`
-	ConfigCount int64  `json:"configCount"`
-	Type        int64  `json:"type"`
+	Quota       int    `json:"quota"`
+	ConfigCount int    `json:"configCount"`
+	Type        int    `json:"type"`
 }
 
 type ConfigList struct {
-	TotalCount     int64     `json:"totalCount"`
-	PageNumber     int64     `json:"pageNumber"`
-	PagesAvailable int64     `json:"pagesAvailable"`
+	TotalCount     int       `json:"totalCount"`
+	PageNumber     int       `json:"pageNumber"`
+	PagesAvailable int       `json:"pagesAvailable"`
 	PageItems      []*Config `json:"pageItems"`
 }
 
@@ -52,7 +52,7 @@ type Nacos struct {
 }
 type Token struct {
 	AccessToken string `json:"accessToken"`
-	TokenTTL    int64  `json:"tokenTtl"`
+	TokenTTL    int    `json:"tokenTtl"`
 	GlobalAdmin bool   `json:"globalAdmin"`
 	Username    string `json:"username"`
 }

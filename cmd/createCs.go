@@ -11,7 +11,7 @@ import (
 
 // createCsCmd represents the createCs command
 var createCsCmd = &cobra.Command{
-	Use:   "cs name",
+	Use:   "cs [flags] name",
 	Short: "Create one configuration",
 
 	Run: func(cmd *cobra.Command, args []string) {
