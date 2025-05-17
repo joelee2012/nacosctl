@@ -47,33 +47,43 @@ func GetCs(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	configs, err := naClient.ListConfig(&listOpts)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	var allCs ConfigList
 	if showAll {
-		if configs.PagesAvailable != configs.PageNumber {
-			total := configs.PagesAvailable
-			for i := 2; i <= total; i++ {
-				listOpts.PageNumber = i
-				configs, err := naClient.ListConfig(&listOpts)
+		nss, err := naClient.ListNamespace()
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, ns := range nss.Items {
+			listOpts.Tenant = ns.Name
+			listOpts.Group = ""
+			listOpts.PageNumber = 1
+			for {
+				cs, err := naClient.ListConfig(&listOpts)
 				if err != nil {
 					log.Fatal(err)
 				}
-				configs.PageItems = append(configs.PageItems, configs.PageItems...)
+				allCs.PageItems = append(allCs.PageItems, cs.PageItems...)
+				if cs.PagesAvailable == cs.PageNumber {
+					break
+				}
+				listOpts.PageNumber += 1
 			}
 		}
 	} else {
+		allCs, err := naClient.ListConfig(&listOpts)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if len(args) > 0 {
 			var items []*Config
-			for _, ns := range configs.PageItems {
+			for _, ns := range allCs.PageItems {
 				if slices.Contains(args, ns.DataID) {
 					items = append(items, ns)
 				}
 			}
-			configs.PageItems = items
+			allCs.PageItems = items
 		}
 	}
-	PrintResources(configs, os.Stdout, output)
-
+	PrintResources(&allCs, os.Stdout, output)
 }

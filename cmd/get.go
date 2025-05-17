@@ -134,11 +134,11 @@ func PrintResources(v any, stdout io.Writer, format string) error {
 			}
 			t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
 		case *ConfigList:
-			t.AppendHeader(table.Row{"DATAID", "GROUP", "TYPE", "CONTENT"})
+			t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "TYPE", "CONTENT"})
 			for _, cs := range v.PageItems {
-				t.AppendRow(table.Row{cs.DataID, cs.Group, cs.AppName, cs.Type})
+				t.AppendRow(table.Row{cs.Tenant, cs.DataID, cs.Group, cs.AppName, cs.Type})
 			}
-			t.SortBy([]table.SortBy{{Name: "Group", Mode: table.Asc}, {Name: "Data Id", Mode: table.Asc}})
+			t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "Data Id", Mode: table.Asc}})
 		}
 
 		s := table.StyleLight
