@@ -45,7 +45,7 @@ func init() {
 	// is called directly, e.g.:
 	// createCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	createCsCmd.Flags().StringVarP(&createOpts.Tenant, "namespace", "n", "", "namespace id")
-	createCsCmd.Flags().StringVarP(&createOpts.Group, "group", "g", "DEFAULT_GROUP", "group of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.Group, "group", "g", "", "group of configuration")
 	createCsCmd.Flags().StringVarP(&createOpts.Content, "content", "c", "", "content of configuration")
 	createCsCmd.MarkFlagRequired("content")
 	createCsCmd.Flags().StringVarP(&createOpts.Type, "type", "t", "text", "configuration type")

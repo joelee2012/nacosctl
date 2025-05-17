@@ -35,8 +35,8 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace", "n", "", "namespace id")
-	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "DEFAULT_GROUP", "group name")
-	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "P", 1, "page number")
+	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "", "group name")
+	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "p", 1, "page number")
 	getCsCmd.Flags().IntVarP(&listOpts.PageSize, "page-size", "s", 10, "page size")
 	getCsCmd.Flags().BoolVarP(&showAll, "all", "A", false, "show all configurations")
 
@@ -56,7 +56,6 @@ func GetCs(args []string) {
 		}
 		for _, ns := range nss.Items {
 			listOpts.Tenant = ns.Name
-			listOpts.Group = ""
 			listOpts.PageNumber = 1
 			for {
 				cs, err := naClient.ListConfig(&listOpts)
@@ -64,7 +63,7 @@ func GetCs(args []string) {
 					log.Fatal(err)
 				}
 				allCs.PageItems = append(allCs.PageItems, cs.PageItems...)
-				if cs.PagesAvailable == cs.PageNumber {
+				if cs.PagesAvailable == 0 || cs.PagesAvailable == cs.PageNumber {
 					break
 				}
 				listOpts.PageNumber += 1
