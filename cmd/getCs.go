@@ -21,7 +21,7 @@ var getCsCmd = &cobra.Command{
 	},
 }
 
-var listOpts = ListCSOpts{}
+var listOpts ListCSOpts
 var showAll bool
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "ns-id", "n", "", "namespace id")
+	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace", "n", "", "namespace id")
 	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "DEFAULT_GROUP", "group name")
 	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "P", 1, "page number")
 	getCsCmd.Flags().IntVarP(&listOpts.PageSize, "page-size", "s", 10, "page size")
@@ -47,11 +47,11 @@ func GetCs(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	configs, err := naClient.ListConfig(&listOpts)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if showAll {
-		configs, err := naClient.ListConfig(&listOpts)
-		if err != nil {
-			log.Fatal(err)
-		}
 		if configs.PagesAvailable != configs.PageNumber {
 			total := configs.PagesAvailable
 			for i := 2; i <= total; i++ {
@@ -63,12 +63,7 @@ func GetCs(args []string) {
 				configs.PageItems = append(configs.PageItems, configs.PageItems...)
 			}
 		}
-		PrintResources(configs, os.Stdout, output)
 	} else {
-		configs, err := naClient.ListConfig(&listOpts)
-		if err != nil {
-			log.Fatal(err)
-		}
 		if len(args) > 0 {
 			var items []*Config
 			for _, ns := range configs.PageItems {
@@ -78,7 +73,7 @@ func GetCs(args []string) {
 			}
 			configs.PageItems = items
 		}
-		PrintResources(configs, os.Stdout, output)
 	}
+	PrintResources(configs, os.Stdout, output)
 
 }

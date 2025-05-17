@@ -7,6 +7,10 @@ build: ## build package
 	./nacosctl -h
 .PHONY: build
 
+release: ## release package
+	goreleaser release --snapshot --clean
+.PHONY: release
+
 test: ## run test and generate coverage report
 	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... && \
 	go tool cover -html=coverage.txt -o cover.html

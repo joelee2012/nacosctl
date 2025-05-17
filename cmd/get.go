@@ -43,7 +43,8 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	getCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "A help for foo")
-	getCmd.PersistentFlags().StringVar(&outputDir, "output-dir", "", "output directory")
+	getCmd.PersistentFlags().StringVarP(&outputDir, "output-dir", "O", "", "output directory")
+	getCmd.MarkFlagsMutuallyExclusive("output", "output-dir")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
