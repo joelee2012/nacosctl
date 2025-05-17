@@ -52,5 +52,14 @@ func GetNamespace(args []string) error {
 		}
 		nss.Items = items
 	}
-	return PrintResources(nss, os.Stdout, output)
+	// return PrintResources(nss, os.Stdout, output)
+	switch output {
+	case "json":
+		return nss.WriteJson(os.Stdout)
+	case "yaml":
+		return nss.WriteYaml(os.Stdout)
+	default:
+		nss.WriteTable(os.Stdout)
+		return nil
+	}
 }
