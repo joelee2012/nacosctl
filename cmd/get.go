@@ -128,17 +128,17 @@ func PrintResources(v any, stdout io.Writer, format string) error {
 		t.SetOutputMirror(stdout)
 		switch v := v.(type) {
 		case *NsList:
-			t.AppendHeader(table.Row{"NAMESPACE", "ID", "Description", "Number"})
+			t.AppendHeader(table.Row{"NAMESPACE", "ID", "DESCRIPTION", "COUNT"})
 			for _, ns := range v.Items {
 				t.AppendRow(table.Row{ns.ShowName, ns.Name, ns.Desc, ns.ConfigCount})
 			}
 			t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
 		case *ConfigList:
-			t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "TYPE", "CONTENT"})
+			t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 			for _, cs := range v.PageItems {
 				t.AppendRow(table.Row{cs.Tenant, cs.DataID, cs.Group, cs.AppName, cs.Type})
 			}
-			t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "Data Id", Mode: table.Asc}})
+			t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
 		}
 
 		s := table.StyleLight

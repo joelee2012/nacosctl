@@ -48,7 +48,7 @@ func GetCs(args []string) {
 		log.Fatal(err)
 	}
 
-	var allCs ConfigList
+	allCs := new(ConfigList)
 	if showAll {
 		nss, err := naClient.ListNamespace()
 		if err != nil {
@@ -70,19 +70,19 @@ func GetCs(args []string) {
 			}
 		}
 	} else {
-		allCs, err := naClient.ListConfig(&listOpts)
+		cs, err := naClient.ListConfig(&listOpts)
 		if err != nil {
 			log.Fatal(err)
 		}
 		if len(args) > 0 {
-			var items []*Config
-			for _, ns := range allCs.PageItems {
-				if slices.Contains(args, ns.DataID) {
-					items = append(items, ns)
+			for _, c := range cs.PageItems {
+				if slices.Contains(args, c.DataID) {
+					allCs.PageItems = append(allCs.PageItems, c)
 				}
 			}
-			allCs.PageItems = items
+		} else {
+			allCs = cs
 		}
 	}
-	PrintResources(&allCs, os.Stdout, output)
+	PrintResources(allCs, os.Stdout, output)
 }
