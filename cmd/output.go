@@ -78,6 +78,14 @@ func (c *ConfigList) WriteYaml(w io.Writer) error {
 	return writeYaml(c, w)
 }
 
+func (c *ConfigList) FixDefaultNs() {
+	for _, c := range c.PageItems {
+		if c.Tenant == "" {
+			c.Tenant = "public"
+		}
+	}
+}
+
 func (c *Config) WriteJson(w io.Writer) error {
 	return writeJson(c, w)
 }
@@ -88,6 +96,18 @@ func (c *Config) WriteYaml(w io.Writer) error {
 
 func (c *Config) WriteFile(name string) error {
 	return writeFile(c, name)
+}
+
+func readFromYamlFile(v any, name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return yaml.NewDecoder(f).Decode(v)
+}
+func (c *Config) FromYamlFile(name string) error {
+	return readFromYamlFile(c, name)
 }
 
 func (n *NsList) WriteTable(w io.Writer) {
@@ -117,6 +137,10 @@ func (n *Namespace) WriteYaml(w io.Writer) error {
 }
 func (n *Namespace) WriteFile(name string) error {
 	return writeFile(n, name)
+}
+
+func (n *Namespace) FromYamlFile(name string) error {
+	return readFromYamlFile(n, name)
 }
 func WriteAsFormat(format string, writable FormatWriter) {
 	switch format {

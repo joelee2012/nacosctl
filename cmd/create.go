@@ -4,6 +4,8 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +23,25 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-	createCmd.PersistentFlags().StringVarP(&cmdOpts.OutDir, "from-dir", "f", "", "create config from dir")
+	// createCmd.PersistentFlags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files that contain the configurations")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
+
+func IsDir(name string) bool {
+	fi, err := os.Stat(name)
+	if err != nil {
+		return false
+	}
+	return fi.IsDir()
+}
+
+func IsFile(name string) bool {
+	fi, err := os.Stat(name)
+	if err != nil {
+		return false
+	}
+	return fi.Mode().IsRegular()
+}
+

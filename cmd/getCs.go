@@ -63,17 +63,17 @@ func GetCs(args []string) error {
 		} else {
 			allCs = cs
 		}
+
 	}
 	if cmdOpts.OutDir != "" {
+		allCs.FixDefaultNs()
 		for _, c := range allCs.PageItems {
-			if c.Tenant == "" {
-				c.Tenant = "public"
-			}
 			dir := path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
 			os.MkdirAll(dir, 0750)
 			c.WriteFile(path.Join(dir, c.DataID))
 		}
 	} else {
+		allCs.FixDefaultNs()
 		WriteAsFormat(cmdOpts.Output, allCs)
 	}
 	return nil

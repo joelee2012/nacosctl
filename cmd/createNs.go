@@ -15,19 +15,10 @@ var createNsCmd = &cobra.Command{
 	Short: "Create one namespace",
 	Run: func(cmd *cobra.Command, args []string) {
 		naClient, err := NewNacosClient()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		for _, name := range args {
-			nsOpts.Name = name
-			err := naClient.CreateNamespace(&nsOpts)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("namespace/%s created\n", name)
-			}
-		}
+		cobra.CheckErr(err)
+		nsOpts.Name = args[0]
+		cobra.CheckErr(naClient.CreateNamespace(&nsOpts))
+		fmt.Printf("namespace/%#v created\n", nsOpts)
 	},
 	Args: cobra.ExactArgs(1),
 }
@@ -48,5 +39,6 @@ func init() {
 	// createNsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	// createNsCmd.Flags().StringVarP(&nsOpts.Name, "name", "n", "", "name of namespace")
 	createNsCmd.Flags().StringVarP(&nsOpts.ID, "id", "i", "", "id of namespace")
+	createNsCmd.MarkFlagRequired("id")
 	createNsCmd.Flags().StringVarP(&nsOpts.Desc, "desc", "d", "", "description of namespace")
 }
