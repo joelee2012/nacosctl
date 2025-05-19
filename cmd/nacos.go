@@ -126,7 +126,7 @@ func (n *Nacos) ListNamespace() (*NsList, error) {
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	dec := json.NewDecoder(resp.Body)
-	namespaces := &NsList{}
+	namespaces := new(NsList)
 	if err := dec.Decode(namespaces); err != nil {
 		return nil, err
 	}
@@ -252,12 +252,12 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	configs := new(ConfigList)
 	dec := json.NewDecoder(resp.Body)
-	var configs ConfigList
 	if err := dec.Decode(&configs); err != nil {
 		return nil, err
 	}
-	return &configs, nil
+	return configs, nil
 }
 
 func (n *Nacos) ListConfigInNs(namespace, group string) (*ConfigList, error) {

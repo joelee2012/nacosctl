@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
 	"path"
 	"slices"
 
@@ -65,7 +66,12 @@ func GetCs(args []string) error {
 	}
 	if cmdOpts.OutDir != "" {
 		for _, c := range allCs.PageItems {
-			c.WriteFile(path.Join(cmdOpts.OutDir, c.DataID))
+			if c.Tenant == "" {
+				c.Tenant = "public"
+			}
+			dir := path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
+			os.MkdirAll(dir, 0750)
+			c.WriteFile(path.Join(dir, c.DataID))
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)
