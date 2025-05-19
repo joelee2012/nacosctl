@@ -51,18 +51,23 @@ func writeFile(v any, name string) error {
 	return writeYaml(v, f)
 }
 
-func (c *ConfigList) WriteTable(w io.Writer) {
-	t := table.NewWriter()
-	t.SetOutputMirror(w)
-	t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "APPLICATION", "TYPE"})
-	for _, item := range c.PageItems {
-		t.AppendRow(table.Row{item.Tenant, item.DataID, item.Group, item.AppName, item.Type})
-	}
-	t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
+func writeTable(w io.Writer, fn func(t table.Writer)) {
+	tb := table.NewWriter()
+	tb.SetOutputMirror(w)
+	fn(tb)
 	s := table.StyleLight
 	s.Options = table.OptionsNoBordersAndSeparators
-	t.SetStyle(s)
-	t.Render()
+	tb.SetStyle(s)
+	tb.Render()
+}
+func (c *ConfigList) WriteTable(w io.Writer) {
+	writeTable(w, func(tb table.Writer) {
+		tb.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "APPLICATION", "TYPE"})
+		for _, item := range c.PageItems {
+			tb.AppendRow(table.Row{item.Tenant, item.DataID, item.Group, item.AppName, item.Type})
+		}
+		tb.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
+	})
 }
 
 func (c *ConfigList) WriteJson(w io.Writer) error {
@@ -86,17 +91,13 @@ func (c *Config) WriteFile(name string) error {
 }
 
 func (n *NsList) WriteTable(w io.Writer) {
-	t := table.NewWriter()
-	t.SetOutputMirror(w)
-	t.AppendHeader(table.Row{"NAMESPACE", "ID", "DESCRIPTION", "COUNT"})
-	for _, ns := range n.Items {
-		t.AppendRow(table.Row{ns.ShowName, ns.Name, ns.Desc, ns.ConfigCount})
-	}
-	t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	t.SetStyle(s)
-	t.Render()
+	writeTable(w, func(tb table.Writer) {
+		tb.AppendHeader(table.Row{"NAMESPACE", "ID", "DESCRIPTION", "COUNT"})
+		for _, ns := range n.Items {
+			tb.AppendRow(table.Row{ns.ShowName, ns.Name, ns.Desc, ns.ConfigCount})
+		}
+		tb.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
+	})
 }
 
 func (n *NsList) WriteJson(w io.Writer) error {
