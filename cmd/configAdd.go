@@ -20,7 +20,7 @@ var configAddCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 }
 
-var na = &Nacos{}
+var server = &Server{}
 
 func init() {
 	configCmd.AddCommand(configAddCmd)
@@ -34,11 +34,11 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configAddCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	configAddCmd.Flags().StringVar(&na.URL, "url", "", "the nacos url")
+	configAddCmd.Flags().StringVar(&server.URL, "url", "", "the nacos url")
 	configAddCmd.MarkFlagRequired("url")
-	configAddCmd.Flags().StringVarP(&na.User, "user", "u", "", "nacos user")
+	configAddCmd.Flags().StringVarP(&server.User, "user", "u", "", "nacos user")
 	configAddCmd.MarkFlagRequired("user")
-	configAddCmd.Flags().StringVarP(&na.Password, "password", "p", "", "nacos password")
+	configAddCmd.Flags().StringVarP(&server.Password, "password", "p", "", "nacos password")
 	configAddCmd.MarkFlagRequired("password")
 }
 
@@ -47,11 +47,6 @@ func AddConfig(name string) {
 		fmt.Printf("server.%s already exists in %s\n", name, viper.ConfigFileUsed())
 		return
 	} else {
-		server := Server{
-			URL:      na.URL,
-			User:     na.User,
-			Password: na.Password,
-		}
 		viper.Set("servers."+name, server)
 		if !viper.IsSet("context") {
 			viper.Set("context", name)

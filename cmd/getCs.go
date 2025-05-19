@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
 	"path"
 	"slices"
 
@@ -16,8 +15,8 @@ var getCsCmd = &cobra.Command{
 	Use:     "configurations [name]",
 	Aliases: []string{"cs"},
 	Short:   "Display one or many configurations",
-	Run: func(cmd *cobra.Command, args []string) {
-		GetCs(args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return GetCs(args)
 	},
 }
 
@@ -37,22 +36,22 @@ func init() {
 
 }
 
-func GetCs(args []string) {
+func GetCs(args []string) error {
 	naClient, err := NewNacosClient()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	allCs := new(ConfigList)
 	if cmdOpts.ShowAll {
 		allCs, err = naClient.ListAllConfig()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	} else {
 		cs, err := naClient.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		if len(args) > 0 {
 			for _, c := range cs.PageItems {
@@ -71,4 +70,5 @@ func GetCs(args []string) {
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)
 	}
+	return nil
 }
