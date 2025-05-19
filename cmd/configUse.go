@@ -16,10 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configUseCmd represents the configSet command
@@ -32,8 +29,11 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		UseConfig(args[0])
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := cliConfig.SetContext(args[0]); err != nil {
+			return err
+		}
+		return cliConfig.WriteFile(cmdOpts.ConfigFile)
 	},
 	Args: cobra.MaximumNArgs(1),
 }
@@ -50,14 +50,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configUseCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func UseConfig(name string) {
-	if !viper.IsSet("servers." + name) {
-		fmt.Printf("server.%s does not exists in %s\n", name, viper.ConfigFileUsed())
-		return
-	}
-	viper.Set("context", name)
-
-	viper.WriteConfig()
 }

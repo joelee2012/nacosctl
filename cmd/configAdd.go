@@ -4,18 +4,16 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configAddCmd represents the configAdd command
 var configAddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new nacos server",
-	Run: func(cmd *cobra.Command, args []string) {
-		AddConfig(args[0])
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cliConfig.AddServer(args[0], server)
+		return cliConfig.WriteFile(cmdOpts.ConfigFile)
 	},
 	Args: cobra.ExactArgs(1),
 }
@@ -40,18 +38,4 @@ func init() {
 	configAddCmd.MarkFlagRequired("user")
 	configAddCmd.Flags().StringVarP(&server.Password, "password", "p", "", "nacos password")
 	configAddCmd.MarkFlagRequired("password")
-}
-
-func AddConfig(name string) {
-	if viper.IsSet("servers." + name) {
-		fmt.Printf("server.%s already exists in %s\n", name, viper.ConfigFileUsed())
-		return
-	} else {
-		viper.Set("servers."+name, server)
-		if !viper.IsSet("context") {
-			viper.Set("context", name)
-		}
-	}
-
-	viper.WriteConfig()
 }

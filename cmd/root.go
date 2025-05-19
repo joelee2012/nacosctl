@@ -6,22 +6,24 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var cfgFile string
 
 type CmdOpts struct {
-	Namespace string
-	Group     string
-	Output    string
-	OutDir    string
-	ShowAll   bool
+	Namespace  string
+	Group      string
+	Output     string
+	OutDir     string
+	ShowAll    bool
+	ConfigFile string
 }
 
 var cmdOpts = CmdOpts{}
+var cliConfig = CLIConfig{}
 
 // var client *nacos.nacos
 
@@ -59,51 +61,20 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
+	if cmdOpts.ConfigFile == "" {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
-
-		// Search config in home directory with name ".cmd" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".nacos")
+		cmdOpts.ConfigFile = path.Join(home, ".nacos.yaml")
 	}
-	viper.SetEnvPrefix("nacos")
-	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			cobra.CheckErr(err)
-		}
-	}
+	err := cliConfig.ReadFile(cmdOpts.ConfigFile)
+	cobra.CheckErr(err)
 }
 
 func NewNacosClient() (*Nacos, error) {
-	var n Nacos
-	if viper.IsSet("context") {
-		ctx := viper.GetString("context")
-		key := "servers." + ctx
-		if v := viper.Sub(key); v != nil {
-			err := v.Unmarshal(&n)
-			if err != nil {
-				return nil, err
-			}
-			if n.URL == "" {
-				return nil, fmt.Errorf("%s no url set", key)
-			}
-			if n.User == "" {
-				return nil, fmt.Errorf("%s no user set", key)
-			}
-			if n.Password == "" {
-				return nil, fmt.Errorf("%s no password set", key)
-			}
-			return &n, nil
-		}
+	if cliConfig.Context == "" {
+		return nil, fmt.Errorf("no context set")
 	}
-	return nil, fmt.Errorf("no context set")
+	server := cliConfig.GetCurrentServer()
+	return NewNacos(server.URL, server.User, server.Password), nil
 }

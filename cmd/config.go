@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
@@ -41,7 +42,7 @@ type Server struct {
 	User     string `json:"user"`
 }
 
-func (c *CLIConfig) Read(name string) error {
+func (c *CLIConfig) ReadFile(name string) error {
 	f, err := os.Open(name)
 	if err != nil {
 		return err
@@ -50,7 +51,7 @@ func (c *CLIConfig) Read(name string) error {
 	return yaml.NewDecoder(f).Decode(c)
 }
 
-func (c *CLIConfig) Write(name string) error {
+func (c *CLIConfig) WriteFile(name string) error {
 	return writeFile(c, name)
 }
 
@@ -64,10 +65,19 @@ func (c *CLIConfig) AddServer(name string, server *Server) {
 
 func (c *CLIConfig) DeleteServer(name string) {
 	delete(c.Servers, name)
+	if c.Context == name {
+		c.Context = ""
+	}
 }
 
-func (c *CLIConfig) SetContext(name string) {
-	c.Context = name
+func (c *CLIConfig) SetContext(name string) error {
+	for k := range c.Servers {
+		if k == name {
+			c.Context = name
+			return nil
+		}
+	}
+	return fmt.Errorf("server %s not found", name)
 }
 
 func (c *CLIConfig) GetContext() string {
