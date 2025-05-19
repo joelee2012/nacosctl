@@ -4,7 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"os"
+	"path"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -52,14 +52,12 @@ func GetNamespace(args []string) error {
 		}
 		nss.Items = items
 	}
-	// return PrintResources(nss, os.Stdout, output)
-	switch output {
-	case "json":
-		return nss.WriteJson(os.Stdout)
-	case "yaml":
-		return nss.WriteYaml(os.Stdout)
-	default:
-		nss.WriteTable(os.Stdout)
-		return nil
+	if cmdOpts.OutDir != "" {
+		for _, c := range nss.Items {
+			c.WriteFile(path.Join(cmdOpts.OutDir, c.ShowName))
+		}
+	} else {
+		WriteAsFormat(cmdOpts.Output, nss)
 	}
+	return nil
 }

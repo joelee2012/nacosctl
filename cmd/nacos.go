@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -130,7 +131,6 @@ func (n *Nacos) ListNamespace() (*NsList, error) {
 		return nil, err
 	}
 	return namespaces, nil
-
 }
 
 type CreateNSOpts struct {
@@ -257,8 +257,40 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	if err := dec.Decode(&configs); err != nil {
 		return nil, err
 	}
-
 	return &configs, nil
+}
+
+func (n *Nacos) ListConfigInNs(namespace, group string) (*ConfigList, error) {
+	nsCs := new(ConfigList)
+	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, Tenant: namespace}
+	for {
+		cs, err := n.ListConfig(&listOpts)
+		if err != nil {
+			log.Fatal(err)
+		}
+		nsCs.PageItems = append(nsCs.PageItems, cs.PageItems...)
+		if cs.PagesAvailable == 0 || cs.PagesAvailable == cs.PageNumber {
+			break
+		}
+		listOpts.PageNumber += 1
+	}
+	return nsCs, nil
+}
+
+func (n *Nacos) ListAllConfig() (*ConfigList, error) {
+	allCs := new(ConfigList)
+	nss, err := n.ListNamespace()
+	if err != nil {
+		return nil, err
+	}
+	for _, ns := range nss.Items {
+		cs, err := n.ListConfigInNs(ns.Name, "")
+		if err != nil {
+			return nil, err
+		}
+		allCs.PageItems = append(allCs.PageItems, cs.PageItems...)
+	}
+	return allCs, nil
 }
 
 type CreateCSOpts struct {

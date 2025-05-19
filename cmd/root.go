@@ -13,6 +13,16 @@ import (
 
 var cfgFile string
 
+type CmdOpts struct {
+	Namespace string
+	Group     string
+	Output    string
+	OutDir    string
+	ShowAll   bool
+}
+
+var cmdOpts = CmdOpts{}
+
 // var client *nacos.nacos
 
 // rootCmd represents the base command when called without any subcommands

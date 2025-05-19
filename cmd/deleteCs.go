@@ -25,8 +25,8 @@ var deleteCsCmd = &cobra.Command{
 				AppName: "",
 				Content: "",
 				DataID:  dataId,
-				Group:   listOpts.Group,
-				Tenant:  listOpts.Tenant,
+				Group:   cmdOpts.Group,
+				Tenant:  cmdOpts.Namespace,
 			})
 			if err != nil {
 				fmt.Println(err)
@@ -50,6 +50,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// deleteCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	deleteCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace", "n", "", "namespace id")
-	deleteCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "", "name of group")
+	deleteCsCmd.Flags().StringVarP(&cmdOpts.Namespace, "namespace", "n", "", "namespace id")
+	deleteCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "name of group")
 }

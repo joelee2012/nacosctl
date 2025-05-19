@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"log"
-	"os"
+	"path"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -21,9 +21,6 @@ var getCsCmd = &cobra.Command{
 	},
 }
 
-var listOpts ListCSOpts
-var showAll bool
-
 func init() {
 	getCmd.AddCommand(getCsCmd)
 	// Here you will define your flags and configuration settings.
@@ -34,11 +31,9 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace", "n", "", "namespace id")
-	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "", "group name")
-	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "p", 1, "page number")
-	getCsCmd.Flags().IntVarP(&listOpts.PageSize, "page-size", "s", 10, "page size")
-	getCsCmd.Flags().BoolVarP(&showAll, "all", "A", false, "show all configurations")
+	getCsCmd.Flags().StringVarP(&cmdOpts.Namespace, "namespace", "n", "", "namespace id")
+	getCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "group name")
+	getCsCmd.Flags().BoolVarP(&cmdOpts.ShowAll, "all", "A", false, "show all configurations")
 
 }
 
@@ -49,28 +44,13 @@ func GetCs(args []string) {
 	}
 
 	allCs := new(ConfigList)
-	if showAll {
-		nss, err := naClient.ListNamespace()
+	if cmdOpts.ShowAll {
+		allCs, err = naClient.ListAllConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
-		for _, ns := range nss.Items {
-			listOpts.Tenant = ns.Name
-			listOpts.PageNumber = 1
-			for {
-				cs, err := naClient.ListConfig(&listOpts)
-				if err != nil {
-					log.Fatal(err)
-				}
-				allCs.PageItems = append(allCs.PageItems, cs.PageItems...)
-				if cs.PagesAvailable == 0 || cs.PagesAvailable == cs.PageNumber {
-					break
-				}
-				listOpts.PageNumber += 1
-			}
-		}
 	} else {
-		cs, err := naClient.ListConfig(&listOpts)
+		cs, err := naClient.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -84,5 +64,11 @@ func GetCs(args []string) {
 			allCs = cs
 		}
 	}
-	PrintResources(allCs, os.Stdout, output)
+	if cmdOpts.OutDir != "" {
+		for _, c := range allCs.PageItems {
+			c.WriteFile(path.Join(cmdOpts.OutDir, c.DataID))
+		}
+	} else {
+		WriteAsFormat(cmdOpts.Output, allCs)
+	}
 }
