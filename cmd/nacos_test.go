@@ -145,7 +145,7 @@ func TestDeleteConfig(t *testing.T) {
 
 	n := NewNacos(ts.URL, "user", "password")
 	n.Token = &Token{AccessToken: "test-token"}
-	err := n.DeleteConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
+	err := n.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
 	if err != nil {
 		t.Errorf("DeleteConfig() failed with error: %v", err)
 	}

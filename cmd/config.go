@@ -4,6 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
+
+	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 )
 
@@ -36,4 +39,45 @@ type Server struct {
 	Password string `json:"password"`
 	URL      string `json:"url"`
 	User     string `json:"user"`
+}
+
+func (c *CLIConfig) Read(name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return yaml.NewDecoder(f).Decode(c)
+}
+
+func (c *CLIConfig) Write(name string) error {
+	return writeFile(c, name)
+}
+
+func (c *CLIConfig) GetServer(name string) *Server {
+	return c.Servers[name]
+}
+
+func (c *CLIConfig) AddServer(name string, server *Server) {
+	c.Servers[name] = server
+}
+
+func (c *CLIConfig) DeleteServer(name string) {
+	delete(c.Servers, name)
+}
+
+func (c *CLIConfig) SetContext(name string) {
+	c.Context = name
+}
+
+func (c *CLIConfig) GetContext() string {
+	return c.Context
+}
+
+func (c *CLIConfig) GetCurrentServer() *Server {
+	return c.Servers[c.Context]
+}
+
+func (c *CLIConfig) ToYaml() ([]byte, error) {
+	return yaml.Marshal(c)
 }

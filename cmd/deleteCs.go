@@ -21,12 +21,10 @@ var deleteCsCmd = &cobra.Command{
 			return
 		}
 		for _, dataId := range args {
-			err := naClient.DeleteConfig(&CreateCSOpts{
-				AppName: "",
-				Content: "",
-				DataID:  dataId,
-				Group:   cmdOpts.Group,
-				Tenant:  cmdOpts.Namespace,
+			err := naClient.DeleteConfig(&DeleteCSOpts{
+				DataID: dataId,
+				Group:  cmdOpts.Group,
+				Tenant: cmdOpts.Namespace,
 			})
 			if err != nil {
 				fmt.Println(err)
@@ -51,7 +49,6 @@ func init() {
 	// is called directly, e.g.:
 	// deleteCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	deleteCsCmd.Flags().StringVarP(&cmdOpts.Namespace, "namespace", "n", "", "namespace id")
-	deleteCsCmd.MarkFlagRequired("namespace")
 	deleteCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "name of group")
 	deleteCsCmd.MarkFlagRequired("group")
 }

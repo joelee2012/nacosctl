@@ -327,7 +327,14 @@ func (n *Nacos) CreateConfig(opts *CreateCSOpts) error {
 	}
 	return nil
 }
-func (n *Nacos) DeleteConfig(opts *CreateCSOpts) error {
+
+type DeleteCSOpts struct {
+	DataID string
+	Group  string
+	Tenant string
+}
+
+func (n *Nacos) DeleteConfig(opts *DeleteCSOpts) error {
 	token, err := n.GetToken()
 	if err != nil {
 		return err
