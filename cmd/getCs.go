@@ -55,9 +55,9 @@ func GetCs(args []string) error {
 			return err
 		}
 		if len(args) > 0 {
-			for _, c := range cs.PageItems {
+			for _, c := range cs.Items {
 				if slices.Contains(args, c.DataID) {
-					allCs.PageItems = append(allCs.PageItems, c)
+					allCs.Items = append(allCs.Items, c)
 				}
 			}
 		} else {
@@ -67,7 +67,7 @@ func GetCs(args []string) error {
 	}
 	if cmdOpts.OutDir != "" {
 		allCs.FixDefaultNs()
-		for _, c := range allCs.PageItems {
+		for _, c := range allCs.Items {
 			dir := path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
 			os.MkdirAll(dir, 0750)
 			c.WriteFile(path.Join(dir, c.DataID))

@@ -42,7 +42,7 @@ type Server struct {
 }
 
 func (c *CLIConfig) ReadFile(name string) error {
-	return readFromYamlFile(c, name)
+	return readYaml(c, name)
 }
 
 func (c *CLIConfig) WriteFile(name string) error {

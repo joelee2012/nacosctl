@@ -28,7 +28,7 @@ type ConfigList struct {
 	TotalCount     int       `json:"totalCount"`
 	PageNumber     int       `json:"pageNumber"`
 	PagesAvailable int       `json:"pagesAvailable"`
-	PageItems      []*Config `json:"pageItems"`
+	Items          []*Config `json:"pageItems"`
 }
 
 type Config struct {
@@ -268,7 +268,7 @@ func (n *Nacos) ListConfigInNs(namespace, group string) (*ConfigList, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		nsCs.PageItems = append(nsCs.PageItems, cs.PageItems...)
+		nsCs.Items = append(nsCs.Items, cs.Items...)
 		if cs.PagesAvailable == 0 || cs.PagesAvailable == cs.PageNumber {
 			break
 		}
@@ -288,7 +288,7 @@ func (n *Nacos) ListAllConfig() (*ConfigList, error) {
 		if err != nil {
 			return nil, err
 		}
-		allCs.PageItems = append(allCs.PageItems, cs.PageItems...)
+		allCs.Items = append(allCs.Items, cs.Items...)
 	}
 	return allCs, nil
 }

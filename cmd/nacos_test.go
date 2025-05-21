@@ -118,8 +118,8 @@ func TestListConfig(t *testing.T) {
 	if err != nil {
 		t.Errorf("ListConfig() failed with error: %v", err)
 	}
-	if len(configs.PageItems) != 1 || configs.PageItems[0].DataID != "test" {
-		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{PageItems: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
+	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
+		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
 	}
 }
 
