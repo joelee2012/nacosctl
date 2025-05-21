@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/spf13/cobra"
 )
@@ -20,16 +21,7 @@ var applyCmd = &cobra.Command{
 				CreateResourceFromFile(naClient, cmdOpts.OutDir)
 			}
 			if IsDir(cmdOpts.OutDir) {
-				err = filepath.Walk(cmdOpts.OutDir, func(path string, info os.FileInfo, err error) error {
-					if err != nil {
-						return fmt.Errorf("prevent panic by handling failure accessing a path %q: [%w]", path, err)
-					}
-					if !info.IsDir() {
-						CreateResourceFromFile(naClient, path)
-					}
-					return nil
-				})
-				cobra.CheckErr(err)
+				CreateResourceFromDir(naClient, cmdOpts.OutDir)
 			}
 		}
 	},
@@ -55,14 +47,74 @@ func CreateResourceFromFile(naClient *Nacos, name string) {
 		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}))
 		fmt.Printf("namespace/%s created\n", ns.ShowName)
 	} else {
-		cs := &Config{}
-		cobra.CheckErr(cs.LoadFromYaml(name))
+		nsNames := ListNamespace(naClient)
+		c := &Config{}
+		cobra.CheckErr(c.LoadFromYaml(name))
+		if !slices.Contains(nsNames, c.Tenant) {
+			cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Tenant))
+		}
 		cobra.CheckErr(naClient.CreateConfig(&CreateCSOpts{
-			DataID:  cs.DataID,
-			Group:   cs.Group,
-			Content: cs.Content,
-			Type:    cs.Type,
+			DataID:  c.DataID,
+			Group:   c.Group,
+			Content: c.Content,
+			Type:    c.Type,
 		}))
-		fmt.Printf("config/%s created\n", cs.DataID)
+		fmt.Printf("config/%s created\n", c.DataID)
 	}
+}
+
+func ListNamespace(naClient *Nacos) []string {
+	nsList, err := naClient.ListNamespace()
+	cobra.CheckErr(err)
+	nsNames := []string{}
+	for _, ns := range nsList.Items {
+		nsNames = append(nsNames, ns.ShowName)
+	}
+	return nsNames
+}
+func CreateResourceFromDir(naClient *Nacos, dir string) {
+	nss := new(NsList)
+	cs := new(ConfigList)
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("prevent panic by handling failure accessing a path %q: [%w]", path, err)
+		}
+		if !info.IsDir() {
+			ns := &Namespace{}
+			if err := ns.LoadFromYaml(path); err == nil {
+				nss.Items = append(nss.Items, ns)
+			} else {
+				c := &Config{}
+				c.LoadFromYaml(path)
+				cs.Items = append(cs.Items, c)
+			}
+		}
+		return nil
+	})
+	cobra.CheckErr(err)
+	nsNames := ListNamespace(naClient)
+	for _, ns := range nss.Items {
+		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}))
+		fmt.Printf("namespace/%s created\n", ns.ShowName)
+		if !slices.Contains(nsNames, ns.ShowName) {
+			nsNames = append(nsNames, ns.ShowName)
+		}
+	}
+	for _, c := range cs.Items {
+		if !slices.Contains(nsNames, c.Tenant) {
+			cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Tenant))
+		}
+		cobra.CheckErr(naClient.CreateConfig(&CreateCSOpts{
+			DataID:  c.DataID,
+			Group:   c.Group,
+			Tenant:  c.Tenant,
+			Content: c.Content,
+			Type:    c.Type,
+			Desc:    c.Desc,
+			AppName: c.AppName,
+			Tags:    c.Tags,
+		}))
+		fmt.Printf("config/%s created\n", c.DataID)
+	}
+
 }

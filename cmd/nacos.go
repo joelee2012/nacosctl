@@ -41,6 +41,10 @@ type Config struct {
 	Tenant           string `json:"tenant"`
 	AppName          string `json:"appName"`
 	Type             string `json:"type"`
+	CreateTime       int64  `json:"createTime"`
+	ModifyTime       int64  `json:"modifyTime"`
+	Desc             string `json:"desc"`
+	Tags             string `json:"configTags"`
 }
 
 type Nacos struct {
@@ -254,6 +258,7 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.Tenant)
+	v.Add("show", "all")
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
@@ -326,6 +331,9 @@ func (n *Nacos) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("content", opts.Content)
 	v.Add("type", opts.Type)
 	v.Add("tenant", opts.Tenant)
+	v.Add("appName", opts.AppName)
+	v.Add("desc", opts.Desc)
+	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
 	resp, err := http.PostForm(n.URL+"/nacos/v1/cs/configs", v)

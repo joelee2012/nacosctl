@@ -31,7 +31,7 @@ type FileWriter interface {
 }
 
 type YamlFileLoader interface {
-	LoadFromYaml(name string) (YamlFileLoader, error)
+	LoadFromYaml(name string) error
 }
 
 func writeJson(v any, w io.Writer) error {
@@ -158,6 +158,6 @@ func WriteAsFormat(format string, writable FormatWriter) {
 	}
 }
 
-func LoadFromYaml(name string, loader YamlFileLoader) (YamlFileLoader, error) {
+func LoadFromYaml(name string, loader YamlFileLoader) error {
 	return loader.LoadFromYaml(name)
 }
