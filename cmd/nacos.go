@@ -214,9 +214,20 @@ func (n *Nacos) UpdateNamespace(opts *CreateNSOpts) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to update namespace/%s status code: %d", opts.ID, resp.StatusCode)
 	}
-
 	return nil
+}
 
+func (n *Nacos) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
+	nsList, err := n.ListNamespace()
+	if err != nil {
+		return err
+	}
+	for _, ns := range nsList.Items {
+		if ns.Name == opts.ID {
+			return n.UpdateNamespace(opts)
+		}
+	}
+	return n.CreateNamespace(opts)
 }
 
 type ListCSOpts struct {

@@ -30,6 +30,10 @@ type FileWriter interface {
 	WriteFile(w io.Writer) error
 }
 
+type YamlFileLoader interface {
+	LoadFromYaml(name string) (YamlFileLoader, error)
+}
+
 func writeJson(v any, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
@@ -105,7 +109,7 @@ func readYaml(v any, name string) error {
 	defer f.Close()
 	return yaml.NewDecoder(f).Decode(v)
 }
-func (c *Config) FromYaml(name string) error {
+func (c *Config) LoadFromYaml(name string) error {
 	return readYaml(c, name)
 }
 
@@ -138,7 +142,7 @@ func (n *Namespace) WriteFile(name string) error {
 	return writeFile(n, name)
 }
 
-func (n *Namespace) FromYaml(name string) error {
+func (n *Namespace) LoadFromYaml(name string) error {
 	return readYaml(n, name)
 }
 func WriteAsFormat(format string, writable FormatWriter) {
@@ -152,4 +156,8 @@ func WriteAsFormat(format string, writable FormatWriter) {
 	default:
 		writable.WriteTable(os.Stdout)
 	}
+}
+
+func LoadFromYaml(name string, loader YamlFileLoader) (YamlFileLoader, error) {
+	return loader.LoadFromYaml(name)
 }

@@ -17,26 +17,15 @@ var applyCmd = &cobra.Command{
 			naClient, err := NewNacosClient()
 			cobra.CheckErr(err)
 			if IsFile(cmdOpts.OutDir) {
-				ns := &Namespace{}
-				cobra.CheckErr(ns.FromYaml(cmdOpts.OutDir))
-				cobra.CheckErr(naClient.CreateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}))
-				fmt.Printf("namespace/%s created\n", ns.ShowName)
+				CreateResourceFromFile(naClient, cmdOpts.OutDir)
 			}
 			if IsDir(cmdOpts.OutDir) {
-				ns := &Namespace{}
 				err = filepath.Walk(cmdOpts.OutDir, func(path string, info os.FileInfo, err error) error {
 					if err != nil {
-						fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
-						return err
+						return fmt.Errorf("prevent panic by handling failure accessing a path %q: [%w]", path, err)
 					}
 					if !info.IsDir() {
-						if err = ns.FromYaml(path); err != nil {
-							return err
-						}
-						if err = naClient.CreateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}); err != nil {
-							return err
-						}
-						fmt.Printf("namespace/%s created\n", ns.ShowName)
+						CreateResourceFromFile(naClient, path)
 					}
 					return nil
 				})
@@ -58,4 +47,22 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func CreateResourceFromFile(naClient *Nacos, name string) {
+	ns := &Namespace{}
+	if err := ns.LoadFromYaml(name); err == nil {
+		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}))
+		fmt.Printf("namespace/%s created\n", ns.ShowName)
+	} else {
+		cs := &Config{}
+		cobra.CheckErr(cs.LoadFromYaml(name))
+		cobra.CheckErr(naClient.CreateConfig(&CreateCSOpts{
+			DataID:  cs.DataID,
+			Group:   cs.Group,
+			Content: cs.Content,
+			Type:    cs.Type,
+		}))
+		fmt.Printf("config/%s created\n", cs.DataID)
+	}
 }
