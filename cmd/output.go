@@ -81,13 +81,13 @@ func (c *ConfigList) WriteYaml(w io.Writer) error {
 	return writeYaml(c, w)
 }
 
-func (c *ConfigList) FixDefaultNs() {
-	for _, c := range c.Items {
-		if c.Tenant == "" {
-			c.Tenant = "public"
-		}
-	}
-}
+// func (c *ConfigList) FixDefaultNs() {
+// 	for _, c := range c.Items {
+// 		if c.Tenant == "" {
+// 			c.Tenant = "public"
+// 		}
+// 	}
+// }
 
 func (c *Config) WriteJson(w io.Writer) error {
 	return writeJson(c, w)

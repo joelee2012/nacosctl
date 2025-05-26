@@ -258,7 +258,7 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.Tenant)
-	v.Add("show", "all")
+	// v.Add("show", "all")
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
