@@ -10,9 +10,9 @@ import (
 )
 
 type NsList struct {
-	Code    int          `json:"code"`
-	Message interface{}  `json:"message"`
-	Items   []*Namespace `json:"data"`
+	// Code    int          `json:"code,omitempty"`
+	// Message interface{}  `json:"message,omitempty"`
+	Items []*Namespace `json:"data"`
 }
 
 type Namespace struct {
@@ -25,9 +25,9 @@ type Namespace struct {
 }
 
 type ConfigList struct {
-	TotalCount     int       `json:"totalCount"`
-	PageNumber     int       `json:"pageNumber"`
-	PagesAvailable int       `json:"pagesAvailable"`
+	TotalCount     int       `json:"totalCount,omitempty"`
+	PageNumber     int       `json:"pageNumber,omitempty"`
+	PagesAvailable int       `json:"pagesAvailable,omitempty"`
 	Items          []*Config `json:"pageItems"`
 }
 

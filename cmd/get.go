@@ -35,7 +35,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	getCmd.PersistentFlags().StringVarP(&cmdOpts.Output, "output", "o", "table", "Output format. One of: (json, yaml, table]")
-	getCmd.PersistentFlags().StringVarP(&cmdOpts.OutDir, "output-dir", "d", "", "Output directory")
+	getCmd.PersistentFlags().StringVarP(&cmdOpts.OutDir, "output-dir", "O", "", "Output directory")
 	getCmd.MarkFlagsMutuallyExclusive("output", "output-dir")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

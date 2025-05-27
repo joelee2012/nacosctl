@@ -54,6 +54,9 @@ func GetNamespace(args []string) error {
 	}
 	if cmdOpts.OutDir != "" {
 		for _, c := range nss.Items {
+			if c.Name == "" {
+				continue
+			}
 			c.WriteFile(path.Join(cmdOpts.OutDir, c.ShowName))
 		}
 	} else {
