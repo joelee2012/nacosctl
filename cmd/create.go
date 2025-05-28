@@ -4,8 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -28,20 +26,3 @@ func init() {
 	// is called directly, e.g.:
 	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-func IsDir(name string) bool {
-	fi, err := os.Stat(name)
-	if err != nil {
-		return false
-	}
-	return fi.IsDir()
-}
-
-func IsFile(name string) bool {
-	fi, err := os.Stat(name)
-	if err != nil {
-		return false
-	}
-	return fi.Mode().IsRegular()
-}
-

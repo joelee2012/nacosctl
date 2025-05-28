@@ -73,8 +73,12 @@ func GetCs(args []string) error {
 			} else {
 				dir = path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
 			}
-			os.MkdirAll(dir, 0750)
-			c.WriteFile(path.Join(dir, c.DataID))
+			if err := os.MkdirAll(dir, 0750); err != nil {
+				return err
+			}
+			if err := c.WriteFile(path.Join(dir, c.DataID)); err != nil {
+				return err
+			}
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)

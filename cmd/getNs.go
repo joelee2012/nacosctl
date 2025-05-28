@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"path"
 	"slices"
 
@@ -57,7 +58,9 @@ func GetNamespace(args []string) error {
 			if c.Name == "" {
 				continue
 			}
-			c.WriteFile(path.Join(cmdOpts.OutDir, c.ShowName))
+			if err := c.WriteFile(path.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
+				return err
+			}
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, nss)

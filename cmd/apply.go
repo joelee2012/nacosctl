@@ -17,12 +17,15 @@ var applyCmd = &cobra.Command{
 		if cmdOpts.OutDir != "" {
 			naClient, err := NewNacosClient()
 			cobra.CheckErr(err)
-			if IsFile(cmdOpts.OutDir) {
+			fi, err := os.Stat(cmdOpts.OutDir)
+			cobra.CheckErr(err)
+			switch mode := fi.Mode(); {
+			case mode.IsRegular():
 				CreateResourceFromFile(naClient, cmdOpts.OutDir)
-			}
-			if IsDir(cmdOpts.OutDir) {
+			case mode.IsDir():
 				CreateResourceFromDir(naClient, cmdOpts.OutDir)
 			}
+
 		}
 	},
 }
@@ -68,7 +71,7 @@ func ListNamespace(naClient *Nacos) []string {
 	cobra.CheckErr(err)
 	nsNames := []string{}
 	for _, ns := range nsList.Items {
-		nsNames = append(nsNames, ns.ShowName)
+		nsNames = append(nsNames, ns.Name)
 	}
 	return nsNames
 }
@@ -85,7 +88,9 @@ func CreateResourceFromDir(naClient *Nacos, dir string) {
 				nss.Items = append(nss.Items, ns)
 			} else {
 				c := &Config{}
-				c.LoadFromYaml(path)
+				if err := c.LoadFromYaml(path); err != nil {
+					return err
+				}
 				cs.Items = append(cs.Items, c)
 			}
 		}
