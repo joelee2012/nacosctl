@@ -27,7 +27,7 @@ var cliConfig = CLIConfig{}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "nacosctl [options]",
+	Use:   "nctl [options]",
 	Short: "Command line tools for Nacos",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -69,10 +69,10 @@ func initConfig() {
 	cobra.CheckErr(err)
 }
 
-func NewNacosClient() (*Nacos, error) {
+func NewNacosClient() *Nacos {
 	if cliConfig.Context == "" {
-		return nil, fmt.Errorf("no context set")
+		cobra.CheckErr(fmt.Errorf("no context set in config file: %s", cmdOpts.ConfigFile))
 	}
 	server := cliConfig.GetCurrentServer()
-	return NewNacos(server.URL, server.User, server.Password), nil
+	return NewNacos(server.URL, server.User, server.Password)
 }

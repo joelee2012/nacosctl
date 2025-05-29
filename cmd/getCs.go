@@ -13,8 +13,8 @@ import (
 
 // getCsCmd represents the getCs command
 var getCsCmd = &cobra.Command{
-	Use:     "configurations [name]",
-	Aliases: []string{"cs"},
+	Use:     "cs [name]",
+	Aliases: []string{"configuration"},
 	Short:   "Display one or many configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		GetCs(args)
@@ -38,15 +38,15 @@ func init() {
 }
 
 func GetCs(args []string) {
-	naClient, err := NewNacosClient()
-	cobra.CheckErr(err)
+	client := NewNacosClient()
 
 	allCs := new(ConfigList)
+	var err error
 	if cmdOpts.ShowAll {
-		allCs, err = naClient.ListAllConfig()
+		allCs, err = client.ListAllConfig()
 		cobra.CheckErr(err)
 	} else {
-		cs, err := naClient.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
+		cs, err := client.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
 		cobra.CheckErr(err)
 		if len(args) > 0 {
 			for _, c := range cs.Items {

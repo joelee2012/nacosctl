@@ -13,8 +13,8 @@ import (
 
 // getNsCmd represents the getNs command
 var getNsCmd = &cobra.Command{
-	Use:     "namespace [name]",
-	Aliases: []string{"ns"},
+	Use:     "ns [name]",
+	Aliases: []string{"namespace"},
 	Short:   "Display one or many namespaces",
 	Run: func(cmd *cobra.Command, args []string) {
 		GetNamespace(args)
@@ -36,9 +36,8 @@ func init() {
 }
 
 func GetNamespace(args []string) {
-	naClient, err := NewNacosClient()
-	cobra.CheckErr(err)
-	nss, err := naClient.ListNamespace()
+	client := NewNacosClient()
+	nss, err := client.ListNamespace()
 	cobra.CheckErr(err)
 	if len(args) > 0 {
 		var items []*Namespace

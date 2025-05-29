@@ -15,10 +15,9 @@ var createCsCmd = &cobra.Command{
 	Short: "Create one configuration",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		cobra.CheckErr(err)
+		client := NewNacosClient()
 		createOpts.DataID = args[0]
-		cobra.CheckErr(naClient.CreateConfig(&createOpts))
+		cobra.CheckErr(client.CreateConfig(&createOpts))
 		fmt.Printf("configuration/%s created\n", createOpts.DataID)
 
 	},

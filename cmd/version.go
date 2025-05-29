@@ -15,18 +15,12 @@ var version = "dev"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Client version:", version)
-		n, err := NewNacosClient()
-		if err != nil {
-			return err
-		}
-		v, err := n.GetVersion()
-		if err != nil {
-			return err
-		}
+		client := NewNacosClient()
+		v, err := client.GetVersion()
+		cobra.CheckErr(err)
 		fmt.Println("Server version:", v)
-		return nil
 	},
 }
 

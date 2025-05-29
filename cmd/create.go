@@ -9,8 +9,9 @@ import (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create one configuration",
+	Use:     "create",
+	Aliases: []string{"add"},
+	Short:   "Create one configuration",
 }
 
 func init() {

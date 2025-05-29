@@ -11,19 +11,18 @@ import (
 
 // configCmd represents the config command
 var applyCmd = &cobra.Command{
-	Use:   "apply  [flags] [command]",
-	Short: "Apply configuration file  to nacos",
+	Use:   "apply [flags] [command]",
+	Short: "Apply configuration file to nacos",
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmdOpts.OutDir != "" {
-			naClient, err := NewNacosClient()
-			cobra.CheckErr(err)
+			client := NewNacosClient()
 			fi, err := os.Stat(cmdOpts.OutDir)
 			cobra.CheckErr(err)
 			switch mode := fi.Mode(); {
 			case mode.IsRegular():
-				CreateResourceFromFile(naClient, cmdOpts.OutDir)
+				CreateResourceFromFile(client, cmdOpts.OutDir)
 			case mode.IsDir():
-				CreateResourceFromDir(naClient, cmdOpts.OutDir)
+				CreateResourceFromDir(client, cmdOpts.OutDir)
 			}
 
 		}
@@ -38,7 +37,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// configCmd.PersistentFlags().String("foo", "", "A help for foo")
-	applyCmd.Flags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files that contain the configurations")
+	applyCmd.Flags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files or dir that contain the configurations")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")

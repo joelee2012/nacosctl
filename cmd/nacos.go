@@ -36,15 +36,15 @@ type Config struct {
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
 	Content          string `json:"content"`
-	Md5              string `json:"md5"`
-	EncryptedDataKey string `json:"encryptedDataKey"`
 	Tenant           string `json:"tenant"`
-	AppName          string `json:"appName"`
 	Type             string `json:"type"`
-	CreateTime       int64  `json:"createTime"`
-	ModifyTime       int64  `json:"modifyTime"`
-	Desc             string `json:"desc"`
-	Tags             string `json:"configTags"`
+	Md5              string `json:"md5,omitempty"`
+	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
+	AppName          string `json:"appName,omitempty"`
+	CreateTime       int64  `json:"createTime,omitempty"`
+	ModifyTime       int64  `json:"modifyTime,omitempty"`
+	Desc             string `json:"desc,omitempty"`
+	Tags             string `json:"configTags,omitempty"`
 }
 
 type Nacos struct {

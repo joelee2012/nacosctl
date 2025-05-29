@@ -11,14 +11,13 @@ import (
 
 // deleteCsCmd represents the deleteCs command
 var deleteCsCmd = &cobra.Command{
-	Use:     "configurations",
-	Aliases: []string{"cs"},
+	Use:     "cs",
+	Aliases: []string{"configuration"},
 	Short:   "Delete one or many configurations",
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		cobra.CheckErr(err)
+		client := NewNacosClient()
 		for _, dataId := range args {
-			err := naClient.DeleteConfig(&DeleteCSOpts{
+			err := client.DeleteConfig(&DeleteCSOpts{
 				DataID: dataId,
 				Group:  cmdOpts.Group,
 				Tenant: cmdOpts.Namespace,

@@ -14,10 +14,9 @@ var createNsCmd = &cobra.Command{
 	Use:   "ns name",
 	Short: "Create one namespace",
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		cobra.CheckErr(err)
+		client := NewNacosClient()
 		nsOpts.Name = args[0]
-		cobra.CheckErr(naClient.CreateNamespace(&nsOpts))
+		cobra.CheckErr(client.CreateNamespace(&nsOpts))
 		fmt.Printf("namespace/%#v created\n", nsOpts)
 	},
 	Args: cobra.ExactArgs(1),

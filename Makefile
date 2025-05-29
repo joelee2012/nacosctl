@@ -3,8 +3,8 @@ help: ## Print usage
 .PHONY: help
 
 build: ## build package
-	go build  -v
-	./nacosctl -h
+	go build  -v -o nctl
+	./nctl -h
 .PHONY: build
 
 release: ## release package

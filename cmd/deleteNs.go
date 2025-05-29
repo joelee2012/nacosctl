@@ -11,14 +11,13 @@ import (
 
 // deleteNsCmd represents the deleteNs command
 var deleteNsCmd = &cobra.Command{
-	Use:     "namespace",
-	Aliases: []string{"ns"},
+	Use:     "ns",
+	Aliases: []string{"namespace"},
 	Short:   "Delete one or many namespaces",
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		cobra.CheckErr(err)
+		client := NewNacosClient()
 		for _, ns := range args {
-			cobra.CheckErr(naClient.DeleteNamespace(ns))
+			cobra.CheckErr(client.DeleteNamespace(ns))
 			fmt.Printf("namespace/%s deleted\n", ns)
 		}
 	},

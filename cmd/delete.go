@@ -9,8 +9,9 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete one or many resources",
+	Use:     "delete",
+	Aliases: []string{"del"},
+	Short:   "Delete one or many resources",
 }
 
 func init() {
