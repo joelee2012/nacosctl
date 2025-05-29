@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -205,5 +206,183 @@ func TestToYaml(t *testing.T) {
 	_, err := config.ToYaml()
 	if err != nil {
 		t.Errorf("ToYaml() error = %v", err)
+	}
+}
+
+func TestCLIConfig_ReadFile(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		c       *CLIConfig
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.c.ReadFile(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("CLIConfig.ReadFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_WriteFile(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		c       *CLIConfig
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.c.WriteFile(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("CLIConfig.WriteFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_GetServer(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		c    *CLIConfig
+		args args
+		want *Server
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.GetServer(tt.args.name); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CLIConfig.GetServer() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_AddServer(t *testing.T) {
+	type args struct {
+		name   string
+		server *Server
+	}
+	tests := []struct {
+		name string
+		c    *CLIConfig
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.c.AddServer(tt.args.name, tt.args.server)
+		})
+	}
+}
+
+func TestCLIConfig_DeleteServer(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		c    *CLIConfig
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.c.DeleteServer(tt.args.name)
+		})
+	}
+}
+
+func TestCLIConfig_SetContext(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		c       *CLIConfig
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.c.SetContext(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("CLIConfig.SetContext() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_GetContext(t *testing.T) {
+	tests := []struct {
+		name string
+		c    *CLIConfig
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.GetContext(); got != tt.want {
+				t.Errorf("CLIConfig.GetContext() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_GetCurrentServer(t *testing.T) {
+	tests := []struct {
+		name string
+		c    *CLIConfig
+		want *Server
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.GetCurrentServer(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CLIConfig.GetCurrentServer() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIConfig_ToYaml(t *testing.T) {
+	tests := []struct {
+		name    string
+		c       *CLIConfig
+		want    []byte
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.c.ToYaml()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CLIConfig.ToYaml() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CLIConfig.ToYaml() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

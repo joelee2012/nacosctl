@@ -45,7 +45,6 @@ func init() {
 
 func CreateResourceFromFile(naClient *Nacos, name string) {
 	ns := &Namespace{}
-
 	if err := ns.LoadFromYaml(name); err == nil {
 		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&CreateNSOpts{ID: ns.Name, Desc: ns.Desc, Name: ns.ShowName}))
 		fmt.Printf("namespace/%s created\n", ns.ShowName)
