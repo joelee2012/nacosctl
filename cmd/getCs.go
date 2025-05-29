@@ -16,8 +16,8 @@ var getCsCmd = &cobra.Command{
 	Use:     "configurations [name]",
 	Aliases: []string{"cs"},
 	Short:   "Display one or many configurations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return GetCs(args)
+	Run: func(cmd *cobra.Command, args []string) {
+		GetCs(args)
 	},
 }
 
@@ -37,23 +37,17 @@ func init() {
 
 }
 
-func GetCs(args []string) error {
+func GetCs(args []string) {
 	naClient, err := NewNacosClient()
-	if err != nil {
-		return err
-	}
+	cobra.CheckErr(err)
 
 	allCs := new(ConfigList)
 	if cmdOpts.ShowAll {
 		allCs, err = naClient.ListAllConfig()
-		if err != nil {
-			return err
-		}
+		cobra.CheckErr(err)
 	} else {
 		cs, err := naClient.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
-		if err != nil {
-			return err
-		}
+		cobra.CheckErr(err)
 		if len(args) > 0 {
 			for _, c := range cs.Items {
 				if slices.Contains(args, c.DataID) {
@@ -73,15 +67,10 @@ func GetCs(args []string) error {
 			} else {
 				dir = path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
 			}
-			if err := os.MkdirAll(dir, 0750); err != nil {
-				return err
-			}
-			if err := c.WriteFile(path.Join(dir, c.DataID)); err != nil {
-				return err
-			}
+			cobra.CheckErr(os.MkdirAll(dir, 0750))
+			cobra.CheckErr(c.WriteFile(path.Join(dir, c.DataID)))
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)
 	}
-	return nil
 }

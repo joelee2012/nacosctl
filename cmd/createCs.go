@@ -16,16 +16,11 @@ var createCsCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		naClient, err := NewNacosClient()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		cobra.CheckErr(err)
 		createOpts.DataID = args[0]
-		if err := naClient.CreateConfig(&createOpts); err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Printf("configuration/%s created\n", createOpts.DataID)
-		}
+		cobra.CheckErr(naClient.CreateConfig(&createOpts))
+		fmt.Printf("configuration/%s created\n", createOpts.DataID)
+
 	},
 	Args: cobra.ExactArgs(1),
 }

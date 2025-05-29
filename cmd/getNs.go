@@ -16,8 +16,8 @@ var getNsCmd = &cobra.Command{
 	Use:     "namespace [name]",
 	Aliases: []string{"ns"},
 	Short:   "Display one or many namespaces",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return GetNamespace(args)
+	Run: func(cmd *cobra.Command, args []string) {
+		GetNamespace(args)
 	},
 }
 
@@ -35,15 +35,11 @@ func init() {
 	// getNsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func GetNamespace(args []string) error {
+func GetNamespace(args []string) {
 	naClient, err := NewNacosClient()
-	if err != nil {
-		return err
-	}
+	cobra.CheckErr(err)
 	nss, err := naClient.ListNamespace()
-	if err != nil {
-		return err
-	}
+	cobra.CheckErr(err)
 	if len(args) > 0 {
 		var items []*Namespace
 		for _, ns := range nss.Items {
@@ -58,12 +54,9 @@ func GetNamespace(args []string) error {
 			if c.Name == "" {
 				continue
 			}
-			if err := c.WriteFile(path.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
-				return err
-			}
+			cobra.CheckErr(c.WriteFile(path.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))))
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, nss)
 	}
-	return nil
 }

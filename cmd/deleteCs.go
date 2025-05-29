@@ -16,21 +16,16 @@ var deleteCsCmd = &cobra.Command{
 	Short:   "Delete one or many configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		naClient, err := NewNacosClient()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		cobra.CheckErr(err)
 		for _, dataId := range args {
 			err := naClient.DeleteConfig(&DeleteCSOpts{
 				DataID: dataId,
 				Group:  cmdOpts.Group,
 				Tenant: cmdOpts.Namespace,
 			})
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("configuration/%s deleted\n", dataId)
-			}
+			cobra.CheckErr(err)
+			fmt.Printf("configuration/%s deleted\n", dataId)
+
 		}
 	},
 	Args: cobra.MinimumNArgs(1),

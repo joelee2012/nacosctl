@@ -83,18 +83,14 @@ func CreateResourceFromDir(naClient *Nacos, dir string) {
 	nss := new(NsList)
 	cs := new(ConfigList)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("prevent panic by handling failure accessing a path %q: [%w]", path, err)
-		}
+		cobra.CheckErr(err)
 		if !info.IsDir() {
 			ns := &Namespace{}
 			if err := ns.LoadFromYaml(path); err == nil {
 				nss.Items = append(nss.Items, ns)
 			} else {
 				c := &Config{}
-				if err := c.LoadFromYaml(path); err != nil {
-					return err
-				}
+				cobra.CheckErr(c.LoadFromYaml(path))
 				cs.Items = append(cs.Items, c)
 			}
 		}

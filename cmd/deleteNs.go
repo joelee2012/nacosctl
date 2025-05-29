@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -17,16 +16,10 @@ var deleteNsCmd = &cobra.Command{
 	Short:   "Delete one or many namespaces",
 	Run: func(cmd *cobra.Command, args []string) {
 		naClient, err := NewNacosClient()
-		if err != nil {
-			log.Fatal(err)
-		}
+		cobra.CheckErr(err)
 		for _, ns := range args {
-			err := naClient.DeleteNamespace(ns)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("namespace/%s deleted\n", ns)
-			}
+			cobra.CheckErr(naClient.DeleteNamespace(ns))
+			fmt.Printf("namespace/%s deleted\n", ns)
 		}
 	},
 	Args: cobra.MinimumNArgs(1),
