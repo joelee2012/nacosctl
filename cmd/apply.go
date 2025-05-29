@@ -59,10 +59,14 @@ func CreateResourceFromFile(naClient *Nacos, name string) {
 		cobra.CheckErr(naClient.CreateConfig(&CreateCSOpts{
 			DataID:  c.DataID,
 			Group:   c.Group,
+			Tenant:  c.Tenant,
 			Content: c.Content,
 			Type:    c.Type,
+			Desc:    c.Desc,
+			AppName: c.AppName,
+			Tags:    c.Tags,
 		}))
-		fmt.Printf("config/%s created\n", c.DataID)
+		fmt.Printf("configuration/%s created\n", c.DataID)
 	}
 }
 
@@ -119,7 +123,7 @@ func CreateResourceFromDir(naClient *Nacos, dir string) {
 			AppName: c.AppName,
 			Tags:    c.Tags,
 		}))
-		fmt.Printf("config/%s created\n", c.DataID)
+		fmt.Printf("configuration/%s created\n", c.DataID)
 	}
 
 }

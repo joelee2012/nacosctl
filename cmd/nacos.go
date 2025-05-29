@@ -331,6 +331,7 @@ func (n *Nacos) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("content", opts.Content)
 	v.Add("type", opts.Type)
 	v.Add("tenant", opts.Tenant)
+	v.Add("namespaceId", opts.Tenant)
 	v.Add("appName", opts.AppName)
 	v.Add("desc", opts.Desc)
 	v.Add("config_tags", opts.Tags)

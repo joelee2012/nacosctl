@@ -41,4 +41,5 @@ func init() {
 	createNsCmd.Flags().StringVarP(&nsOpts.ID, "id", "i", "", "id of namespace")
 	createNsCmd.MarkFlagRequired("id")
 	createNsCmd.Flags().StringVarP(&nsOpts.Desc, "desc", "d", "", "description of namespace")
+	createNsCmd.MarkFlagRequired("desc")
 }
