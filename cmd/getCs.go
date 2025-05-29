@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -63,12 +63,12 @@ func GetCs(args []string) {
 		var dir string
 		for _, c := range allCs.Items {
 			if c.Tenant == "" {
-				dir = path.Join(cmdOpts.OutDir, "public", c.Group)
+				dir = filepath.Join(cmdOpts.OutDir, "public", c.Group)
 			} else {
-				dir = path.Join(cmdOpts.OutDir, c.Tenant, c.Group)
+				dir = filepath.Join(cmdOpts.OutDir, c.Tenant, c.Group)
 			}
 			cobra.CheckErr(os.MkdirAll(dir, 0750))
-			cobra.CheckErr(c.WriteFile(path.Join(dir, c.DataID)))
+			cobra.CheckErr(c.WriteFile(filepath.Join(dir, c.DataID)))
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)

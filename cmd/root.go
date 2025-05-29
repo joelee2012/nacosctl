@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -62,7 +62,7 @@ func initConfig() {
 	if cmdOpts.ConfigFile == "" {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
-		cmdOpts.ConfigFile = path.Join(home, ".nacos.yaml")
+		cmdOpts.ConfigFile = filepath.Join(home, ".nacos.yaml")
 	}
 
 	err := cliConfig.ReadFile(cmdOpts.ConfigFile)

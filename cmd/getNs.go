@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -54,7 +54,7 @@ func GetNamespace(args []string) {
 			if c.Name == "" {
 				continue
 			}
-			cobra.CheckErr(c.WriteFile(path.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))))
+			cobra.CheckErr(c.WriteFile(filepath.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))))
 		}
 	} else {
 		WriteAsFormat(cmdOpts.Output, nss)
