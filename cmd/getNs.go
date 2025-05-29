@@ -4,8 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -49,12 +47,7 @@ func GetNamespace(args []string) {
 		nss.Items = items
 	}
 	if cmdOpts.OutDir != "" {
-		for _, c := range nss.Items {
-			if c.Name == "" {
-				continue
-			}
-			cobra.CheckErr(c.WriteFile(filepath.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))))
-		}
+		cobra.CheckErr(nss.WriteToDir(cmdOpts.OutDir))
 	} else {
 		WriteAsFormat(cmdOpts.Output, nss)
 	}

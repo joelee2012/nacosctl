@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/goccy/go-yaml"
 	"github.com/jedib0t/go-pretty/table"
@@ -28,6 +30,9 @@ type YamlWriter interface {
 
 type FileWriter interface {
 	WriteFile(w io.Writer) error
+}
+type DirWriter interface {
+	WriteToDir(name string) error
 }
 
 type YamlFileLoader interface {
@@ -81,13 +86,23 @@ func (c *ConfigList) WriteYaml(w io.Writer) error {
 	return writeYaml(c, w)
 }
 
-// func (c *ConfigList) FixDefaultNs() {
-// 	for _, c := range c.Items {
-// 		if c.Tenant == "" {
-// 			c.Tenant = "public"
-// 		}
-// 	}
-// }
+func (cs *ConfigList) WriteToDir(name string) error {
+	var dir string
+	for _, c := range cs.Items {
+		if c.Tenant == "" {
+			dir = filepath.Join(name, "public", c.Group)
+		} else {
+			dir = filepath.Join(name, c.Tenant, c.Group)
+		}
+		if err := os.MkdirAll(dir, 0750); err != nil {
+			return err
+		}
+		if err := c.WriteFile(filepath.Join(dir, c.DataID)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (c *Config) WriteJson(w io.Writer) error {
 	return writeJson(c, w)
@@ -109,6 +124,7 @@ func readYaml(v any, name string) error {
 	defer f.Close()
 	return yaml.NewDecoder(f).Decode(v)
 }
+
 func (c *Config) LoadFromYaml(name string) error {
 	return readYaml(c, name)
 }
@@ -129,6 +145,18 @@ func (n *NsList) WriteJson(w io.Writer) error {
 
 func (n *NsList) WriteYaml(w io.Writer) error {
 	return writeYaml(n, w)
+}
+
+func (n *NsList) WriteToDir(name string) error {
+	for _, c := range n.Items {
+		if c.Name == "" {
+			continue
+		}
+		if err := c.WriteFile(filepath.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (n *Namespace) WriteJson(w io.Writer) error {

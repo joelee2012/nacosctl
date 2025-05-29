@@ -4,8 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -57,19 +55,9 @@ func GetCs(args []string) {
 		} else {
 			allCs = cs
 		}
-
 	}
 	if cmdOpts.OutDir != "" {
-		var dir string
-		for _, c := range allCs.Items {
-			if c.Tenant == "" {
-				dir = filepath.Join(cmdOpts.OutDir, "public", c.Group)
-			} else {
-				dir = filepath.Join(cmdOpts.OutDir, c.Tenant, c.Group)
-			}
-			cobra.CheckErr(os.MkdirAll(dir, 0750))
-			cobra.CheckErr(c.WriteFile(filepath.Join(dir, c.DataID)))
-		}
+		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
 	} else {
 		WriteAsFormat(cmdOpts.Output, allCs)
 	}
