@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"os"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -12,11 +11,11 @@ import (
 
 // getNsCmd represents the getNs command
 var getNsCmd = &cobra.Command{
-	Use:     "namespace [name]",
-	Aliases: []string{"ns"},
+	Use:     "ns [name]",
+	Aliases: []string{"namespace"},
 	Short:   "Display one or many namespaces",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return GetNamespace(args)
+	Run: func(cmd *cobra.Command, args []string) {
+		GetNamespace(args)
 	},
 }
 
@@ -34,15 +33,10 @@ func init() {
 	// getNsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func GetNamespace(args []string) error {
-	naClient, err := NewNacosClient()
-	if err != nil {
-		return err
-	}
-	nss, err := naClient.ListNamespace()
-	if err != nil {
-		return err
-	}
+func GetNamespace(args []string) {
+	client := NewNacosClient()
+	nss, err := client.ListNamespace()
+	cobra.CheckErr(err)
 	if len(args) > 0 {
 		var items []*Namespace
 		for _, ns := range nss.Items {
@@ -52,5 +46,9 @@ func GetNamespace(args []string) error {
 		}
 		nss.Items = items
 	}
-	return PrintResources(nss, os.Stdout, output)
+	if cmdOpts.OutDir != "" {
+		cobra.CheckErr(nss.WriteToDir(cmdOpts.OutDir))
+	} else {
+		WriteAsFormat(cmdOpts.Output, nss)
+	}
 }

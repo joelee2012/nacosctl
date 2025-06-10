@@ -3,31 +3,32 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 )
 
 type NsList struct {
-	Code    int64        `json:"code"`
-	Message interface{}  `json:"message"`
-	Items   []*Namespace `json:"data"`
+	// Code    int          `json:"code,omitempty"`
+	// Message interface{}  `json:"message,omitempty"`
+	Items []*Namespace `json:"data"`
 }
 
 type Namespace struct {
 	Name        string `json:"namespace"`
 	ShowName    string `json:"namespaceShowName"`
 	Desc        string `json:"namespaceDesc"`
-	Quota       int64  `json:"quota"`
-	ConfigCount int64  `json:"configCount"`
-	Type        int64  `json:"type"`
+	Quota       int    `json:"quota"`
+	ConfigCount int    `json:"configCount"`
+	Type        int    `json:"type"`
 }
 
 type ConfigList struct {
-	TotalCount     int64     `json:"totalCount"`
-	PageNumber     int64     `json:"pageNumber"`
-	PagesAvailable int64     `json:"pagesAvailable"`
-	PageItems      []*Config `json:"pageItems"`
+	TotalCount     int       `json:"totalCount,omitempty"`
+	PageNumber     int       `json:"pageNumber,omitempty"`
+	PagesAvailable int       `json:"pagesAvailable,omitempty"`
+	Items          []*Config `json:"pageItems"`
 }
 
 type Config struct {
@@ -35,11 +36,15 @@ type Config struct {
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
 	Content          string `json:"content"`
-	Md5              string `json:"md5"`
-	EncryptedDataKey string `json:"encryptedDataKey"`
 	Tenant           string `json:"tenant"`
-	AppName          string `json:"appName"`
 	Type             string `json:"type"`
+	Md5              string `json:"md5,omitempty"`
+	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
+	AppName          string `json:"appName,omitempty"`
+	CreateTime       int64  `json:"createTime,omitempty"`
+	ModifyTime       int64  `json:"modifyTime,omitempty"`
+	Desc             string `json:"desc,omitempty"`
+	Tags             string `json:"configTags,omitempty"`
 }
 
 type Nacos struct {
@@ -52,7 +57,7 @@ type Nacos struct {
 }
 type Token struct {
 	AccessToken string `json:"accessToken"`
-	TokenTTL    int64  `json:"tokenTtl"`
+	TokenTTL    int    `json:"tokenTtl"`
 	GlobalAdmin bool   `json:"globalAdmin"`
 	Username    string `json:"username"`
 }
@@ -125,12 +130,11 @@ func (n *Nacos) ListNamespace() (*NsList, error) {
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	dec := json.NewDecoder(resp.Body)
-	namespaces := &NsList{}
+	namespaces := new(NsList)
 	if err := dec.Decode(namespaces); err != nil {
 		return nil, err
 	}
 	return namespaces, nil
-
 }
 
 type CreateNSOpts struct {
@@ -214,9 +218,20 @@ func (n *Nacos) UpdateNamespace(opts *CreateNSOpts) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to update namespace/%s status code: %d", opts.ID, resp.StatusCode)
 	}
-
 	return nil
+}
 
+func (n *Nacos) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
+	nsList, err := n.ListNamespace()
+	if err != nil {
+		return err
+	}
+	for _, ns := range nsList.Items {
+		if ns.Name == opts.ID {
+			return n.UpdateNamespace(opts)
+		}
+	}
+	return n.CreateNamespace(opts)
 }
 
 type ListCSOpts struct {
@@ -243,6 +258,7 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.Tenant)
+	// v.Add("show", "all")
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
@@ -252,13 +268,45 @@ func (n *Nacos) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	configs := new(ConfigList)
 	dec := json.NewDecoder(resp.Body)
-	var configs ConfigList
 	if err := dec.Decode(&configs); err != nil {
 		return nil, err
 	}
+	return configs, nil
+}
 
-	return &configs, nil
+func (n *Nacos) ListConfigInNs(namespace, group string) (*ConfigList, error) {
+	nsCs := new(ConfigList)
+	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, Tenant: namespace}
+	for {
+		cs, err := n.ListConfig(&listOpts)
+		if err != nil {
+			log.Fatal(err)
+		}
+		nsCs.Items = append(nsCs.Items, cs.Items...)
+		if cs.PagesAvailable == 0 || cs.PagesAvailable == cs.PageNumber {
+			break
+		}
+		listOpts.PageNumber += 1
+	}
+	return nsCs, nil
+}
+
+func (n *Nacos) ListAllConfig() (*ConfigList, error) {
+	allCs := new(ConfigList)
+	nss, err := n.ListNamespace()
+	if err != nil {
+		return nil, err
+	}
+	for _, ns := range nss.Items {
+		cs, err := n.ListConfigInNs(ns.Name, "")
+		if err != nil {
+			return nil, err
+		}
+		allCs.Items = append(allCs.Items, cs.Items...)
+	}
+	return allCs, nil
 }
 
 type CreateCSOpts struct {
@@ -283,6 +331,10 @@ func (n *Nacos) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("content", opts.Content)
 	v.Add("type", opts.Type)
 	v.Add("tenant", opts.Tenant)
+	v.Add("namespaceId", opts.Tenant)
+	v.Add("appName", opts.AppName)
+	v.Add("desc", opts.Desc)
+	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
 	v.Add("username", n.User)
 	resp, err := http.PostForm(n.URL+"/nacos/v1/cs/configs", v)
@@ -295,7 +347,14 @@ func (n *Nacos) CreateConfig(opts *CreateCSOpts) error {
 	}
 	return nil
 }
-func (n *Nacos) DeleteConfig(opts *CreateCSOpts) error {
+
+type DeleteCSOpts struct {
+	DataID string
+	Group  string
+	Tenant string
+}
+
+func (n *Nacos) DeleteConfig(opts *DeleteCSOpts) error {
 	token, err := n.GetToken()
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package cmd
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -118,8 +119,8 @@ func TestListConfig(t *testing.T) {
 	if err != nil {
 		t.Errorf("ListConfig() failed with error: %v", err)
 	}
-	if len(configs.PageItems) != 1 || configs.PageItems[0].DataID != "test" {
-		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{PageItems: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
+	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
+		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
 	}
 }
 
@@ -145,8 +146,281 @@ func TestDeleteConfig(t *testing.T) {
 
 	n := NewNacos(ts.URL, "user", "password")
 	n.Token = &Token{AccessToken: "test-token"}
-	err := n.DeleteConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
+	err := n.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
 	if err != nil {
 		t.Errorf("DeleteConfig() failed with error: %v", err)
+	}
+}
+
+func TestNacos_GetVersion(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       *Nacos
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.GetVersion()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.GetVersion() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Nacos.GetVersion() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_GetToken(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       *Nacos
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.GetToken()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.GetToken() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Nacos.GetToken() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_ListNamespace(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       *Nacos
+		want    *NsList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.ListNamespace()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.ListNamespace() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Nacos.ListNamespace() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_CreateNamespace(t *testing.T) {
+	type args struct {
+		opts *CreateNSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.CreateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.CreateNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNacos_DeleteNamespace(t *testing.T) {
+	type args struct {
+		id string
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.DeleteNamespace(tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.DeleteNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNacos_UpdateNamespace(t *testing.T) {
+	type args struct {
+		opts *CreateNSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.UpdateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.UpdateNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNacos_CreateOrUpdateNamespace(t *testing.T) {
+	type args struct {
+		opts *CreateNSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.CreateOrUpdateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.CreateOrUpdateNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNacos_ListConfig(t *testing.T) {
+	type args struct {
+		opts *ListCSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		want    *ConfigList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.ListConfig(tt.args.opts)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.ListConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Nacos.ListConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_ListConfigInNs(t *testing.T) {
+	type args struct {
+		namespace string
+		group     string
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		want    *ConfigList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.ListConfigInNs(tt.args.namespace, tt.args.group)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.ListConfigInNs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Nacos.ListConfigInNs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_ListAllConfig(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       *Nacos
+		want    *ConfigList
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.n.ListAllConfig()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.ListAllConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Nacos.ListAllConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNacos_CreateConfig(t *testing.T) {
+	type args struct {
+		opts *CreateCSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.CreateConfig(tt.args.opts); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.CreateConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNacos_DeleteConfig(t *testing.T) {
+	type args struct {
+		opts *DeleteCSOpts
+	}
+	tests := []struct {
+		name    string
+		n       *Nacos
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.n.DeleteConfig(tt.args.opts); (err != nil) != tt.wantErr {
+				t.Errorf("Nacos.DeleteConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }

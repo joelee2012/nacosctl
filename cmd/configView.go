@@ -5,25 +5,21 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configViewCmd represents the configView command
 var configViewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "View nacos config",
-
-	Run: func(cmd *cobra.Command, args []string) {
-		c := viper.AllSettings()
-		bs, err := yaml.Marshal(c)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		data, err := cliConfig.ToYaml()
 		if err != nil {
-			log.Fatalf("unable to marshal config to YAML: %v", err)
+			return err
 		}
-		fmt.Println(string(bs))
+		_, err = fmt.Println(string(data))
+		return err
 	},
 }
 

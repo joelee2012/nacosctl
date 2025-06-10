@@ -4,6 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 )
 
@@ -36,4 +39,49 @@ type Server struct {
 	Password string `json:"password"`
 	URL      string `json:"url"`
 	User     string `json:"user"`
+}
+
+func (c *CLIConfig) ReadFile(name string) error {
+	return readYaml(c, name)
+}
+
+func (c *CLIConfig) WriteFile(name string) error {
+	return writeFile(c, name)
+}
+
+func (c *CLIConfig) GetServer(name string) *Server {
+	return c.Servers[name]
+}
+
+func (c *CLIConfig) AddServer(name string, server *Server) {
+	c.Servers[name] = server
+}
+
+func (c *CLIConfig) DeleteServer(name string) {
+	delete(c.Servers, name)
+	if c.Context == name {
+		c.Context = ""
+	}
+}
+
+func (c *CLIConfig) SetContext(name string) error {
+	for k := range c.Servers {
+		if k == name {
+			c.Context = name
+			return nil
+		}
+	}
+	return fmt.Errorf("server %s not found", name)
+}
+
+func (c *CLIConfig) GetContext() string {
+	return c.Context
+}
+
+func (c *CLIConfig) GetCurrentServer() *Server {
+	return c.Servers[c.Context]
+}
+
+func (c *CLIConfig) ToYaml() ([]byte, error) {
+	return yaml.Marshal(c)
 }

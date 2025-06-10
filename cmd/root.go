@@ -6,18 +6,28 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var cfgFile string
+type CmdOpts struct {
+	Namespace  string
+	Group      string
+	Output     string
+	OutDir     string
+	ShowAll    bool
+	ConfigFile string
+}
+
+var cmdOpts = CmdOpts{}
+var cliConfig = CLIConfig{}
 
 // var client *nacos.nacos
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "nacosctl",
+	Use:   "nctl [options]",
 	Short: "Command line tools for Nacos",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -40,7 +50,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.nacos.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cmdOpts.ConfigFile, "setting", "s", "", "config file (default is $HOME/.nacos.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -49,51 +59,20 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
+	if cmdOpts.ConfigFile == "" {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
-
-		// Search config in home directory with name ".cmd" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".nacos")
+		cmdOpts.ConfigFile = filepath.Join(home, ".nacos.yaml")
 	}
-	viper.SetEnvPrefix("nacos")
-	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			cobra.CheckErr(err)
-		}
-	}
+	err := cliConfig.ReadFile(cmdOpts.ConfigFile)
+	cobra.CheckErr(err)
 }
 
-func NewNacosClient() (*Nacos, error) {
-	var n Nacos
-	if viper.IsSet("context") {
-		ctx := viper.GetString("context")
-		key := "servers." + ctx
-		if v := viper.Sub(key); v != nil {
-			err := v.Unmarshal(&n)
-			if err != nil {
-				return nil, err
-			}
-			if n.URL == "" {
-				return nil, fmt.Errorf("%s no url set", key)
-			}
-			if n.User == "" {
-				return nil, fmt.Errorf("%s no user set", key)
-			}
-			if n.Password == "" {
-				return nil, fmt.Errorf("%s no password set", key)
-			}
-			return &n, nil
-		}
+func NewNacosClient() *Nacos {
+	if cliConfig.Context == "" {
+		cobra.CheckErr(fmt.Errorf("no context set in config file: %s", cmdOpts.ConfigFile))
 	}
-	return nil, fmt.Errorf("no context set")
+	server := cliConfig.GetCurrentServer()
+	return NewNacos(server.URL, server.User, server.Password)
 }

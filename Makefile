@@ -3,9 +3,13 @@ help: ## Print usage
 .PHONY: help
 
 build: ## build package
-	go build  -v
-	./nacosctl -h
+	go build  -v -o nctl
+	./nctl -h
 .PHONY: build
+
+release: ## release package
+	goreleaser release --snapshot --clean
+.PHONY: release
 
 test: ## run test and generate coverage report
 	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... && \

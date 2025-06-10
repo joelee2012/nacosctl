@@ -5,28 +5,20 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 )
 
 // deleteNsCmd represents the deleteNs command
 var deleteNsCmd = &cobra.Command{
-	Use:     "namespace",
-	Aliases: []string{"ns"},
+	Use:     "ns",
+	Aliases: []string{"namespace"},
 	Short:   "Delete one or many namespaces",
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		if err != nil {
-			log.Fatal(err)
-		}
+		client := NewNacosClient()
 		for _, ns := range args {
-			err := naClient.DeleteNamespace(ns)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("namespace/%s deleted\n", ns)
-			}
+			cobra.CheckErr(client.DeleteNamespace(ns))
+			fmt.Printf("namespace/%s deleted\n", ns)
 		}
 	},
 	Args: cobra.MinimumNArgs(1),

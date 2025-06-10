@@ -4,8 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
-	"os"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -13,16 +11,13 @@ import (
 
 // getCsCmd represents the getCs command
 var getCsCmd = &cobra.Command{
-	Use:     "configurations [name]",
-	Aliases: []string{"cs"},
+	Use:     "cs [name]",
+	Aliases: []string{"configuration"},
 	Short:   "Display one or many configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		GetCs(args)
 	},
 }
-
-var listOpts = ListCSOpts{}
-var showAll bool
 
 func init() {
 	getCmd.AddCommand(getCsCmd)
@@ -34,31 +29,36 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace-id", "n", "", "namespace id")
-	getCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "DEFAULT_GROUP", "group name")
-	getCsCmd.Flags().IntVarP(&listOpts.PageNumber, "page-number", "P", 1, "page number")
-	getCsCmd.Flags().IntVarP(&listOpts.PageSize, "page-size", "s", 10, "page size")
-	getCsCmd.Flags().BoolVarP(&showAll, "all", "A", false, "show all configurations")
+	getCsCmd.Flags().StringVarP(&cmdOpts.Namespace, "namespace", "n", "", "namespace id")
+	getCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "group name")
+	getCsCmd.Flags().BoolVarP(&cmdOpts.ShowAll, "all", "A", false, "show all configurations")
+
 }
 
 func GetCs(args []string) {
-	naClient, err := NewNacosClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-	configs, err := naClient.ListConfig(&listOpts)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(args) > 0 {
-		var items []*Config
-		for _, ns := range configs.PageItems {
-			if slices.Contains(args, ns.DataID) {
-				items = append(items, ns)
-			}
-		}
-		configs.PageItems = items
-	}
-	PrintResources(configs, os.Stdout, output)
+	client := NewNacosClient()
 
+	allCs := new(ConfigList)
+	var err error
+	if cmdOpts.ShowAll {
+		allCs, err = client.ListAllConfig()
+		cobra.CheckErr(err)
+	} else {
+		cs, err := client.ListConfigInNs(cmdOpts.Namespace, cmdOpts.Group)
+		cobra.CheckErr(err)
+		if len(args) > 0 {
+			for _, c := range cs.Items {
+				if slices.Contains(args, c.DataID) {
+					allCs.Items = append(allCs.Items, c)
+				}
+			}
+		} else {
+			allCs = cs
+		}
+	}
+	if cmdOpts.OutDir != "" {
+		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
+	} else {
+		WriteAsFormat(cmdOpts.Output, allCs)
+	}
 }

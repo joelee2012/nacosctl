@@ -9,8 +9,9 @@ import (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create one configuration",
+	Use:     "create",
+	Aliases: []string{"add"},
+	Short:   "Create one configuration",
 }
 
 func init() {
@@ -21,7 +22,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
+	// createCmd.PersistentFlags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files that contain the configurations")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")

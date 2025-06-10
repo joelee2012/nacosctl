@@ -11,28 +11,20 @@ import (
 
 // deleteCsCmd represents the deleteCs command
 var deleteCsCmd = &cobra.Command{
-	Use:     "configurations",
-	Aliases: []string{"cs"},
+	Use:     "cs",
+	Aliases: []string{"configuration"},
 	Short:   "Delete one or many configurations",
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		client := NewNacosClient()
 		for _, dataId := range args {
-			err := naClient.DeleteConfig(&CreateCSOpts{
-				AppName: "",
-				Content: "",
-				DataID:  dataId,
-				Group:   listOpts.Group,
-				Tenant:  listOpts.Tenant,
+			err := client.DeleteConfig(&DeleteCSOpts{
+				DataID: dataId,
+				Group:  cmdOpts.Group,
+				Tenant: cmdOpts.Namespace,
 			})
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("configuration/%s deleted\n", dataId)
-			}
+			cobra.CheckErr(err)
+			fmt.Printf("configuration/%s deleted\n", dataId)
+
 		}
 	},
 	Args: cobra.MinimumNArgs(1),
@@ -50,6 +42,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// deleteCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	deleteCsCmd.Flags().StringVarP(&listOpts.Tenant, "namespace-id", "n", "", "namespace id")
-	deleteCsCmd.Flags().StringVarP(&listOpts.Group, "group", "g", "", "name of group")
+	deleteCsCmd.Flags().StringVarP(&cmdOpts.Namespace, "namespace", "n", "", "namespace id")
+	deleteCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "name of group")
+	deleteCsCmd.MarkFlagRequired("group")
 }

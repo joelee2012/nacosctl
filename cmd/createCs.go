@@ -11,21 +11,15 @@ import (
 
 // createCsCmd represents the createCs command
 var createCsCmd = &cobra.Command{
-	Use:   "cs name",
+	Use:   "cs [flags] name",
 	Short: "Create one configuration",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		naClient, err := NewNacosClient()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		client := NewNacosClient()
 		createOpts.DataID = args[0]
-		if err := naClient.CreateConfig(&createOpts); err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Printf("configuration/%s created\n", createOpts.DataID)
-		}
+		cobra.CheckErr(client.CreateConfig(&createOpts))
+		fmt.Printf("configuration/%s created\n", createOpts.DataID)
+
 	},
 	Args: cobra.ExactArgs(1),
 }
@@ -44,9 +38,13 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// createCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	createCsCmd.Flags().StringVarP(&createOpts.Tenant, "namespace-id", "n", "", "namespace id")
-	createCsCmd.Flags().StringVarP(&createOpts.Group, "group", "g", "DEFAULT_GROUP", "group of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.Tenant, "namespace", "n", "", "namespace id")
+	createCsCmd.Flags().StringVarP(&createOpts.Group, "group", "g", "", "group of configuration")
 	createCsCmd.Flags().StringVarP(&createOpts.Content, "content", "c", "", "content of configuration")
 	createCsCmd.MarkFlagRequired("content")
 	createCsCmd.Flags().StringVarP(&createOpts.Type, "type", "t", "text", "configuration type")
+	createCsCmd.Flags().StringVarP(&createOpts.Desc, "desc", "d", "", "description of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.Tags, "tags", "T", "", "tags of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.AppName, "appname", "a", "", "appname of configuration")
+
 }
