@@ -3,14 +3,13 @@ package nacos
 import (
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 )
 
-func TestNewNacos(t *testing.T) {
-	n := NewClient("http://localhost:8848", "user", "password")
-	if n.URL != "http://localhost:8848" || n.User != "user" || n.Password != "password" {
-		t.Errorf("NewNacos() failed, got: %v, want: %v", n, &Client{URL: "http://localhost:8848", User: "user", Password: "password"})
+func TestNewClient(t *testing.T) {
+	c := NewClient("http://localhost:8848", "user", "password")
+	if c.URL != "http://localhost:8848" || c.User != "user" || c.Password != "password" {
+		t.Errorf("NewClient() failed, got: %v, want: %v", c, &Client{URL: "http://localhost:8848", User: "user", Password: "password"})
 	}
 }
 
@@ -21,8 +20,8 @@ func TestGetVersion(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	version, err := n.GetVersion()
+	c := NewClient(ts.URL, "user", "password")
+	version, err := c.GetVersion()
 	if err != nil {
 		t.Errorf("GetVersion() failed with error: %v", err)
 	}
@@ -38,8 +37,8 @@ func TestGetToken(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	token, err := n.GetToken()
+	c := NewClient(ts.URL, "user", "password")
+	token, err := c.GetToken()
 	if err != nil {
 		t.Errorf("GetToken() failed with error: %v", err)
 	}
@@ -55,8 +54,8 @@ func TestListNamespace(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	namespaces, err := n.ListNamespace()
+	c := NewClient(ts.URL, "user", "password")
+	namespaces, err := c.ListNamespace()
 	if err != nil {
 		t.Errorf("ListNamespace() failed with error: %v", err)
 	}
@@ -85,9 +84,9 @@ func TestDeleteNamespace(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	n.Token = &Token{AccessToken: "test-token"}
-	err := n.DeleteNamespace("test-id")
+	c := NewClient(ts.URL, "user", "password")
+	c.Token = &Token{AccessToken: "test-token"}
+	err := c.DeleteNamespace("test-id")
 	if err != nil {
 		t.Errorf("DeleteNamespace() failed with error: %v", err)
 	}
@@ -99,9 +98,9 @@ func TestUpdateNamespace(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	n.Token = &Token{AccessToken: "test-token"}
-	err := n.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
+	c := NewClient(ts.URL, "user", "password")
+	c.Token = &Token{AccessToken: "test-token"}
+	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
 	if err != nil {
 		t.Errorf("UpdateNamespace() failed with error: %v", err)
 	}
@@ -114,8 +113,8 @@ func TestListConfig(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	configs, err := n.ListConfig(&ListCSOpts{DataId: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	c := NewClient(ts.URL, "user", "password")
+	configs, err := c.ListConfig(&ListCSOpts{DataId: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
 	if err != nil {
 		t.Errorf("ListConfig() failed with error: %v", err)
 	}
@@ -130,9 +129,9 @@ func TestCreateConfig(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	n.Token = &Token{AccessToken: "test-token"}
-	err := n.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Tenant: "test-tenant", Type: "properties"})
+	c := NewClient(ts.URL, "user", "password")
+	c.Token = &Token{AccessToken: "test-token"}
+	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Tenant: "test-tenant", Type: "properties"})
 	if err != nil {
 		t.Errorf("CreateConfig() failed with error: %v", err)
 	}
@@ -144,283 +143,10 @@ func TestDeleteConfig(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	n.Token = &Token{AccessToken: "test-token"}
-	err := n.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
+	c := NewClient(ts.URL, "user", "password")
+	c.Token = &Token{AccessToken: "test-token"}
+	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
 	if err != nil {
 		t.Errorf("DeleteConfig() failed with error: %v", err)
-	}
-}
-
-func TestNacos_GetVersion(t *testing.T) {
-	tests := []struct {
-		name    string
-		n       *Client
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.GetVersion()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.GetVersion() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Nacos.GetVersion() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_GetToken(t *testing.T) {
-	tests := []struct {
-		name    string
-		n       *Client
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.GetToken()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.GetToken() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Nacos.GetToken() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_ListNamespace(t *testing.T) {
-	tests := []struct {
-		name    string
-		n       *Client
-		want    *NsList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.ListNamespace()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.ListNamespace() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Nacos.ListNamespace() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_CreateNamespace(t *testing.T) {
-	type args struct {
-		opts *CreateNSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.CreateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.CreateNamespace() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNacos_DeleteNamespace(t *testing.T) {
-	type args struct {
-		id string
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.DeleteNamespace(tt.args.id); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.DeleteNamespace() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNacos_UpdateNamespace(t *testing.T) {
-	type args struct {
-		opts *CreateNSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.UpdateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.UpdateNamespace() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNacos_CreateOrUpdateNamespace(t *testing.T) {
-	type args struct {
-		opts *CreateNSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.CreateOrUpdateNamespace(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.CreateOrUpdateNamespace() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNacos_ListConfig(t *testing.T) {
-	type args struct {
-		opts *ListCSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		want    *ConfigList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.ListConfig(tt.args.opts)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.ListConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Nacos.ListConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_ListConfigInNs(t *testing.T) {
-	type args struct {
-		namespace string
-		group     string
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		want    *ConfigList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.ListConfigInNs(tt.args.namespace, tt.args.group)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.ListConfigInNs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Nacos.ListConfigInNs() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_ListAllConfig(t *testing.T) {
-	tests := []struct {
-		name    string
-		n       *Client
-		want    *ConfigList
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.n.ListAllConfig()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.ListAllConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Nacos.ListAllConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNacos_CreateConfig(t *testing.T) {
-	type args struct {
-		opts *CreateCSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.CreateConfig(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.CreateConfig() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNacos_DeleteConfig(t *testing.T) {
-	type args struct {
-		opts *DeleteCSOpts
-	}
-	tests := []struct {
-		name    string
-		n       *Client
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.n.DeleteConfig(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("Nacos.DeleteConfig() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
 	}
 }
