@@ -105,6 +105,36 @@ func TestUpdateNamespace(t *testing.T) {
 		t.Errorf("UpdateNamespace() failed with error: %v", err)
 	}
 }
+func TestCreateOrUpdateNamespace(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"code": 200, "message": "success", "data": [{"namespace": "test", "namespaceShowName": "Test", "namespaceDesc": "Test namespace", "quota": 100, "configCount": 10, "type": 0}]}`))
+		}
+		if r.Method == "POST" || r.Method == "PUT" {
+			w.WriteHeader(http.StatusOK)
+		}
+	}))
+	defer ts.Close()
+
+	c := NewClient(ts.URL, "user", "password")
+	c.Token = &Token{AccessToken: "test-token"}
+	tests := []struct {
+		name string
+		data CreateNSOpts
+	}{
+		{name: "CreateNamespace", data: CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test"}},
+		{name: "UpdateNamespace", data: CreateNSOpts{Name: "test-id", Desc: "Test namespace", ID: "test-id"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := c.CreateOrUpdateNamespace(&tt.data)
+			if err != nil {
+				t.Errorf("CreateOrUpdateNamespace() failed with error: %v", err)
+			}
+		})
+	}
+}
 
 func TestListConfig(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +150,22 @@ func TestListConfig(t *testing.T) {
 	}
 	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
 		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
+	}
+}
+
+func TestListConfigInNs(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"totalCount": 1, "pageNumber": 1, "pagesAvailable": 0, "pageItems": [{"id": "1", "dataId": "test", "group": "DEFAULT_GROUP", "content": "test content", "md5": "test-md5", "encryptedDataKey": "test-key", "tenant": "test-tenant", "appName": "test-app", "type": "properties"}]}`))
+	}))
+	defer ts.Close()
+	c := NewClient(ts.URL, "user", "password")
+	configs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
+	if err != nil {
+		t.Errorf("ListConfigInNs() failed with error: %v", err)
+	}
+	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
+		t.Errorf("ListConfigInNs() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
 	}
 }
 

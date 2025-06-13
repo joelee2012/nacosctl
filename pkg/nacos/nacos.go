@@ -9,44 +9,6 @@ import (
 	"strconv"
 )
 
-type NsList struct {
-	// Code    int          `json:"code,omitempty"`
-	// Message interface{}  `json:"message,omitempty"`
-	Items []*Namespace `json:"data"`
-}
-
-type Namespace struct {
-	Name        string `json:"namespace"`
-	ShowName    string `json:"namespaceShowName"`
-	Desc        string `json:"namespaceDesc"`
-	Quota       int    `json:"quota"`
-	ConfigCount int    `json:"configCount"`
-	Type        int    `json:"type"`
-}
-
-type ConfigList struct {
-	TotalCount     int       `json:"totalCount,omitempty"`
-	PageNumber     int       `json:"pageNumber,omitempty"`
-	PagesAvailable int       `json:"pagesAvailable,omitempty"`
-	Items          []*Config `json:"pageItems"`
-}
-
-type Config struct {
-	ID               string `json:"id"`
-	DataID           string `json:"dataId"`
-	Group            string `json:"group"`
-	Content          string `json:"content"`
-	Tenant           string `json:"tenant"`
-	Type             string `json:"type"`
-	Md5              string `json:"md5,omitempty"`
-	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
-	AppName          string `json:"appName,omitempty"`
-	CreateTime       int64  `json:"createTime,omitempty"`
-	ModifyTime       int64  `json:"modifyTime,omitempty"`
-	Desc             string `json:"desc,omitempty"`
-	Tags             string `json:"configTags,omitempty"`
-}
-
 type Client struct {
 	URL        string
 	User       string

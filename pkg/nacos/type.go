@@ -38,6 +38,13 @@ type YamlFileLoader interface {
 	LoadFromYaml(name string) error
 }
 
+type ConfigList struct {
+	TotalCount     int       `json:"totalCount,omitempty"`
+	PageNumber     int       `json:"pageNumber,omitempty"`
+	PagesAvailable int       `json:"pagesAvailable,omitempty"`
+	Items          []*Config `json:"pageItems"`
+}
+
 func (c *ConfigList) WriteTable(w io.Writer) {
 	writeTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "APPLICATION", "TYPE"})
@@ -74,6 +81,22 @@ func (cs *ConfigList) WriteToDir(name string) error {
 	return nil
 }
 
+type Config struct {
+	ID               string `json:"id"`
+	DataID           string `json:"dataId"`
+	Group            string `json:"group"`
+	Content          string `json:"content"`
+	Tenant           string `json:"tenant"`
+	Type             string `json:"type"`
+	Md5              string `json:"md5,omitempty"`
+	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
+	AppName          string `json:"appName,omitempty"`
+	CreateTime       int64  `json:"createTime,omitempty"`
+	ModifyTime       int64  `json:"modifyTime,omitempty"`
+	Desc             string `json:"desc,omitempty"`
+	Tags             string `json:"configTags,omitempty"`
+}
+
 func (c *Config) WriteJson(w io.Writer) error {
 	return writeJson(c, w)
 }
@@ -89,6 +112,12 @@ func (c *Config) WriteFile(name string) error {
 // LoadFromYaml load from YAML file
 func (c *Config) LoadFromYaml(name string) error {
 	return readYamlFile(c, name)
+}
+
+type NsList struct {
+	// Code    int          `json:"code,omitempty"`
+	// Message interface{}  `json:"message,omitempty"`
+	Items []*Namespace `json:"data"`
 }
 
 func (n *NsList) WriteTable(w io.Writer) {
@@ -119,6 +148,15 @@ func (n *NsList) WriteToDir(name string) error {
 		}
 	}
 	return nil
+}
+
+type Namespace struct {
+	Name        string `json:"namespace"`
+	ShowName    string `json:"namespaceShowName"`
+	Desc        string `json:"namespaceDesc"`
+	Quota       int    `json:"quota"`
+	ConfigCount int    `json:"configCount"`
+	Type        int    `json:"type"`
 }
 
 func (n *Namespace) WriteJson(w io.Writer) error {
