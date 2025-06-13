@@ -4,13 +4,52 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+var testCsList = `
+{
+  "totalCount": 1,
+  "pageNumber": 1,
+  "pagesAvailable": 0,
+  "pageItems": [
+    {
+      "id": "1",
+      "dataId": "test",
+      "group": "DEFAULT_GROUP",
+      "content": "test content",
+      "md5": "test-md5",
+      "encryptedDataKey": "test-key",
+      "tenant": "test-tenant",
+      "appName": "test-app",
+      "type": "properties"
+    }
+  ]
+}
+`
+var testNsList = `
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "namespace": "test",
+      "namespaceShowName": "Test",
+      "namespaceDesc": "Test namespace",
+      "quota": 100,
+      "configCount": 10,
+      "type": 0
+    }
+  ]
+}
+`
 
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
-	if c.URL != "http://localhost:8848" || c.User != "user" || c.Password != "password" {
-		t.Errorf("NewClient() failed, got: %v, want: %v", c, &Client{URL: "http://localhost:8848", User: "user", Password: "password"})
-	}
+	assert.Equal(t, "http://localhost:8848", c.URL)
+	assert.Equal(t, "user", c.User)
+	assert.Equal(t, "password", c.Password)
 }
 
 func TestGetVersion(t *testing.T) {
@@ -22,11 +61,8 @@ func TestGetVersion(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	version, err := c.GetVersion()
-	if err != nil {
-		t.Errorf("GetVersion() failed with error: %v", err)
-	}
-	if version != "1.0.0" {
-		t.Errorf("GetVersion() failed, got: %s, want: %s", version, "1.0.0")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "1.0.0", version)
 	}
 }
 
@@ -39,28 +75,23 @@ func TestGetToken(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	token, err := c.GetToken()
-	if err != nil {
-		t.Errorf("GetToken() failed with error: %v", err)
-	}
-	if token != "test-token" {
-		t.Errorf("GetToken() failed, got: %s, want: %s", token, "test-token")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "test-token", token)
 	}
 }
 
 func TestListNamespace(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"code": 200, "message": "success", "data": [{"namespace": "test", "namespaceShowName": "Test", "namespaceDesc": "Test namespace", "quota": 100, "configCount": 10, "type": 0}]}`))
+		w.Write([]byte(testNsList))
 	}))
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
 	namespaces, err := c.ListNamespace()
-	if err != nil {
-		t.Errorf("ListNamespace() failed with error: %v", err)
-	}
-	if len(namespaces.Items) != 1 || namespaces.Items[0].Name != "test" {
-		t.Errorf("ListNamespace() failed, got: %v, want: %v", namespaces, &NsList{Items: []*Namespace{{Name: "test", ShowName: "Test", Desc: "Test namespace", Quota: 100, ConfigCount: 10, Type: 0}}})
+	if assert.NoError(t, err) {
+		assert.Equal(t, 1, len(namespaces.Items))
+		assert.Equal(t, "test", namespaces.Items[0].Name)
 	}
 }
 
@@ -73,9 +104,7 @@ func TestCreateNamespace(t *testing.T) {
 	n := NewClient(ts.URL, "user", "password")
 	n.Token = &Token{AccessToken: "test-token"}
 	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
-	if err != nil {
-		t.Errorf("CreateNamespace() failed with error: %v", err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestDeleteNamespace(t *testing.T) {
@@ -87,9 +116,7 @@ func TestDeleteNamespace(t *testing.T) {
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
 	err := c.DeleteNamespace("test-id")
-	if err != nil {
-		t.Errorf("DeleteNamespace() failed with error: %v", err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestUpdateNamespace(t *testing.T) {
@@ -101,15 +128,13 @@ func TestUpdateNamespace(t *testing.T) {
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
 	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
-	if err != nil {
-		t.Errorf("UpdateNamespace() failed with error: %v", err)
-	}
+	assert.NoError(t, err)
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"code": 200, "message": "success", "data": [{"namespace": "test", "namespaceShowName": "Test", "namespaceDesc": "Test namespace", "quota": 100, "configCount": 10, "type": 0}]}`))
+			w.Write([]byte(testNsList))
 		}
 		if r.Method == "POST" || r.Method == "PUT" {
 			w.WriteHeader(http.StatusOK)
@@ -123,15 +148,13 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 		name string
 		data CreateNSOpts
 	}{
-		{name: "CreateNamespace", data: CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test"}},
-		{name: "UpdateNamespace", data: CreateNSOpts{Name: "test-id", Desc: "Test namespace", ID: "test-id"}},
+		{name: "Create", data: CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test"}},
+		{name: "Update", data: CreateNSOpts{Name: "test-id", Desc: "Test namespace", ID: "test-id"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := c.CreateOrUpdateNamespace(&tt.data)
-			if err != nil {
-				t.Errorf("CreateOrUpdateNamespace() failed with error: %v", err)
-			}
+			assert.NoError(t, err)
 		})
 	}
 }
@@ -139,33 +162,47 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 func TestListConfig(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"totalCount": 1, "pageNumber": 1, "pagesAvailable": 1, "pageItems": [{"id": "1", "dataId": "test", "group": "DEFAULT_GROUP", "content": "test content", "md5": "test-md5", "encryptedDataKey": "test-key", "tenant": "test-tenant", "appName": "test-app", "type": "properties"}]}`))
+		w.Write([]byte(testCsList))
 	}))
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
 	configs, err := c.ListConfig(&ListCSOpts{DataId: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
-	if err != nil {
-		t.Errorf("ListConfig() failed with error: %v", err)
-	}
-	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
-		t.Errorf("ListConfig() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
+	if assert.NoError(t, err) {
+		assert.Equal(t, 1, len(configs.Items))
+		assert.Equal(t, "test", configs.Items[0].DataID)
 	}
 }
 
 func TestListConfigInNs(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"totalCount": 1, "pageNumber": 1, "pagesAvailable": 0, "pageItems": [{"id": "1", "dataId": "test", "group": "DEFAULT_GROUP", "content": "test content", "md5": "test-md5", "encryptedDataKey": "test-key", "tenant": "test-tenant", "appName": "test-app", "type": "properties"}]}`))
+		w.Write([]byte(testCsList))
 	}))
 	defer ts.Close()
 	c := NewClient(ts.URL, "user", "password")
 	configs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
-	if err != nil {
-		t.Errorf("ListConfigInNs() failed with error: %v", err)
+	if assert.NoError(t, err) {
+		assert.Equal(t, 1, len(configs.Items))
+		assert.Equal(t, "test", configs.Items[0].DataID)
 	}
-	if len(configs.Items) != 1 || configs.Items[0].DataID != "test" {
-		t.Errorf("ListConfigInNs() failed, got: %v, want: %v", configs, &ConfigList{Items: []*Config{{ID: "1", DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Md5: "test-md5", EncryptedDataKey: "test-key", Tenant: "test-tenant", AppName: "test-app", Type: "properties"}}})
+}
+
+func TestListAllConfig(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		if r.URL.Path == "/nacos/v1/console/namespaces" {
+			w.Write([]byte(testNsList))
+			return
+		}
+		w.Write([]byte(testCsList))
+	}))
+	defer ts.Close()
+	c := NewClient(ts.URL, "user", "password")
+	configs, err := c.ListAllConfig()
+	if assert.NoError(t, err) {
+		assert.Equal(t, 1, len(configs.Items))
+		assert.Equal(t, "test", configs.Items[0].DataID)
 	}
 }
 
@@ -178,9 +215,7 @@ func TestCreateConfig(t *testing.T) {
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
 	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Tenant: "test-tenant", Type: "properties"})
-	if err != nil {
-		t.Errorf("CreateConfig() failed with error: %v", err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestDeleteConfig(t *testing.T) {
@@ -192,7 +227,5 @@ func TestDeleteConfig(t *testing.T) {
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
 	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
-	if err != nil {
-		t.Errorf("DeleteConfig() failed with error: %v", err)
-	}
+	assert.NoError(t, err)
 }
