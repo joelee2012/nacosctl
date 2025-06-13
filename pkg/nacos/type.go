@@ -33,6 +33,7 @@ type DirWriter interface {
 	WriteToDir(name string) error
 }
 
+// YamlFileLoader interface for loading from YAML
 type YamlFileLoader interface {
 	LoadFromYaml(name string) error
 }
@@ -85,6 +86,7 @@ func (c *Config) WriteFile(name string) error {
 	return writeYamlFile(c, name)
 }
 
+// LoadFromYaml load from YAML file
 func (c *Config) LoadFromYaml(name string) error {
 	return readYamlFile(c, name)
 }

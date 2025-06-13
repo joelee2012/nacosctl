@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	// "joelee2012/pkg/nacos"
-
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
