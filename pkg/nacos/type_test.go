@@ -51,7 +51,7 @@ func TestWriteFile(t *testing.T) {
 		tmpDir := t.TempDir()
 		tmpFile := filepath.Join(tmpDir, "test.yaml")
 		data := map[string]string{"key": "value"}
-		err := writeFile(data, tmpFile)
+		err := writeYamlFile(data, tmpFile)
 		assert.NoError(t, err)
 
 		content, err := os.ReadFile(tmpFile)
@@ -60,7 +60,7 @@ func TestWriteFile(t *testing.T) {
 	})
 
 	t.Run("file creation error", func(t *testing.T) {
-		err := writeFile("data", "/invalid/path/test.yaml")
+		err := writeYamlFile("data", "/invalid/path/test.yaml")
 		assert.Error(t, err)
 	})
 }
@@ -298,7 +298,7 @@ func Test_writeFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := writeFile(tt.args.v, tt.args.name); (err != nil) != tt.wantErr {
+			if err := writeYamlFile(tt.args.v, tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("writeFile() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -494,7 +494,7 @@ func Test_readYaml(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := readYaml(tt.args.v, tt.args.name); (err != nil) != tt.wantErr {
+			if err := readYamlFile(tt.args.v, tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("readYaml() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
