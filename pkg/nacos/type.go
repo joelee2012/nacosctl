@@ -1,4 +1,4 @@
-package cmd
+package nacos
 
 import (
 	"encoding/json"
@@ -152,7 +152,7 @@ func (n *NsList) WriteToDir(name string) error {
 		if c.Name == "" {
 			continue
 		}
-		if err := c.WriteFile(filepath.Join(cmdOpts.OutDir, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
+		if err := c.WriteFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
 			return err
 		}
 	}

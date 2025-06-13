@@ -6,6 +6,7 @@ package cmd
 import (
 	"slices"
 
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +39,7 @@ func GetNamespace(args []string) {
 	nss, err := client.ListNamespace()
 	cobra.CheckErr(err)
 	if len(args) > 0 {
-		var items []*Namespace
+		var items []*nacos.Namespace
 		for _, ns := range nss.Items {
 			if slices.Contains(args, ns.ShowName) {
 				items = append(items, ns)
@@ -49,6 +50,6 @@ func GetNamespace(args []string) {
 	if cmdOpts.OutDir != "" {
 		cobra.CheckErr(nss.WriteToDir(cmdOpts.OutDir))
 	} else {
-		WriteAsFormat(cmdOpts.Output, nss)
+		nacos.WriteAsFormat(cmdOpts.Output, nss)
 	}
 }

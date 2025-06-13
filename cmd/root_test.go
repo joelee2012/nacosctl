@@ -6,6 +6,8 @@ package cmd
 import (
 	"reflect"
 	"testing"
+
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
 func TestExecute(t *testing.T) {
@@ -37,7 +39,7 @@ func Test_initConfig(t *testing.T) {
 func TestNewNacosClient(t *testing.T) {
 	tests := []struct {
 		name string
-		want *Nacos
+		want *nacos.Client
 	}{
 		// TODO: Add test cases.
 	}

@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
 func TestCreateResourceFromFile(t *testing.T) {
 	type args struct {
-		naClient *Nacos
+		naClient *nacos.Client
 		name     string
 	}
 	tests := []struct {
@@ -24,7 +26,7 @@ func TestCreateResourceFromFile(t *testing.T) {
 
 func TestCreateResourceFromDir(t *testing.T) {
 	type args struct {
-		naClient *Nacos
+		naClient *nacos.Client
 		dir      string
 	}
 	tests := []struct {
