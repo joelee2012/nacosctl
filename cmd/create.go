@@ -11,7 +11,7 @@ import (
 var createCmd = &cobra.Command{
 	Use:     "create",
 	Aliases: []string{"add"},
-	Short:   "Create one configuration",
+	Short:   "Create one resource",
 }
 
 func init() {
