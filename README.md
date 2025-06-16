@@ -13,7 +13,7 @@ Available Commands:
   apply       Apply configuration file to nacos
   completion  Generate the autocompletion script for the specified shell
   config      Manage nacos instance config
-  create      Create one configuration
+  create      Create one resource
   delete      Delete one or many resources
   get         Display one or many resources
   help        Help about any command

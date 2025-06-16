@@ -13,8 +13,9 @@ import (
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Manage nacos instance config",
+	Use:     "config",
+	Aliases: []string{"setting", "c"},
+	Short:   "Manage nacos instance config",
 }
 
 func init() {
