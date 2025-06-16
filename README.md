@@ -25,3 +25,16 @@ Flags:
 
 Use "nctl [command] --help" for more information about a command.
 ```
+
+# Setting
+
+default setting file path is `$HOME/.nacos.yaml`
+
+```yaml
+servers:
+  test: # server name
+    url: http://127.0.0.1:8848/nacos # nacos url with context path
+    user: "nacos" # username
+    password: "password" # password
+context: test # current context name
+```
