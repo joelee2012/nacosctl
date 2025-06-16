@@ -2,7 +2,6 @@ package nacos
 
 import (
 	"bytes"
-	"errors"
 	"path/filepath"
 	"testing"
 
@@ -32,7 +31,7 @@ func TestConfigListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{Items: []*Config{}}
 		cl.WriteTable(&buf)
-		assert.Contains(t, buf.String(), "NAMESPACE")
+		assert.Equal(t, buf.String(), " NAMESPACE  DATAID  GROUP  APPLICATION  TYPE \n")
 	})
 }
 
@@ -51,18 +50,16 @@ func TestConfigListWriteJson(t *testing.T) {
 
 // TestConfigListWriteToDir tests ConfigList.WriteToDir method
 func TestConfigListWriteToDir(t *testing.T) {
+	cl := &ConfigList{
+		Items: []*Config{
+			{Tenant: "ns1", DataID: "data1", Group: "group1"},
+			{Tenant: "", DataID: "public_data", Group: "public_group"},
+		},
+	}
 	t.Run("successful write", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		cl := &ConfigList{
-			Items: []*Config{
-				{Tenant: "ns1", DataID: "data1", Group: "group1"},
-				{Tenant: "", DataID: "public_data", Group: "public_group"},
-			},
-		}
 		err := cl.WriteToDir(tmpDir)
 		assert.NoError(t, err)
-
-		// Check files were created
 		ns1File := filepath.Join(tmpDir, "ns1", "group1", "data1")
 		assert.FileExists(t, ns1File)
 
@@ -71,11 +68,6 @@ func TestConfigListWriteToDir(t *testing.T) {
 	})
 
 	t.Run("directory creation error", func(t *testing.T) {
-		cl := &ConfigList{
-			Items: []*Config{
-				{Tenant: "ns1", DataID: "data1", Group: "group1"},
-			},
-		}
 		err := cl.WriteToDir("/invalid/path")
 		assert.Error(t, err)
 	})
@@ -91,56 +83,45 @@ func TestConfigWriteFile(t *testing.T) {
 	assert.FileExists(t, tmpFile)
 }
 
-// // TestLoadFromYaml tests LoadFromYaml function
-// func TestLoadFromYaml(t *testing.T) {
-// 	t.Run("successful load", func(t *testing.T) {
-// 		tmpDir := t.TempDir()
-// 		tmpFile := filepath.Join(tmpDir, "test.yaml")
-// 		err := os.WriteFile(tmpFile, []byte("Tenant: test"), 0644)
-// 		require.NoError(t, err)
+func TestNamespaceListWriteTable(t *testing.T) {
+	t.Run("with items", func(t *testing.T) {
+		var buf bytes.Buffer
+		cl := &NsList{
+			Items: []*Namespace{
+				{Name: "ns1", ShowName: "data1", Desc: "group1"},
+			},
+		}
+		cl.WriteTable(&buf)
+		output := buf.String()
+		assert.Contains(t, output, "NAME")
+		assert.Contains(t, output, "ns1")
+		assert.Contains(t, output, "data1")
+	})
 
-// 		var ns Namespace
-// 		err = LoadFromYaml(tmpFile, &ns)
-// 		assert.NoError(t, err)
-// 		assert.Equal(t, "test", ns.Tenant)
-// 	})
-
-// 	t.Run("file not found", func(t *testing.T) {
-// 		var ns Namespace
-// 		err := LoadFromYaml("nonexistent.yaml", &ns)
-// 		assert.Error(t, err)
-// 	})
-// }
-
-// // TestWriteAsFormat tests WriteAsFormat function
-// func TestWriteAsFormat(t *testing.T) {
-// 	t.Run("json format", func(t *testing.T) {
-// 		var buf bytes.Buffer
-// 		oldStdout := os.Stdout
-// 		defer func() { os.Stdout = oldStdout }()
-// 		os.Stdout = &buf
-
-// 		mockWritable := &mockFormatWriter{}
-// 		WriteAsFormat("json", mockWritable)
-// 		assert.True(t, mockWritable.jsonCalled)
-// 	})
-
-// 	t.Run("default to table", func(t *testing.T) {
-// 		var buf bytes.Buffer
-// 		oldStdout := os.Stdout
-// 		defer func() { os.Stdout = oldStdout }()
-// 		os.Stdout = &buf
-
-// 		mockWritable := &mockFormatWriter{}
-// 		WriteAsFormat("invalid", mockWritable)
-// 		assert.True(t, mockWritable.tableCalled)
-// 	})
-// }
-
-// errorWriter is a mock io.Writer that always returns an error
-type errorWriter struct{}
-
-func (ew errorWriter) Write(p []byte) (n int, err error) {
-	return 0, errors.New("mock write error")
+	t.Run("empty list", func(t *testing.T) {
+		var buf bytes.Buffer
+		cl := &NsList{Items: []*Namespace{}}
+		cl.WriteTable(&buf)
+		assert.Equal(t, buf.String(), " NAME  ID  DESCRIPTION  COUNT \n")
+	})
 }
 
+func TestNamespaceListWriteToDir(t *testing.T) {
+	nl := &NsList{
+		Items: []*Namespace{
+			{Name: "ns1", ShowName: "showname", Desc: "description"},
+		},
+	}
+	t.Run("successful write", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		err := nl.WriteToDir(tmpDir)
+		assert.NoError(t, err)
+		ns1File := filepath.Join(tmpDir, "showname.yaml")
+		assert.FileExists(t, ns1File)
+	})
+
+	t.Run("directory creation error", func(t *testing.T) {
+		err := nl.WriteToDir("/invalid/path")
+		assert.Error(t, err)
+	})
+}

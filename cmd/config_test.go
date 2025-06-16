@@ -2,75 +2,68 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
-
-// MockFileSystem is a mock implementation of the file system operations.
-type MockFileSystem struct {
-	OpenFunc  func(name string) (*os.File, error)
-	WriteFunc func(data []byte, perm os.FileMode) error
-}
-
-func (m *MockFileSystem) Open(name string) (*os.File, error) {
-	return m.OpenFunc(name)
-}
-
-func (m *MockFileSystem) WriteFile(name string, data []byte, perm os.FileMode) error {
-	return m.WriteFunc(data, perm)
-}
 
 // TestReadFile tests the ReadFile method of CLIConfig.
 func TestReadFile(t *testing.T) {
 	tests := []struct {
 		name        string
 		fileContent string
-		expectError bool
+		wantErr     bool
 	}{
 		{"ValidYAML", "context: test\nservers:\n  server1:\n    password: pass1\n    url: url1\n    user: user1", false},
 		{"InvalidYAML", "invalid yaml content", true},
 	}
 
-	f, err := os.CreateTemp("", "nacosctl")
-	if err != nil {
-		t.Error(err)
-	}
-	defer os.Remove(f.Name()) // clean up
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := os.WriteFile(f.Name(), []byte(tt.fileContent), 0666); err != nil {
+			tmpDir := t.TempDir()
+			tmpFile := filepath.Join(tmpDir, "nacos.yaml")
+			if err := os.WriteFile(tmpFile, []byte(tt.fileContent), 0666); err != nil {
 				t.Error(err)
 			}
-			config := &CLIConfig{}
-			err := config.ReadFile(f.Name())
-			if (err != nil) != tt.expectError {
-				t.Errorf("ReadFile() error = %v, expectError %v", err, tt.expectError)
+			c := &CLIConfig{}
+			err := c.ReadFile(tmpFile)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
 }
 
+var config = &CLIConfig{
+	Context: "server1",
+	Servers: map[string]*Server{
+		"server1": {Password: "pass1", URL: "url1", User: "user1"},
+		"server3": {Password: "pass3", URL: "url3", User: "user3"},
+	},
+}
+
 // TestGetServer tests the GetServer method of CLIConfig.
 func TestGetServer(t *testing.T) {
-	config := &CLIConfig{
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	tests := []struct {
 		name     string
 		server   string
 		expected *Server
 	}{
 		{"ServerExists", "server1", &Server{Password: "pass1", URL: "url1", User: "user1"}},
-		{"ServerNotExists", "server2", nil},
+		{"ServerNotExists", "notexist", nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := config.GetServer(tt.server)
-			if result != tt.expected && (result.URL != tt.expected.URL || result.Password != tt.expected.Password || result.User != tt.expected.User) {
-				t.Errorf("GetServer() = %v, expected %v", result, tt.expected)
+			assert.Equal(t, tt.expected, result)
+			if result != nil {
+				assert.Equal(t, tt.expected.URL, result.URL)
+				assert.Equal(t, tt.expected.Password, result.Password)
+				assert.Equal(t, tt.expected.User, result.User)
 			}
 		})
 	}
@@ -82,56 +75,44 @@ func TestAddServer(t *testing.T) {
 		Servers: make(map[string]*Server),
 	}
 
-	server := &Server{Password: "pass1", URL: "url1", User: "user1"}
-	config.AddServer("server1", server)
-
-	if config.Servers["server1"] != server {
-		t.Errorf("AddServer() failed to add server")
-	}
+	server := &Server{Password: "pass2", URL: "url2", User: "user2"}
+	config.AddServer("server2", server)
+	assert.Equal(t, server, config.Servers["server2"])
 }
 
 // TestDeleteServer tests the DeleteServer method of CLIConfig.
 func TestDeleteServer(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
+	c := &CLIConfig{
+		Context: "server3",
 		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
+			"server3": {Password: "pass3", URL: "url3", User: "user3"},
 		},
 	}
-
-	config.DeleteServer("server1")
-
-	if _, exists := config.Servers["server1"]; exists {
-		t.Errorf("DeleteServer() failed to delete server")
-	}
-
-	if config.Context != "" {
-		t.Errorf("DeleteServer() failed to clear context")
-	}
+	c.DeleteServer("server3")
+	exist := c.Servers["server3"]
+	assert.Nil(t, exist)
+	assert.Empty(t, c.Context)
 }
 
 // TestSetContext tests the SetContext method of CLIConfig.
 func TestSetContext(t *testing.T) {
-	config := &CLIConfig{
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	tests := []struct {
-		name        string
-		context     string
-		expectError bool
+		name    string
+		context string
+		wantErr bool
 	}{
 		{"ValidContext", "server1", false},
-		{"InvalidContext", "server2", true},
+		{"InvalidContext", "notexist", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := config.SetContext(tt.context)
-			if (err != nil) != tt.expectError {
-				t.Errorf("SetContext() error = %v, expectError %v", err, tt.expectError)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.context, config.Context)
 			}
 		})
 	}
@@ -139,41 +120,17 @@ func TestSetContext(t *testing.T) {
 
 // TestGetContext tests the GetContext method of CLIConfig.
 func TestGetContext(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-	}
-
-	if config.GetContext() != "server1" {
-		t.Errorf("GetContext() = %v, expected server1", config.GetContext())
-	}
+	assert.Equal(t, "server1", config.GetContext())
 }
 
 // TestGetCurrentServer tests the GetCurrentServer method of CLIConfig.
 func TestGetCurrentServer(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	server := config.GetCurrentServer()
-	if server != config.Servers["server1"] {
-		t.Errorf("GetCurrentServer() = %v, expected %v", server, config.Servers["server1"])
-	}
+	assert.Equal(t, "url1", server.URL)
 }
 
 // TestToYaml tests the ToYaml method of CLIConfig.
 func TestToYaml(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	_, err := config.ToYaml()
-	if err != nil {
-		t.Errorf("ToYaml() error = %v", err)
-	}
+	assert.NoError(t, err)
 }

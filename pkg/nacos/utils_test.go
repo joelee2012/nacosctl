@@ -2,6 +2,7 @@ package nacos
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"path/filepath"
 	"testing"
@@ -9,6 +10,13 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/stretchr/testify/assert"
 )
+
+// // errorWriter is a mock io.Writer that always returns an error
+type errorWriter struct{}
+
+func (ew *errorWriter) Write(p []byte) (n int, err error) {
+	return 0, errors.New("mock write error")
+}
 
 func TestWriteJson(t *testing.T) {
 	tests := []struct {
