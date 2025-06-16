@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,7 @@ var createCsCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 }
 
-var createOpts CreateCSOpts
+var createOpts nacos.CreateCSOpts
 
 func init() {
 	createCmd.AddCommand(createCsCmd)

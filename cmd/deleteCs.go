@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +18,7 @@ var deleteCsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := NewNacosClient()
 		for _, dataId := range args {
-			err := client.DeleteConfig(&DeleteCSOpts{
+			err := client.DeleteConfig(&nacos.DeleteCSOpts{
 				DataID: dataId,
 				Group:  cmdOpts.Group,
 				Tenant: cmdOpts.Namespace,

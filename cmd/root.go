@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
 
@@ -69,10 +70,10 @@ func initConfig() {
 	cobra.CheckErr(err)
 }
 
-func NewNacosClient() *Nacos {
+func NewNacosClient() *nacos.Client {
 	if cliConfig.Context == "" {
 		cobra.CheckErr(fmt.Errorf("no context set in config file: %s", cmdOpts.ConfigFile))
 	}
 	server := cliConfig.GetCurrentServer()
-	return NewNacos(server.URL, server.User, server.Password)
+	return nacos.NewClient(server.URL, server.User, server.Password)
 }

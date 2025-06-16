@@ -2,106 +2,68 @@ package cmd
 
 import (
 	"os"
-	"reflect"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
-
-// MockFileSystem is a mock implementation of the file system operations.
-type MockFileSystem struct {
-	OpenFunc  func(name string) (*os.File, error)
-	WriteFunc func(data []byte, perm os.FileMode) error
-}
-
-func (m *MockFileSystem) Open(name string) (*os.File, error) {
-	return m.OpenFunc(name)
-}
-
-func (m *MockFileSystem) WriteFile(name string, data []byte, perm os.FileMode) error {
-	return m.WriteFunc(data, perm)
-}
 
 // TestReadFile tests the ReadFile method of CLIConfig.
 func TestReadFile(t *testing.T) {
 	tests := []struct {
 		name        string
 		fileContent string
-		expectError bool
+		wantErr     bool
 	}{
 		{"ValidYAML", "context: test\nservers:\n  server1:\n    password: pass1\n    url: url1\n    user: user1", false},
 		{"InvalidYAML", "invalid yaml content", true},
 	}
 
-	f, err := os.CreateTemp("", "nacosctl")
-	if err != nil {
-		t.Error(err)
-	}
-	defer os.Remove(f.Name()) // clean up
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := os.WriteFile(f.Name(), []byte(tt.fileContent), 0666); err != nil {
+			tmpDir := t.TempDir()
+			tmpFile := filepath.Join(tmpDir, "nacos.yaml")
+			if err := os.WriteFile(tmpFile, []byte(tt.fileContent), 0666); err != nil {
 				t.Error(err)
 			}
-			config := &CLIConfig{}
-			err := config.ReadFile(f.Name())
-			if (err != nil) != tt.expectError {
-				t.Errorf("ReadFile() error = %v, expectError %v", err, tt.expectError)
+			c := &CLIConfig{}
+			err := c.ReadFile(tmpFile)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
 }
 
-// TestWriteFile tests the WriteFile method of CLIConfig.
-// func TestWriteFile(t *testing.T) {
-// 	tests := []struct {
-// 		name        string
-// 		expectError bool
-// 	}{
-// 		{"WriteSuccess", false},
-// 		{"WriteFailure", true},
-// 	}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			mockFS := &MockFileSystem{
-// 				WriteFunc: func(data []byte, perm os.FileMode) error {
-// 					if tt.expectError {
-// 						return errors.New("write error")
-// 					}
-// 					return nil
-// 				},
-// 			}
-
-// 			config := &CLIConfig{}
-// 			err := config.WriteFile("testfile")
-// 			if (err != nil) != tt.expectError {
-// 				t.Errorf("WriteFile() error = %v, expectError %v", err, tt.expectError)
-// 			}
-// 		})
-// 	}
-// }
+var config = &CLIConfig{
+	Context: "server1",
+	Servers: map[string]*Server{
+		"server1": {Password: "pass1", URL: "url1", User: "user1"},
+		"server3": {Password: "pass3", URL: "url3", User: "user3"},
+	},
+}
 
 // TestGetServer tests the GetServer method of CLIConfig.
 func TestGetServer(t *testing.T) {
-	config := &CLIConfig{
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	tests := []struct {
 		name     string
 		server   string
 		expected *Server
 	}{
 		{"ServerExists", "server1", &Server{Password: "pass1", URL: "url1", User: "user1"}},
-		{"ServerNotExists", "server2", nil},
+		{"ServerNotExists", "notexist", nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := config.GetServer(tt.server)
-			if result != tt.expected && (result.URL != tt.expected.URL || result.Password != tt.expected.Password || result.User != tt.expected.User) {
-				t.Errorf("GetServer() = %v, expected %v", result, tt.expected)
+			assert.Equal(t, tt.expected, result)
+			if result != nil {
+				assert.Equal(t, tt.expected.URL, result.URL)
+				assert.Equal(t, tt.expected.Password, result.Password)
+				assert.Equal(t, tt.expected.User, result.User)
 			}
 		})
 	}
@@ -113,56 +75,44 @@ func TestAddServer(t *testing.T) {
 		Servers: make(map[string]*Server),
 	}
 
-	server := &Server{Password: "pass1", URL: "url1", User: "user1"}
-	config.AddServer("server1", server)
-
-	if config.Servers["server1"] != server {
-		t.Errorf("AddServer() failed to add server")
-	}
+	server := &Server{Password: "pass2", URL: "url2", User: "user2"}
+	config.AddServer("server2", server)
+	assert.Equal(t, server, config.Servers["server2"])
 }
 
 // TestDeleteServer tests the DeleteServer method of CLIConfig.
 func TestDeleteServer(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
+	c := &CLIConfig{
+		Context: "server3",
 		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
+			"server3": {Password: "pass3", URL: "url3", User: "user3"},
 		},
 	}
-
-	config.DeleteServer("server1")
-
-	if _, exists := config.Servers["server1"]; exists {
-		t.Errorf("DeleteServer() failed to delete server")
-	}
-
-	if config.Context != "" {
-		t.Errorf("DeleteServer() failed to clear context")
-	}
+	c.DeleteServer("server3")
+	exist := c.Servers["server3"]
+	assert.Nil(t, exist)
+	assert.Empty(t, c.Context)
 }
 
 // TestSetContext tests the SetContext method of CLIConfig.
 func TestSetContext(t *testing.T) {
-	config := &CLIConfig{
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	tests := []struct {
-		name        string
-		context     string
-		expectError bool
+		name    string
+		context string
+		wantErr bool
 	}{
 		{"ValidContext", "server1", false},
-		{"InvalidContext", "server2", true},
+		{"InvalidContext", "notexist", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := config.SetContext(tt.context)
-			if (err != nil) != tt.expectError {
-				t.Errorf("SetContext() error = %v, expectError %v", err, tt.expectError)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.context, config.Context)
 			}
 		})
 	}
@@ -170,219 +120,17 @@ func TestSetContext(t *testing.T) {
 
 // TestGetContext tests the GetContext method of CLIConfig.
 func TestGetContext(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-	}
-
-	if config.GetContext() != "server1" {
-		t.Errorf("GetContext() = %v, expected server1", config.GetContext())
-	}
+	assert.Equal(t, "server1", config.GetContext())
 }
 
 // TestGetCurrentServer tests the GetCurrentServer method of CLIConfig.
 func TestGetCurrentServer(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	server := config.GetCurrentServer()
-	if server != config.Servers["server1"] {
-		t.Errorf("GetCurrentServer() = %v, expected %v", server, config.Servers["server1"])
-	}
+	assert.Equal(t, "url1", server.URL)
 }
 
 // TestToYaml tests the ToYaml method of CLIConfig.
 func TestToYaml(t *testing.T) {
-	config := &CLIConfig{
-		Context: "server1",
-		Servers: map[string]*Server{
-			"server1": {Password: "pass1", URL: "url1", User: "user1"},
-		},
-	}
-
 	_, err := config.ToYaml()
-	if err != nil {
-		t.Errorf("ToYaml() error = %v", err)
-	}
-}
-
-func TestCLIConfig_ReadFile(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name    string
-		c       *CLIConfig
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.c.ReadFile(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("CLIConfig.ReadFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_WriteFile(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name    string
-		c       *CLIConfig
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.c.WriteFile(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("CLIConfig.WriteFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_GetServer(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name string
-		c    *CLIConfig
-		args args
-		want *Server
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.c.GetServer(tt.args.name); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CLIConfig.GetServer() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_AddServer(t *testing.T) {
-	type args struct {
-		name   string
-		server *Server
-	}
-	tests := []struct {
-		name string
-		c    *CLIConfig
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.c.AddServer(tt.args.name, tt.args.server)
-		})
-	}
-}
-
-func TestCLIConfig_DeleteServer(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name string
-		c    *CLIConfig
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.c.DeleteServer(tt.args.name)
-		})
-	}
-}
-
-func TestCLIConfig_SetContext(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name    string
-		c       *CLIConfig
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.c.SetContext(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("CLIConfig.SetContext() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_GetContext(t *testing.T) {
-	tests := []struct {
-		name string
-		c    *CLIConfig
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.c.GetContext(); got != tt.want {
-				t.Errorf("CLIConfig.GetContext() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_GetCurrentServer(t *testing.T) {
-	tests := []struct {
-		name string
-		c    *CLIConfig
-		want *Server
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.c.GetCurrentServer(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CLIConfig.GetCurrentServer() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCLIConfig_ToYaml(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CLIConfig
-		want    []byte
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.ToYaml()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CLIConfig.ToYaml() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CLIConfig.ToYaml() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	assert.NoError(t, err)
 }

@@ -4,8 +4,10 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
 	"slices"
 
+	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +40,7 @@ func init() {
 func GetCs(args []string) {
 	client := NewNacosClient()
 
-	allCs := new(ConfigList)
+	allCs := new(nacos.ConfigList)
 	var err error
 	if cmdOpts.ShowAll {
 		allCs, err = client.ListAllConfig()
@@ -59,6 +61,6 @@ func GetCs(args []string) {
 	if cmdOpts.OutDir != "" {
 		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
 	} else {
-		WriteAsFormat(cmdOpts.Output, allCs)
+		nacos.WriteAsFormat(cmdOpts.Output, allCs, os.Stdout)
 	}
 }
