@@ -16,7 +16,6 @@ type Client struct {
 	APIVersion string
 	*Token
 	*State
-	// client *http.Client
 }
 type Token struct {
 	AccessToken string `json:"accessToken"`
@@ -38,18 +37,11 @@ func NewClient(url, user, password string) *Client {
 	}
 }
 
-// func (n *Nacos) Client() *http.Client {
-// 	if n.client == nil {
-// 		n.client = &http.Client{}
-// 	}
-// 	return n.client
-// }
-
 func (c *Client) GetVersion() (string, error) {
 	if c.State != nil {
 		return c.Version, nil
 	}
-	resp, err := http.Get(c.URL + "/nacos/v1/console/server/state")
+	resp, err := http.Get(c.URL + "/v1/console/server/state")
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +63,7 @@ func (c *Client) GetToken() (string, error) {
 	v := url.Values{}
 	v.Add("username", c.User)
 	v.Add("password", c.Password)
-	resp, err := http.PostForm(c.URL+"/nacos/v1/auth/login", v)
+	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +82,7 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	}
 	v := url.Values{}
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/nacos/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -124,7 +116,7 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	v.Add("namespaceDesc", opts.Desc)
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
-	resp, err := http.PostForm(c.URL+"/nacos/v1/console/namespaces", v)
+	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
 	if err != nil {
 		return err
 	}
@@ -144,7 +136,7 @@ func (c *Client) DeleteNamespace(id string) error {
 	v.Add("namespaceId", id)
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
-	url := fmt.Sprintf("%s/nacos/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err
@@ -173,7 +165,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 
-	url := fmt.Sprintf("%s/nacos/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		return err
@@ -232,7 +224,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
-	url := fmt.Sprintf("%s/nacos/v1/cs/configs?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -307,7 +299,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
-	resp, err := http.PostForm(c.URL+"/nacos/v1/cs/configs", v)
+	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
 	if err != nil {
 		return err
 	}
@@ -335,7 +327,7 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	v.Add("tenant", opts.Tenant)
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
-	url := fmt.Sprintf("%s/nacos/v1/cs/configs?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err

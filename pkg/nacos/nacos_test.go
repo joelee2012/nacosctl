@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testCsList = `
+var csList = `
 {
   "totalCount": 1,
   "pageNumber": 1,
@@ -28,7 +28,7 @@ var testCsList = `
   ]
 }
 `
-var testNsList = `
+var nsList = `
 {
   "code": 200,
   "message": "success",
@@ -52,11 +52,23 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, "password", c.Password)
 }
 
-func TestGetVersion(t *testing.T) {
+func startServer() *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"version": "1.0.0"}`))
+		if r.URL.Path == "/v1/console/namespaces" {
+			w.Write([]byte(nsList))
+		} else if r.URL.Path == "/v1/cs/configs" {
+			w.Write([]byte(csList))
+		} else if r.URL.Path == "/v1/console/server/state" {
+			w.Write([]byte(`{"version": "1.0.0"}`))
+		} else if r.URL.Path == "/v1/auth/login" {
+			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
+		}
 	}))
+	return ts
+}
+func TestGetVersion(t *testing.T) {
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
@@ -67,10 +79,7 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
@@ -81,10 +90,7 @@ func TestGetToken(t *testing.T) {
 }
 
 func TestListNamespace(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(testNsList))
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
@@ -96,54 +102,36 @@ func TestListNamespace(t *testing.T) {
 }
 
 func TestCreateNamespace(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	n := NewClient(ts.URL, "user", "password")
-	n.Token = &Token{AccessToken: "test-token"}
 	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 
 func TestDeleteNamespace(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	c.Token = &Token{AccessToken: "test-token"}
 	err := c.DeleteNamespace("test-id")
 	assert.NoError(t, err)
 }
 
 func TestUpdateNamespace(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	c.Token = &Token{AccessToken: "test-token"}
 	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(testNsList))
-		}
-		if r.Method == "POST" || r.Method == "PUT" {
-			w.WriteHeader(http.StatusOK)
-		}
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	c.Token = &Token{AccessToken: "test-token"}
 	tests := []struct {
 		name string
 		data CreateNSOpts
@@ -160,10 +148,7 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 }
 
 func TestListConfig(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(testCsList))
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
@@ -175,10 +160,7 @@ func TestListConfig(t *testing.T) {
 }
 
 func TestListConfigInNs(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(testCsList))
-	}))
+	ts := startServer()
 	defer ts.Close()
 	c := NewClient(ts.URL, "user", "password")
 	configs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
@@ -189,14 +171,7 @@ func TestListConfigInNs(t *testing.T) {
 }
 
 func TestListAllConfig(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		if r.URL.Path == "/nacos/v1/console/namespaces" {
-			w.Write([]byte(testNsList))
-			return
-		}
-		w.Write([]byte(testCsList))
-	}))
+	ts := startServer()
 	defer ts.Close()
 	c := NewClient(ts.URL, "user", "password")
 	configs, err := c.ListAllConfig()
@@ -207,9 +182,7 @@ func TestListAllConfig(t *testing.T) {
 }
 
 func TestCreateConfig(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
@@ -219,9 +192,7 @@ func TestCreateConfig(t *testing.T) {
 }
 
 func TestDeleteConfig(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
