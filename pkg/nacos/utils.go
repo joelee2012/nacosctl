@@ -47,16 +47,17 @@ func writeTable(w io.Writer, fn func(t table.Writer)) {
 	tb.SetStyle(s)
 	tb.Render()
 }
-func WriteAsFormat(format string, writable FormatWriter) {
+
+func WriteAsFormat(format string, writable FormatWriter, w io.Writer) {
 	switch format {
 	case "json":
-		writable.WriteJson(os.Stdout)
+		writable.WriteJson(w)
 	case "yaml":
-		writable.WriteYaml(os.Stdout)
+		writable.WriteYaml(w)
 	case "table":
-		writable.WriteTable(os.Stdout)
+		writable.WriteTable(w)
 	default:
-		writable.WriteTable(os.Stdout)
+		writable.WriteTable(w)
 	}
 }
 

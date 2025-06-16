@@ -124,7 +124,7 @@ func TestWriteAsFormat(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
 			writer := mockFormatWriter{}
-			WriteAsFormat(tt.format, writer)
+			WriteAsFormat(tt.format, writer, &bytes.Buffer{})
 			assert.Equal(t, tt.called, writer[tt.format])
 		})
 	}

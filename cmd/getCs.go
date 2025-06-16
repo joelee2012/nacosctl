@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
 	"slices"
 
 	"github.com/joelee2012/nacosctl/pkg/nacos"
@@ -60,6 +61,6 @@ func GetCs(args []string) {
 	if cmdOpts.OutDir != "" {
 		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
 	} else {
-		nacos.WriteAsFormat(cmdOpts.Output, allCs)
+		nacos.WriteAsFormat(cmdOpts.Output, allCs, os.Stdout)
 	}
 }
