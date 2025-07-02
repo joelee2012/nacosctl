@@ -13,12 +13,12 @@ import (
 )
 
 type CmdOpts struct {
-	Namespace  string
-	Group      string
-	Output     string
-	OutDir     string
-	ShowAll    bool
-	ConfigFile string
+	NamespaceId string
+	Group       string
+	Output      string
+	OutDir      string
+	ConfigFile  string
+	ShowAll     bool
 }
 
 var cmdOpts = CmdOpts{}

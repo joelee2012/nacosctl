@@ -97,7 +97,7 @@ func TestListNamespace(t *testing.T) {
 	namespaces, err := c.ListNamespace()
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(namespaces.Items))
-		assert.Equal(t, "test", namespaces.Items[0].Name)
+		assert.Equal(t, "test", namespaces.Items[0].ID)
 	}
 }
 
@@ -106,7 +106,7 @@ func TestCreateNamespace(t *testing.T) {
 	defer ts.Close()
 
 	n := NewClient(ts.URL, "user", "password")
-	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
+	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 
@@ -124,7 +124,7 @@ func TestUpdateNamespace(t *testing.T) {
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test-id"})
+	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
@@ -136,8 +136,8 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 		name string
 		data CreateNSOpts
 	}{
-		{name: "Create", data: CreateNSOpts{Name: "test", Desc: "Test namespace", ID: "test"}},
-		{name: "Update", data: CreateNSOpts{Name: "test-id", Desc: "Test namespace", ID: "test-id"}},
+		{name: "Create", data: CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test"}},
+		{name: "Update", data: CreateNSOpts{Name: "test-id", Description: "Test namespace", ID: "test-id"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -187,7 +187,7 @@ func TestCreateConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", Tenant: "test-tenant", Type: "properties"})
+	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceId: "test-tenant", Type: "properties"})
 	assert.NoError(t, err)
 }
 
@@ -197,6 +197,6 @@ func TestDeleteConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Tenant: "test-tenant"})
+	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceId: "test-tenant"})
 	assert.NoError(t, err)
 }

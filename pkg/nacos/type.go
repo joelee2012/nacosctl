@@ -47,11 +47,11 @@ type ConfigList struct {
 
 func (c *ConfigList) WriteTable(w io.Writer) {
 	writeTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAMESPACE", "DATAID", "GROUP", "APPLICATION", "TYPE"})
+		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 		for _, item := range c.Items {
-			t.AppendRow(table.Row{item.Tenant, item.DataID, item.Group, item.AppName, item.Type})
+			t.AppendRow(table.Row{item.NamespaceId, item.DataID, item.Group, item.AppName, item.Type})
 		}
-		t.SortBy([]table.SortBy{{Name: "NAMESPACE", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
+		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
 	})
 }
 
@@ -66,10 +66,10 @@ func (c *ConfigList) WriteYaml(w io.Writer) error {
 func (cs *ConfigList) WriteToDir(name string) error {
 	var dir string
 	for _, c := range cs.Items {
-		if c.Tenant == "" {
+		if c.NamespaceId == "" {
 			dir = filepath.Join(name, "public", c.Group)
 		} else {
-			dir = filepath.Join(name, c.Tenant, c.Group)
+			dir = filepath.Join(name, c.NamespaceId, c.Group)
 		}
 		if err := os.MkdirAll(dir, 0750); err != nil {
 			return err
@@ -86,7 +86,7 @@ type Config struct {
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
 	Content          string `json:"content"`
-	Tenant           string `json:"tenant"`
+	NamespaceId      string `json:"tenant"`
 	Type             string `json:"type"`
 	Md5              string `json:"md5,omitempty"`
 	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
@@ -124,7 +124,7 @@ func (n *NsList) WriteTable(w io.Writer) {
 	writeTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"})
 		for _, ns := range n.Items {
-			t.AppendRow(table.Row{ns.ShowName, ns.Name, ns.Desc, ns.ConfigCount})
+			t.AppendRow(table.Row{ns.Name, ns.ID, ns.Description, ns.ConfigCount})
 		}
 		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
 	})
@@ -140,10 +140,10 @@ func (n *NsList) WriteYaml(w io.Writer) error {
 
 func (n *NsList) WriteToDir(name string) error {
 	for _, c := range n.Items {
-		if c.Name == "" {
+		if c.ID == "" {
 			continue
 		}
-		if err := c.WriteFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.ShowName))); err != nil {
+		if err := c.WriteFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.Name))); err != nil {
 			return err
 		}
 	}
@@ -151,9 +151,9 @@ func (n *NsList) WriteToDir(name string) error {
 }
 
 type Namespace struct {
-	Name        string `json:"namespace"`
-	ShowName    string `json:"namespaceShowName"`
-	Desc        string `json:"namespaceDesc"`
+	ID          string `json:"namespace"`
+	Name        string `json:"namespaceShowName"`
+	Description string `json:"namespaceDesc"`
 	Quota       int    `json:"quota"`
 	ConfigCount int    `json:"configCount"`
 	Type        int    `json:"type"`

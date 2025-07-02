@@ -16,8 +16,8 @@ func TestConfigListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{
 			Items: []*Config{
-				{Tenant: "ns1", DataID: "data1", Group: "group1", AppName: "app1", Type: "type1"},
-				{Tenant: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
+				{NamespaceId: "ns1", DataID: "data1", Group: "group1", AppName: "app1", Type: "type1"},
+				{NamespaceId: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
 			},
 		}
 		cl.WriteTable(&buf)
@@ -39,7 +39,7 @@ func TestConfigListWriteTable(t *testing.T) {
 func TestConfigListWriteJson(t *testing.T) {
 	cl := &ConfigList{
 		Items: []*Config{
-			{Tenant: "ns1", DataID: "data1"},
+			{NamespaceId: "ns1", DataID: "data1"},
 		},
 	}
 	var buf bytes.Buffer
@@ -52,8 +52,8 @@ func TestConfigListWriteJson(t *testing.T) {
 func TestConfigListWriteToDir(t *testing.T) {
 	cl := &ConfigList{
 		Items: []*Config{
-			{Tenant: "ns1", DataID: "data1", Group: "group1"},
-			{Tenant: "", DataID: "public_data", Group: "public_group"},
+			{NamespaceId: "ns1", DataID: "data1", Group: "group1"},
+			{NamespaceId: "", DataID: "public_data", Group: "public_group"},
 		},
 	}
 	t.Run("successful write", func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestConfigListWriteToDir(t *testing.T) {
 func TestConfigWriteFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "config.yaml")
-	config := &Config{Tenant: "test"}
+	config := &Config{NamespaceId: "test"}
 	err := config.WriteFile(tmpFile)
 	assert.NoError(t, err)
 	assert.FileExists(t, tmpFile)
@@ -88,7 +88,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &NsList{
 			Items: []*Namespace{
-				{Name: "ns1", ShowName: "data1", Desc: "group1"},
+				{ID: "ns1", Name: "data1", Description: "group1"},
 			},
 		}
 		cl.WriteTable(&buf)
@@ -109,7 +109,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 func TestNamespaceListWriteToDir(t *testing.T) {
 	nl := &NsList{
 		Items: []*Namespace{
-			{Name: "ns1", ShowName: "showname", Desc: "description"},
+			{ID: "ns1", Name: "showname", Description: "description"},
 		},
 	}
 	t.Run("successful write", func(t *testing.T) {

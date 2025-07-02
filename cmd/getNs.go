@@ -42,7 +42,7 @@ func GetNamespace(args []string) {
 	if len(args) > 0 {
 		var items []*nacos.Namespace
 		for _, ns := range nss.Items {
-			if slices.Contains(args, ns.ShowName) {
+			if slices.Contains(args, ns.ID) {
 				items = append(items, ns)
 			}
 		}
