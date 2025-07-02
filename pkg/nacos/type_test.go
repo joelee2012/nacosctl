@@ -22,7 +22,7 @@ func TestConfigListWriteTable(t *testing.T) {
 		}
 		cl.WriteTable(&buf)
 		output := buf.String()
-		assert.Contains(t, output, "NAMESPACE")
+		assert.Contains(t, output, "NAMESPACEID")
 		assert.Contains(t, output, "ns1")
 		assert.Contains(t, output, "data1")
 	})
@@ -31,7 +31,7 @@ func TestConfigListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{Items: []*Config{}}
 		cl.WriteTable(&buf)
-		assert.Equal(t, buf.String(), " NAMESPACE  DATAID  GROUP  APPLICATION  TYPE \n")
+		assert.Equal(t, buf.String(), " NAMESPACEID  DATAID  GROUP  APPLICATION  TYPE \n")
 	})
 }
 
