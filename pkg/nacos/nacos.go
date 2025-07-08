@@ -196,6 +196,33 @@ func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
 	return c.CreateNamespace(opts)
 }
 
+func (c *Client) GetNamespace(id string) (*Namespace, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	v := url.Values{}
+	v.Add("accessToken", token)
+	v.Add("namespaceId", id)
+	v.Add("show", "all")
+	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+	dec := json.NewDecoder(resp.Body)
+
+	namespace := new(Namespace)
+	if err := dec.Decode(namespace); err != nil {
+		return nil, err
+	}
+	return namespace, nil
+}
+
 type ListCSOpts struct {
 	DataId      string
 	Group       string
