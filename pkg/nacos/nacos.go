@@ -140,12 +140,12 @@ func (c *Client) DeleteNamespace(id string) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -169,13 +169,13 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	v.Add("username", c.User)
 
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
-	req, err := http.NewRequest("PUT", url, nil)
+	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	client := &http.Client{}
-	resp, err := client.Do(req)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -361,13 +361,12 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
