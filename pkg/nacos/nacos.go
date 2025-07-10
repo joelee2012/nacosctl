@@ -68,6 +68,9 @@ func (c *Client) GetToken() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("status code: %d", resp.StatusCode)
+	}
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&c.Token); err != nil {
 		return "", err
@@ -122,7 +125,7 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to create namespace/%s with error %s", opts.Name, resp.Status)
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	return nil
 }
@@ -148,7 +151,7 @@ func (c *Client) DeleteNamespace(id string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to delete namespace/%s with error %s", id, resp.Status)
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	return nil
 }
@@ -178,7 +181,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to update namespace/%s status code: %d", opts.ID, resp.StatusCode)
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	return nil
 }
@@ -224,7 +227,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 }
 
 type ListCSOpts struct {
-	DataId      string
+	DataID      string
 	Group       string
 	Content     string
 	AppName     string
@@ -240,7 +243,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 		return nil, err
 	}
 	v := url.Values{}
-	v.Add("dataId", opts.DataId)
+	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
 	v.Add("appName", opts.AppName)
 	v.Add("config_tags", opts.Tags)
@@ -257,6 +260,9 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+	}
 	configs := new(ConfigList)
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&configs); err != nil {
@@ -332,7 +338,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to create configuration/%s with %s", opts.DataID, resp.Status)
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	return nil
 }
@@ -368,7 +374,7 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to delete configuration/%s with %s", opts.DataID, resp.Status)
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 	return nil
 }

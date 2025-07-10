@@ -13,7 +13,7 @@ import (
 )
 
 type CmdOpts struct {
-	NamespaceId string
+	NamespaceID string
 	Group       string
 	Output      string
 	OutDir      string

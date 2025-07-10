@@ -31,7 +31,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCsCmd.Flags().StringVarP(&cmdOpts.NamespaceId, "namespace", "n", "", "namespace id")
+	getCsCmd.Flags().StringVarP(&cmdOpts.NamespaceID, "namespace", "n", "", "namespace id")
 	getCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "group name")
 	getCsCmd.Flags().BoolVarP(&cmdOpts.ShowAll, "all", "A", false, "show all configurations")
 
@@ -46,7 +46,7 @@ func GetCs(args []string) {
 		allCs, err = client.ListAllConfig()
 		cobra.CheckErr(err)
 	} else {
-		cs, err := client.ListConfigInNs(cmdOpts.NamespaceId, cmdOpts.Group)
+		cs, err := client.ListConfigInNs(cmdOpts.NamespaceID, cmdOpts.Group)
 		cobra.CheckErr(err)
 		if len(args) > 0 {
 			for _, c := range cs.Items {
