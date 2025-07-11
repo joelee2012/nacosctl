@@ -48,7 +48,8 @@ func (c *Client) GetVersion() (string, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&c.State); err != nil {
@@ -70,7 +71,8 @@ func (c *Client) GetToken() (string, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&c.Token); err != nil {
@@ -93,7 +95,8 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	dec := json.NewDecoder(resp.Body)
 	namespaces := new(NsList)
@@ -126,7 +129,8 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	return nil
 }
@@ -152,7 +156,8 @@ func (c *Client) DeleteNamespace(id string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	return nil
 }
@@ -182,7 +187,8 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	return nil
 }
@@ -216,7 +222,8 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	dec := json.NewDecoder(resp.Body)
 
@@ -238,6 +245,37 @@ type ListCSOpts struct {
 	PageSize    int
 }
 
+func (c *Client) GetConfig(opts *ListCSOpts) (*Config, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	v := url.Values{}
+	v.Add("dataId", opts.DataID)
+	v.Add("group", opts.Group)
+	v.Add("namespaceId", opts.NamespaceId)
+	v.Add("tenant", opts.NamespaceId)
+	v.Add("show", "all")
+	v.Add("accessToken", token)
+	v.Add("username", c.User)
+	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		data, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
+	}
+	config := new(Config)
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&config); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
 func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	token, err := c.GetToken()
 	if err != nil {
@@ -257,7 +295,6 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.NamespaceId)
-	// v.Add("show", "all")
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
@@ -269,7 +306,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status code: %d caused by %s %s", resp.StatusCode, data, err)
+		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	configs := new(ConfigList)
 	dec := json.NewDecoder(resp.Body)
@@ -346,7 +383,8 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	return nil
 }
@@ -381,7 +419,8 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
 	}
 	return nil
 }
