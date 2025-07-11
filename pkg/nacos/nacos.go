@@ -3,6 +3,7 @@ package nacos
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -261,7 +262,8 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("status code: %d caused by %s %s", resp.StatusCode, data, err)
 	}
 	configs := new(ConfigList)
 	dec := json.NewDecoder(resp.Body)
