@@ -248,6 +248,12 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("group", opts.Group)
 	v.Add("appName", opts.AppName)
 	v.Add("config_tags", opts.Tags)
+	if opts.PageNumber == 0 {
+		opts.PageNumber = 1
+	}
+	if opts.PageSize == 0 {
+		opts.PageSize = 10
+	}
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.NamespaceId)
