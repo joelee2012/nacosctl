@@ -43,11 +43,7 @@ func (c *Client) GetVersion() (string, error) {
 		return c.Version, nil
 	}
 	resp, err := http.Get(c.URL + "/v1/console/server/state")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	err = readResponse(resp, &c.State)
+	err = checkErrAndReadResponse(resp, err, &c.State)
 	return c.Version, err
 }
 
@@ -59,11 +55,7 @@ func (c *Client) GetToken() (string, error) {
 	v.Add("username", c.User)
 	v.Add("password", c.Password)
 	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	err = readResponse(resp, &c.Token)
+	err = checkErrAndReadResponse(resp, err, &c.Token)
 	return c.AccessToken, err
 }
 
@@ -76,12 +68,8 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 	namespaces := new(NsList)
-	err = readResponse(resp, namespaces)
+	err = checkErrAndReadResponse(resp, err, namespaces)
 	return namespaces, err
 }
 
@@ -103,11 +91,7 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkErrAndResponse(resp, err)
 }
 
 func (c *Client) DeleteNamespace(id string) error {
@@ -126,11 +110,7 @@ func (c *Client) DeleteNamespace(id string) error {
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkErrAndResponse(resp, err)
 }
 
 func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
@@ -153,11 +133,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkErrAndResponse(resp, err)
 }
 
 func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
@@ -184,12 +160,8 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	v.Add("show", "all")
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 	namespace := new(Namespace)
-	err = readResponse(resp, namespace)
+	err = checkErrAndReadResponse(resp, err, namespace)
 	return namespace, err
 }
 
@@ -214,13 +186,8 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	config := new(Config)
-	err = readResponse(resp, config)
+	err = checkErrAndReadResponse(resp, err, config)
 	return config, err
 }
 
@@ -258,14 +225,9 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	configs := new(ConfigList)
-	err = readResponse(resp, configs)
+	resp, err := http.Get(url)
+	err = checkErrAndReadResponse(resp, err, configs)
 	return configs, err
 }
 
@@ -331,11 +293,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkErrAndResponse(resp, err)
 }
 
 type DeleteCSOpts struct {
@@ -362,11 +320,7 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkErrAndResponse(resp, err)
 }
 
 func checkResponse(resp *http.Response) error {
@@ -377,7 +331,26 @@ func checkResponse(resp *http.Response) error {
 	return nil
 }
 
+func checkErrAndResponse(resp *http.Response, httpErr error) error {
+	if httpErr != nil {
+		return httpErr
+	}
+	defer resp.Body.Close()
+	return checkResponse(resp)
+}
 func readResponse(resp *http.Response, v any) error {
+	if err := checkResponse(resp); err != nil {
+		return err
+	}
+	dec := json.NewDecoder(resp.Body)
+	return dec.Decode(v)
+}
+
+func checkErrAndReadResponse(resp *http.Response, httpErr error, v any) error {
+	if httpErr != nil {
+		return httpErr
+	}
+	defer resp.Body.Close()
 	if err := checkResponse(resp); err != nil {
 		return err
 	}
