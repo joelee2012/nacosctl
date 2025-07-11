@@ -47,15 +47,8 @@ func (c *Client) GetVersion() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	dec := json.NewDecoder(resp.Body)
-	if err := dec.Decode(&c.State); err != nil {
-		return "", err
-	}
-	return c.Version, nil
+	err = readResponse(resp, &c.State)
+	return c.Version, err
 }
 
 func (c *Client) GetToken() (string, error) {
@@ -70,15 +63,8 @@ func (c *Client) GetToken() (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	dec := json.NewDecoder(resp.Body)
-	if err := dec.Decode(&c.Token); err != nil {
-		return "", err
-	}
-	return c.AccessToken, nil
+	err = readResponse(resp, &c.Token)
+	return c.AccessToken, err
 }
 
 func (c *Client) ListNamespace() (*NsList, error) {
@@ -94,16 +80,9 @@ func (c *Client) ListNamespace() (*NsList, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	dec := json.NewDecoder(resp.Body)
 	namespaces := new(NsList)
-	if err := dec.Decode(namespaces); err != nil {
-		return nil, err
-	}
-	return namespaces, nil
+	err = readResponse(resp, namespaces)
+	return namespaces, err
 }
 
 type CreateNSOpts struct {
@@ -128,11 +107,7 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	return nil
+	return checkResponse(resp)
 }
 
 func (c *Client) DeleteNamespace(id string) error {
@@ -155,11 +130,7 @@ func (c *Client) DeleteNamespace(id string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	return nil
+	return checkResponse(resp)
 }
 
 func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
@@ -186,11 +157,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	return nil
+	return checkResponse(resp)
 }
 
 func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
@@ -221,31 +188,18 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	dec := json.NewDecoder(resp.Body)
-
 	namespace := new(Namespace)
-	if err := dec.Decode(namespace); err != nil {
-		return nil, err
-	}
-	return namespace, nil
+	err = readResponse(resp, namespace)
+	return namespace, err
 }
 
-type ListCSOpts struct {
+type GetCSOpts struct {
 	DataID      string
 	Group       string
-	Content     string
-	AppName     string
 	NamespaceID string
-	PageNumber  int
-	Tags        string
-	PageSize    int
 }
 
-func (c *Client) GetConfig(opts *ListCSOpts) (*Config, error) {
+func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -264,16 +218,21 @@ func (c *Client) GetConfig(opts *ListCSOpts) (*Config, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
+
 	config := new(Config)
-	dec := json.NewDecoder(resp.Body)
-	if err := dec.Decode(&config); err != nil {
-		return nil, err
-	}
-	return config, nil
+	err = readResponse(resp, config)
+	return config, err
+}
+
+type ListCSOpts struct {
+	DataID      string
+	Group       string
+	Content     string
+	AppName     string
+	NamespaceID string
+	PageNumber  int
+	Tags        string
+	PageSize    int
 }
 
 func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
@@ -304,16 +263,10 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
+
 	configs := new(ConfigList)
-	dec := json.NewDecoder(resp.Body)
-	if err := dec.Decode(&configs); err != nil {
-		return nil, err
-	}
-	return configs, nil
+	err = readResponse(resp, configs)
+	return configs, err
 }
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
@@ -382,11 +335,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
-	}
-	return nil
+	return checkResponse(resp)
 }
 
 type DeleteCSOpts struct {
@@ -417,10 +366,21 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 		return err
 	}
 	defer resp.Body.Close()
+	return checkResponse(resp)
+}
 
+func checkResponse(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
-		data, err := io.ReadAll(resp.Body)
-		return fmt.Errorf("status code: %d %s %v", resp.StatusCode, data, err)
+		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+		return fmt.Errorf("%s: %s %w", resp.Status, data, err)
 	}
 	return nil
+}
+
+func readResponse(resp *http.Response, v any) error {
+	if err := checkResponse(resp); err != nil {
+		return err
+	}
+	dec := json.NewDecoder(resp.Body)
+	return dec.Decode(v)
 }

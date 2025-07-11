@@ -195,7 +195,7 @@ func TestGetConfig(t *testing.T) {
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	config, err := c.GetConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	config, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
 	if assert.NoError(t, err) {
 		assert.Equal(t, "test", config.DataID)
 	}
