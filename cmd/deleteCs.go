@@ -21,7 +21,7 @@ var deleteCsCmd = &cobra.Command{
 			err := client.DeleteConfig(&nacos.DeleteCSOpts{
 				DataID:      dataId,
 				Group:       cmdOpts.Group,
-				NamespaceId: cmdOpts.NamespaceID,
+				NamespaceID: cmdOpts.NamespaceID,
 			})
 			cobra.CheckErr(err)
 			fmt.Printf("configuration/%s deleted\n", dataId)

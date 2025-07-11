@@ -29,7 +29,7 @@ func TestWriteJson(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := writeJson("data", tt.writer)
+			err := toJson("data", tt.writer)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -41,7 +41,7 @@ func TestWriteJson(t *testing.T) {
 
 // TestWriteYaml tests the writeYaml function
 func TestWriteYaml(t *testing.T) {
-	err := writeYaml("data", &bytes.Buffer{})
+	err := toYaml("data", &bytes.Buffer{})
 	assert.NoError(t, err)
 }
 
@@ -96,7 +96,7 @@ func TestReadYamlFile(t *testing.T) {
 // TestWriteTable tests the writeTable function
 func TestWriteTable(t *testing.T) {
 	var buf bytes.Buffer
-	writeTable(&buf, func(t table.Writer) {
+	toTable(&buf, func(t table.Writer) {
 		t.AppendHeader(table.Row{"Header"})
 		t.AppendRow(table.Row{"Value"})
 	})
@@ -106,15 +106,15 @@ func TestWriteTable(t *testing.T) {
 
 type mockFormatWriter map[string]bool
 
-func (mw mockFormatWriter) WriteJson(w io.Writer) error {
+func (mw mockFormatWriter) ToJson(w io.Writer) error {
 	mw["json"] = true
 	return nil
 }
-func (mw mockFormatWriter) WriteTable(w io.Writer) {
+func (mw mockFormatWriter) ToTable(w io.Writer) {
 	mw["table"] = true
 }
 
-func (mw mockFormatWriter) WriteYaml(w io.Writer) error {
+func (mw mockFormatWriter) ToYaml(w io.Writer) error {
 	mw["yaml"] = true
 	return nil
 }

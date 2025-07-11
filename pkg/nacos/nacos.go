@@ -239,7 +239,7 @@ type ListCSOpts struct {
 	Group       string
 	Content     string
 	AppName     string
-	NamespaceId string
+	NamespaceID string
 	PageNumber  int
 	Tags        string
 	PageSize    int
@@ -253,8 +253,8 @@ func (c *Client) GetConfig(opts *ListCSOpts) (*Config, error) {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
-	v.Add("namespaceId", opts.NamespaceId)
-	v.Add("tenant", opts.NamespaceId)
+	v.Add("namespaceId", opts.NamespaceID)
+	v.Add("tenant", opts.NamespaceID)
 	v.Add("show", "all")
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
@@ -294,7 +294,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	}
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
-	v.Add("tenant", opts.NamespaceId)
+	v.Add("tenant", opts.NamespaceID)
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
@@ -318,7 +318,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
 	nsCs := new(ConfigList)
-	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceId: namespace}
+	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceID: namespace}
 	for {
 		cs, err := c.ListConfig(&listOpts)
 		if err != nil {
@@ -354,7 +354,7 @@ type CreateCSOpts struct {
 	Group       string
 	Content     string
 	AppName     string
-	NamespaceId string
+	NamespaceID string
 	Tags        string
 	Type        string
 	Desc        string
@@ -370,8 +370,8 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("group", opts.Group)
 	v.Add("content", opts.Content)
 	v.Add("type", opts.Type)
-	v.Add("tenant", opts.NamespaceId)
-	v.Add("namespaceId", opts.NamespaceId)
+	v.Add("tenant", opts.NamespaceID)
+	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("appName", opts.AppName)
 	v.Add("desc", opts.Desc)
 	v.Add("config_tags", opts.Tags)
@@ -392,7 +392,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 type DeleteCSOpts struct {
 	DataID      string
 	Group       string
-	NamespaceId string
+	NamespaceID string
 }
 
 func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
@@ -403,7 +403,7 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
-	v.Add("tenant", opts.NamespaceId)
+	v.Add("tenant", opts.NamespaceID)
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())

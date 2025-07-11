@@ -28,6 +28,20 @@ var csList = `
   ]
 }
 `
+
+var config = `
+{
+	"id": "1",
+	"dataId": "test",
+	"group": "DEFAULT_GROUP",
+	"content": "test content",
+	"md5": "test-md5",
+	"encryptedDataKey": "test-key",
+	"tenant": "test-tenant",
+	"appName": "test-app",
+	"type": "properties"
+}
+`
 var nsList = `
 {
   "code": 200,
@@ -44,6 +58,16 @@ var nsList = `
   ]
 }
 `
+var namespace = `
+{
+	"namespace": "test",
+	"namespaceShowName": "Test",
+	"namespaceDesc": "Test namespace",
+	"quota": 100,
+	"configCount": 10,
+	"type": 0
+}
+`
 
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
@@ -56,9 +80,17 @@ func startServer() *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.URL.Path == "/v1/console/namespaces" {
-			w.Write([]byte(nsList))
+			if r.URL.Query().Get("show") == "all" {
+				w.Write([]byte(namespace))
+			} else {
+				w.Write([]byte(nsList))
+			}
 		} else if r.URL.Path == "/v1/cs/configs" {
-			w.Write([]byte(csList))
+			if r.URL.Query().Get("show") == "all" {
+				w.Write([]byte(config))
+			} else {
+				w.Write([]byte(csList))
+			}
 		} else if r.URL.Path == "/v1/console/server/state" {
 			w.Write([]byte(`{"version": "1.0.0"}`))
 		} else if r.URL.Path == "/v1/auth/login" {
@@ -110,6 +142,17 @@ func TestCreateNamespace(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGetNamespace(t *testing.T) {
+	ts := startServer()
+	defer ts.Close()
+
+	n := NewClient(ts.URL, "user", "password")
+	ns, err := n.GetNamespace("test")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "test", ns.ID)
+	}
+}
+
 func TestDeleteNamespace(t *testing.T) {
 	ts := startServer()
 	defer ts.Close()
@@ -144,6 +187,17 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 			err := c.CreateOrUpdateNamespace(&tt.data)
 			assert.NoError(t, err)
 		})
+	}
+}
+
+func TestGetConfig(t *testing.T) {
+	ts := startServer()
+	defer ts.Close()
+
+	c := NewClient(ts.URL, "user", "password")
+	config, err := c.GetConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	if assert.NoError(t, err) {
+		assert.Equal(t, "test", config.DataID)
 	}
 }
 
@@ -187,7 +241,7 @@ func TestCreateConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceId: "test-tenant", Type: "properties"})
+	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceID: "test-tenant", Type: "properties"})
 	assert.NoError(t, err)
 }
 
@@ -197,6 +251,6 @@ func TestDeleteConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceId: "test-tenant"})
+	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceID: "test-tenant"})
 	assert.NoError(t, err)
 }
