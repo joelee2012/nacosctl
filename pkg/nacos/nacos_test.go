@@ -1,6 +1,7 @@
 package nacos
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -111,14 +112,46 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	ts := startServer()
-	defer ts.Close()
-
-	c := NewClient(ts.URL, "user", "password")
-	token, err := c.GetToken()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test-token", token)
+	okServer := startServer()
+	defer okServer.Close()
+	nokServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`<html><body>404 Not Found</body></html>`))
+	}))
+	defer nokServer.Close()
+	tests := []struct {
+		name    string
+		server  *httptest.Server
+		wantErr bool
+	}{
+		{name: "OK", server: okServer, wantErr: false},
+		{name: "NOK", server: nokServer, wantErr: true},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewClient(tt.server.URL, "user", "password")
+			token, err := c.GetToken()
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, "", token)
+				assert.Equal(t, err.Error(), fmt.Sprintf("404 Not Found: %s/v1/auth/login", tt.server.URL))
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, "test-token", token)
+			}
+		})
+	}
+	// c := NewClient(okServer.URL, "user", "password")
+	// token, err := c.GetToken()
+	// if assert.NoError(t, err) {
+	// 	assert.Equal(t, "test-token", token)
+	// }
+	// c = NewClient("http://wrong.context:8080", "user", "password")
+	// token, err = c.GetToken()
+	// if assert.Error(t, err) {
+	// 	assert.Equal(t, "", token)
+	// }
 }
 
 func TestListNamespace(t *testing.T) {

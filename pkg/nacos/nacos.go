@@ -44,6 +44,9 @@ func (c *Client) GetVersion() (string, error) {
 	}
 	resp, err := http.Get(c.URL + "/v1/console/server/state")
 	err = checkErrAndReadResponse(resp, err, &c.State)
+	if err != nil {
+		return "", err
+	}
 	return c.Version, err
 }
 
@@ -56,6 +59,9 @@ func (c *Client) GetToken() (string, error) {
 	v.Add("password", c.Password)
 	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
 	err = checkErrAndReadResponse(resp, err, &c.Token)
+	if err != nil {
+		return "", err
+	}
 	return c.AccessToken, err
 }
 
@@ -108,7 +114,6 @@ func (c *Client) DeleteNamespace(id string) error {
 	if err != nil {
 		return err
 	}
-
 	resp, err := http.DefaultClient.Do(req)
 	return checkErrAndResponse(resp, err)
 }
@@ -326,7 +331,13 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 func checkResponse(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-		return fmt.Errorf("%s: %s %w", resp.Status, data, err)
+		if err != nil {
+			return fmt.Errorf("%s: %s %w", resp.Status, resp.Request.URL, err)
+		}
+		if data[0] == '<' {
+			return fmt.Errorf("%s: %s", resp.Status, resp.Request.URL)
+		}
+		return fmt.Errorf("%s: %s %s", resp.Status, resp.Request.URL, data)
 	}
 	return nil
 }
@@ -337,13 +348,6 @@ func checkErrAndResponse(resp *http.Response, httpErr error) error {
 	}
 	defer resp.Body.Close()
 	return checkResponse(resp)
-}
-func readResponse(resp *http.Response, v any) error {
-	if err := checkResponse(resp); err != nil {
-		return err
-	}
-	dec := json.NewDecoder(resp.Body)
-	return dec.Decode(v)
 }
 
 func checkErrAndReadResponse(resp *http.Response, httpErr error, v any) error {
