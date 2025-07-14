@@ -43,7 +43,7 @@ func (c *Client) GetVersion() (string, error) {
 		return c.Version, nil
 	}
 	resp, err := http.Get(c.URL + "/v1/console/server/state")
-	err = checkErrAndReadResponse(resp, err, &c.State)
+	err = unmarshalResponse(resp, err, &c.State)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +58,7 @@ func (c *Client) GetToken() (string, error) {
 	v.Add("username", c.User)
 	v.Add("password", c.Password)
 	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
-	err = checkErrAndReadResponse(resp, err, &c.Token)
+	err = unmarshalResponse(resp, err, &c.Token)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	namespaces := new(NsList)
-	err = checkErrAndReadResponse(resp, err, namespaces)
+	err = unmarshalResponse(resp, err, namespaces)
 	return namespaces, err
 }
 
@@ -97,7 +97,7 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
-	return checkErrAndResponse(resp, err)
+	return checkErr(resp, err)
 }
 
 func (c *Client) DeleteNamespace(id string) error {
@@ -115,7 +115,7 @@ func (c *Client) DeleteNamespace(id string) error {
 		return err
 	}
 	resp, err := http.DefaultClient.Do(req)
-	return checkErrAndResponse(resp, err)
+	return checkErr(resp, err)
 }
 
 func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
@@ -138,7 +138,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
-	return checkErrAndResponse(resp, err)
+	return checkErr(resp, err)
 }
 
 func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
@@ -166,7 +166,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	namespace := new(Namespace)
-	err = checkErrAndReadResponse(resp, err, namespace)
+	err = unmarshalResponse(resp, err, namespace)
 	return namespace, err
 }
 
@@ -192,7 +192,10 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	config := new(Config)
-	err = checkErrAndReadResponse(resp, err, config)
+	err = unmarshalResponse(resp, err, config)
+	if err == io.EOF {
+		return nil, fmt.Errorf("404 Not Found: %s", url)
+	}
 	return config, err
 }
 
@@ -232,7 +235,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	configs := new(ConfigList)
 	resp, err := http.Get(url)
-	err = checkErrAndReadResponse(resp, err, configs)
+	err = unmarshalResponse(resp, err, configs)
 	return configs, err
 }
 
@@ -298,7 +301,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("accessToken", token)
 	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
-	return checkErrAndResponse(resp, err)
+	return checkErr(resp, err)
 }
 
 type DeleteCSOpts struct {
@@ -325,10 +328,10 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-	return checkErrAndResponse(resp, err)
+	return checkErr(resp, err)
 }
 
-func checkResponse(resp *http.Response) error {
+func checkStatus(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 		if err != nil {
@@ -342,22 +345,21 @@ func checkResponse(resp *http.Response) error {
 	return nil
 }
 
-func checkErrAndResponse(resp *http.Response, httpErr error) error {
+func checkErr(resp *http.Response, httpErr error) error {
 	if httpErr != nil {
 		return httpErr
 	}
 	defer resp.Body.Close()
-	return checkResponse(resp)
+	return checkStatus(resp)
 }
 
-func checkErrAndReadResponse(resp *http.Response, httpErr error, v any) error {
+func unmarshalResponse(resp *http.Response, httpErr error, v any) error {
 	if httpErr != nil {
 		return httpErr
 	}
 	defer resp.Body.Close()
-	if err := checkResponse(resp); err != nil {
+	if err := checkStatus(resp); err != nil {
 		return err
 	}
-	dec := json.NewDecoder(resp.Body)
-	return dec.Decode(v)
+	return json.NewDecoder(resp.Body).Decode(v)
 }
