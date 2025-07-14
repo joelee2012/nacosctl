@@ -337,7 +337,8 @@ func checkStatus(resp *http.Response) error {
 		if err != nil {
 			return fmt.Errorf("%s: %s %w", resp.Status, resp.Request.URL, err)
 		}
-		if data[0] == '<' {
+		// no data or html data
+		if len(data) == 0 || data[0] == '<' {
 			return fmt.Errorf("%s: %s", resp.Status, resp.Request.URL)
 		}
 		return fmt.Errorf("%s: %s %s", resp.Status, resp.Request.URL, data)
