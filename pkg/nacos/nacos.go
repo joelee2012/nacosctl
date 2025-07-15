@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 type Client struct {
@@ -23,7 +24,13 @@ type Token struct {
 	TokenTTL    int    `json:"tokenTtl"`
 	GlobalAdmin bool   `json:"globalAdmin"`
 	Username    string `json:"username"`
+	ExpiredTime time.Time
 }
+
+func (t *Token) Expired() bool {
+	return time.Now().After(t.ExpiredTime)
+}
+
 type State struct {
 	Version        string `json:"version"`
 	StandaloneMode string `json:"standalone_mode"`
@@ -51,7 +58,7 @@ func (c *Client) GetVersion() (string, error) {
 }
 
 func (c *Client) GetToken() (string, error) {
-	if c.Token != nil {
+	if c.Token != nil && !c.Token.Expired() {
 		return c.AccessToken, nil
 	}
 	v := url.Values{}
@@ -62,6 +69,7 @@ func (c *Client) GetToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	c.ExpiredTime = time.Now().Add(time.Duration(c.TokenTTL) * time.Second)
 	return c.AccessToken, err
 }
 
@@ -155,19 +163,16 @@ func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
 }
 
 func (c *Client) GetNamespace(id string) (*Namespace, error) {
-	token, err := c.GetToken()
+	nsList, err := c.ListNamespace()
 	if err != nil {
 		return nil, err
 	}
-	v := url.Values{}
-	v.Add("accessToken", token)
-	v.Add("namespaceId", id)
-	v.Add("show", "all")
-	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
-	resp, err := http.Get(url)
-	namespace := new(Namespace)
-	err = unmarshalResponse(resp, err, namespace)
-	return namespace, err
+	for _, ns := range nsList.Items {
+		if ns.ID == id {
+			return ns, nil
+		}
+	}
+	return nil, fmt.Errorf("not found: %s", id)
 }
 
 type GetCSOpts struct {
