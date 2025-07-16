@@ -21,14 +21,14 @@ type Client struct {
 }
 type Token struct {
 	AccessToken string `json:"accessToken"`
-	TokenTTL    int    `json:"tokenTtl"`
+	TokenTTL    int64  `json:"tokenTtl"`
 	GlobalAdmin bool   `json:"globalAdmin"`
 	Username    string `json:"username"`
-	ExpiredTime time.Time
+	ExpiredAt   int64
 }
 
 func (t *Token) Expired() bool {
-	return time.Now().After(t.ExpiredTime)
+	return time.Now().After(time.Unix(t.ExpiredAt, 0))
 }
 
 type State struct {
@@ -64,12 +64,13 @@ func (c *Client) GetToken() (string, error) {
 	v := url.Values{}
 	v.Add("username", c.User)
 	v.Add("password", c.Password)
+	now := time.Now().Unix()
 	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
 	err = unmarshalResponse(resp, err, &c.Token)
 	if err != nil {
 		return "", err
 	}
-	c.ExpiredTime = time.Now().Add(time.Duration(c.TokenTTL) * time.Second)
+	c.ExpiredAt = now + c.TokenTTL
 	return c.AccessToken, err
 }
 
