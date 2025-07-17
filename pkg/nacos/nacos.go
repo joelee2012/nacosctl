@@ -310,11 +310,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	return checkErr(resp, err)
 }
 
-type DeleteCSOpts struct {
-	DataID      string
-	Group       string
-	NamespaceID string
-}
+type DeleteCSOpts = GetCSOpts
 
 func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	token, err := c.GetToken()
