@@ -173,7 +173,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 			return ns, nil
 		}
 	}
-	return nil, fmt.Errorf("not found: %s", id)
+	return nil, fmt.Errorf("404 Not Found %s", id)
 }
 
 type GetCSOpts struct {
@@ -200,7 +200,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	config := new(Config)
 	err = unmarshalResponse(resp, err, config)
 	if err == io.EOF {
-		return nil, fmt.Errorf("404 Not Found: %s", url)
+		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
 	}
 	return config, err
 }
@@ -337,13 +337,13 @@ func checkStatus(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 		if err != nil {
-			return fmt.Errorf("%s: %s %w", resp.Status, resp.Request.URL, err)
+			return fmt.Errorf("%s %s %w", resp.Status, resp.Request.URL, err)
 		}
 		// no data or html data
 		if len(data) == 0 || data[0] == '<' {
-			return fmt.Errorf("%s: %s", resp.Status, resp.Request.URL)
+			return fmt.Errorf("%s %s", resp.Status, resp.Request.URL)
 		}
-		return fmt.Errorf("%s: %s %s", resp.Status, resp.Request.URL, data)
+		return fmt.Errorf("%s %s %s", resp.Status, resp.Request.URL, data)
 	}
 	return nil
 }
@@ -366,3 +366,13 @@ func unmarshalResponse(resp *http.Response, httpErr error, v any) error {
 	}
 	return json.NewDecoder(resp.Body).Decode(v)
 }
+
+// type NacosErr struct {
+// 	StatusCode int
+// 	Err        error
+// 	URL        string
+// }
+
+// func (e *NacosErr) Error() string {
+// 	return fmt.Sprintf("%d %s: %s", e.StatusCode, e.URL, e.Err.Error())
+// }

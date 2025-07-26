@@ -135,7 +135,7 @@ func TestGetToken(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Equal(t, "", token)
-				assert.Equal(t, err.Error(), fmt.Sprintf("404 Not Found: %s/v1/auth/login", tt.server.URL))
+				assert.Equal(t, err.Error(), fmt.Sprintf("404 Not Found %s/v1/auth/login", tt.server.URL))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, "test-token", token)
