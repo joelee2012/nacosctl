@@ -199,6 +199,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	resp, err := http.Get(url)
 	config := new(Config)
 	err = unmarshalResponse(resp, err, config)
+	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
 		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
 	}
@@ -376,3 +377,5 @@ func unmarshalResponse(resp *http.Response, httpErr error, v any) error {
 // func (e *NacosErr) Error() string {
 // 	return fmt.Sprintf("%d %s: %s", e.StatusCode, e.URL, e.Err.Error())
 // }
+
+// func (e *NacosErr) Unwrap() error { return e.Err }
