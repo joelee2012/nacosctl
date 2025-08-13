@@ -50,7 +50,7 @@ func (c *Client) GetVersion() (string, error) {
 		return c.Version, nil
 	}
 	resp, err := http.Get(c.URL + "/v1/console/server/state")
-	err = unmarshalResponse(resp, err, &c.State)
+	err = decode(resp, err, &c.State)
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +66,7 @@ func (c *Client) GetToken() (string, error) {
 	v.Add("password", c.Password)
 	now := time.Now().Unix()
 	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
-	err = unmarshalResponse(resp, err, &c.Token)
+	err = decode(resp, err, &c.Token)
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +84,7 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	namespaces := new(NsList)
-	err = unmarshalResponse(resp, err, namespaces)
+	err = decode(resp, err, namespaces)
 	return namespaces, err
 }
 
@@ -198,7 +198,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	config := new(Config)
-	err = unmarshalResponse(resp, err, config)
+	err = decode(resp, err, config)
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
 		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
@@ -242,7 +242,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	configs := new(ConfigList)
 	resp, err := http.Get(url)
-	err = unmarshalResponse(resp, err, configs)
+	err = decode(resp, err, configs)
 	return configs, err
 }
 
@@ -357,7 +357,7 @@ func checkErr(resp *http.Response, httpErr error) error {
 	return checkStatus(resp)
 }
 
-func unmarshalResponse(resp *http.Response, httpErr error, v any) error {
+func decode(resp *http.Response, httpErr error, v any) error {
 	if httpErr != nil {
 		return httpErr
 	}
