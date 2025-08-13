@@ -9,13 +9,13 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 )
 
-func writeJson(v any, w io.Writer) error {
+func toJson(v any, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
 }
 
-func writeYaml(v any, w io.Writer) error {
+func toYaml(v any, w io.Writer) error {
 	enc := yaml.NewEncoder(w)
 	return enc.Encode(v)
 }
@@ -35,10 +35,10 @@ func writeYamlFile(v any, name string) error {
 		return err
 	}
 	defer f.Close()
-	return writeYaml(v, f)
+	return toYaml(v, f)
 }
 
-func writeTable(w io.Writer, fn func(t table.Writer)) {
+func toTable(w io.Writer, fn func(t table.Writer)) {
 	tb := table.NewWriter()
 	tb.SetOutputMirror(w)
 	fn(tb)
@@ -51,13 +51,13 @@ func writeTable(w io.Writer, fn func(t table.Writer)) {
 func WriteAsFormat(format string, writable FormatWriter, w io.Writer) {
 	switch format {
 	case "json":
-		writable.WriteJson(w)
+		writable.ToJson(w)
 	case "yaml":
-		writable.WriteYaml(w)
+		writable.ToYaml(w)
 	case "table":
-		writable.WriteTable(w)
+		writable.ToTable(w)
 	default:
-		writable.WriteTable(w)
+		writable.ToTable(w)
 	}
 }
 
@@ -65,5 +65,5 @@ func WriteToDir(name string, writable DirWriter) error {
 	return writable.WriteToDir(name)
 }
 func LoadFromYaml(name string, loader YamlFileLoader) error {
-	return loader.LoadFromYaml(name)
+	return loader.FromYaml(name)
 }

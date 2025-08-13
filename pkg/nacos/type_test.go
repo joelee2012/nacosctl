@@ -20,7 +20,7 @@ func TestConfigListWriteTable(t *testing.T) {
 				{NamespaceId: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
 			},
 		}
-		cl.WriteTable(&buf)
+		cl.ToTable(&buf)
 		output := buf.String()
 		assert.Contains(t, output, "NAMESPACEID")
 		assert.Contains(t, output, "ns1")
@@ -30,7 +30,7 @@ func TestConfigListWriteTable(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{Items: []*Config{}}
-		cl.WriteTable(&buf)
+		cl.ToTable(&buf)
 		assert.Equal(t, buf.String(), " NAMESPACEID  DATAID  GROUP  APPLICATION  TYPE \n")
 	})
 }
@@ -43,7 +43,7 @@ func TestConfigListWriteJson(t *testing.T) {
 		},
 	}
 	var buf bytes.Buffer
-	err := cl.WriteJson(&buf)
+	err := cl.ToJson(&buf)
 	assert.NoError(t, err)
 	assert.Contains(t, buf.String(), `"tenant": "ns1"`)
 }
@@ -78,7 +78,7 @@ func TestConfigWriteFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "config.yaml")
 	config := &Config{NamespaceId: "test"}
-	err := config.WriteFile(tmpFile)
+	err := config.ToFile(tmpFile)
 	assert.NoError(t, err)
 	assert.FileExists(t, tmpFile)
 }
@@ -91,7 +91,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 				{ID: "ns1", Name: "data1", Description: "group1"},
 			},
 		}
-		cl.WriteTable(&buf)
+		cl.ToTable(&buf)
 		output := buf.String()
 		assert.Contains(t, output, "NAME")
 		assert.Contains(t, output, "ns1")
@@ -101,7 +101,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &NsList{Items: []*Namespace{}}
-		cl.WriteTable(&buf)
+		cl.ToTable(&buf)
 		assert.Equal(t, buf.String(), " NAME  ID  DESCRIPTION  COUNT \n")
 	})
 }

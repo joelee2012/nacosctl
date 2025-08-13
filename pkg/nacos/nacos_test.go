@@ -1,6 +1,7 @@
 package nacos
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,6 +29,20 @@ var csList = `
   ]
 }
 `
+
+var config = `
+{
+	"id": "1",
+	"dataId": "test",
+	"group": "DEFAULT_GROUP",
+	"content": "test content",
+	"md5": "test-md5",
+	"encryptedDataKey": "test-key",
+	"tenant": "test-tenant",
+	"appName": "test-app",
+	"type": "properties"
+}
+`
 var nsList = `
 {
   "code": 200,
@@ -44,6 +59,16 @@ var nsList = `
   ]
 }
 `
+var namespace = `
+{
+	"namespace": "test",
+	"namespaceShowName": "Test",
+	"namespaceDesc": "Test namespace",
+	"quota": 100,
+	"configCount": 10,
+	"type": 0
+}
+`
 
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
@@ -56,9 +81,17 @@ func startServer() *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.URL.Path == "/v1/console/namespaces" {
-			w.Write([]byte(nsList))
+			if r.URL.Query().Get("show") == "all" {
+				w.Write([]byte(namespace))
+			} else {
+				w.Write([]byte(nsList))
+			}
 		} else if r.URL.Path == "/v1/cs/configs" {
-			w.Write([]byte(csList))
+			if r.URL.Query().Get("show") == "all" {
+				w.Write([]byte(config))
+			} else {
+				w.Write([]byte(csList))
+			}
 		} else if r.URL.Path == "/v1/console/server/state" {
 			w.Write([]byte(`{"version": "1.0.0"}`))
 		} else if r.URL.Path == "/v1/auth/login" {
@@ -79,14 +112,46 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	ts := startServer()
-	defer ts.Close()
-
-	c := NewClient(ts.URL, "user", "password")
-	token, err := c.GetToken()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test-token", token)
+	okServer := startServer()
+	defer okServer.Close()
+	nokServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`<html><body>404 Not Found</body></html>`))
+	}))
+	defer nokServer.Close()
+	tests := []struct {
+		name    string
+		server  *httptest.Server
+		wantErr bool
+	}{
+		{name: "OK", server: okServer, wantErr: false},
+		{name: "NOK", server: nokServer, wantErr: true},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewClient(tt.server.URL, "user", "password")
+			token, err := c.GetToken()
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, "", token)
+				assert.Equal(t, err.Error(), fmt.Sprintf("404 Not Found %s/v1/auth/login", tt.server.URL))
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, "test-token", token)
+			}
+		})
+	}
+	// c := NewClient(okServer.URL, "user", "password")
+	// token, err := c.GetToken()
+	// if assert.NoError(t, err) {
+	// 	assert.Equal(t, "test-token", token)
+	// }
+	// c = NewClient("http://wrong.context:8080", "user", "password")
+	// token, err = c.GetToken()
+	// if assert.Error(t, err) {
+	// 	assert.Equal(t, "", token)
+	// }
 }
 
 func TestListNamespace(t *testing.T) {
@@ -108,6 +173,17 @@ func TestCreateNamespace(t *testing.T) {
 	n := NewClient(ts.URL, "user", "password")
 	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
+}
+
+func TestGetNamespace(t *testing.T) {
+	ts := startServer()
+	defer ts.Close()
+
+	n := NewClient(ts.URL, "user", "password")
+	ns, err := n.GetNamespace("test")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "test", ns.ID)
+	}
 }
 
 func TestDeleteNamespace(t *testing.T) {
@@ -147,12 +223,23 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 	}
 }
 
+func TestGetConfig(t *testing.T) {
+	ts := startServer()
+	defer ts.Close()
+
+	c := NewClient(ts.URL, "user", "password")
+	config, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
+	if assert.NoError(t, err) {
+		assert.Equal(t, "test", config.DataID)
+	}
+}
+
 func TestListConfig(t *testing.T) {
 	ts := startServer()
 	defer ts.Close()
 
 	c := NewClient(ts.URL, "user", "password")
-	configs, err := c.ListConfig(&ListCSOpts{DataId: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	configs, err := c.ListConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(configs.Items))
 		assert.Equal(t, "test", configs.Items[0].DataID)
@@ -187,7 +274,7 @@ func TestCreateConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceId: "test-tenant", Type: "properties"})
+	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceID: "test-tenant", Type: "properties"})
 	assert.NoError(t, err)
 }
 
@@ -197,6 +284,6 @@ func TestDeleteConfig(t *testing.T) {
 
 	c := NewClient(ts.URL, "user", "password")
 	c.Token = &Token{AccessToken: "test-token"}
-	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceId: "test-tenant"})
+	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceID: "test-tenant"})
 	assert.NoError(t, err)
 }

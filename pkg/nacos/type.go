@@ -16,18 +16,18 @@ type FormatWriter interface {
 }
 
 type TableWriter interface {
-	WriteTable(w io.Writer)
+	ToTable(w io.Writer)
 }
 
 type JsonWriter interface {
-	WriteJson(w io.Writer) error
+	ToJson(w io.Writer) error
 }
 type YamlWriter interface {
-	WriteYaml(w io.Writer) error
+	ToYaml(w io.Writer) error
 }
 
 type FileWriter interface {
-	WriteFile(w io.Writer) error
+	ToFile(w io.Writer) error
 }
 type DirWriter interface {
 	WriteToDir(name string) error
@@ -35,7 +35,7 @@ type DirWriter interface {
 
 // YamlFileLoader interface for loading from YAML
 type YamlFileLoader interface {
-	LoadFromYaml(name string) error
+	FromYaml(name string) error
 }
 
 type ConfigList struct {
@@ -45,8 +45,8 @@ type ConfigList struct {
 	Items          []*Config `json:"pageItems"`
 }
 
-func (c *ConfigList) WriteTable(w io.Writer) {
-	writeTable(w, func(t table.Writer) {
+func (c *ConfigList) ToTable(w io.Writer) {
+	toTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 		for _, item := range c.Items {
 			t.AppendRow(table.Row{item.NamespaceId, item.DataID, item.Group, item.AppName, item.Type})
@@ -55,12 +55,12 @@ func (c *ConfigList) WriteTable(w io.Writer) {
 	})
 }
 
-func (c *ConfigList) WriteJson(w io.Writer) error {
-	return writeJson(c, w)
+func (c *ConfigList) ToJson(w io.Writer) error {
+	return toJson(c, w)
 }
 
-func (c *ConfigList) WriteYaml(w io.Writer) error {
-	return writeYaml(c, w)
+func (c *ConfigList) ToYaml(w io.Writer) error {
+	return toYaml(c, w)
 }
 
 func (cs *ConfigList) WriteToDir(name string) error {
@@ -74,7 +74,7 @@ func (cs *ConfigList) WriteToDir(name string) error {
 		if err := os.MkdirAll(dir, 0750); err != nil {
 			return err
 		}
-		if err := c.WriteFile(filepath.Join(dir, c.DataID)); err != nil {
+		if err := c.ToFile(filepath.Join(dir, c.DataID)); err != nil {
 			return err
 		}
 	}
@@ -97,20 +97,20 @@ type Config struct {
 	Tags             string `json:"configTags,omitempty"`
 }
 
-func (c *Config) WriteJson(w io.Writer) error {
-	return writeJson(c, w)
+func (c *Config) ToJson(w io.Writer) error {
+	return toJson(c, w)
 }
 
-func (c *Config) WriteYaml(w io.Writer) error {
-	return writeYaml(c, w)
+func (c *Config) ToYaml(w io.Writer) error {
+	return toYaml(c, w)
 }
 
-func (c *Config) WriteFile(name string) error {
+func (c *Config) ToFile(name string) error {
 	return writeYamlFile(c, name)
 }
 
-// LoadFromYaml load from YAML file
-func (c *Config) LoadFromYaml(name string) error {
+// FromYaml load from YAML file
+func (c *Config) FromYaml(name string) error {
 	return readYamlFile(c, name)
 }
 
@@ -120,8 +120,8 @@ type NsList struct {
 	Items []*Namespace `json:"data"`
 }
 
-func (n *NsList) WriteTable(w io.Writer) {
-	writeTable(w, func(t table.Writer) {
+func (n *NsList) ToTable(w io.Writer) {
+	toTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"})
 		for _, ns := range n.Items {
 			t.AppendRow(table.Row{ns.Name, ns.ID, ns.Description, ns.ConfigCount})
@@ -130,12 +130,12 @@ func (n *NsList) WriteTable(w io.Writer) {
 	})
 }
 
-func (n *NsList) WriteJson(w io.Writer) error {
-	return writeJson(n, w)
+func (n *NsList) ToJson(w io.Writer) error {
+	return toJson(n, w)
 }
 
-func (n *NsList) WriteYaml(w io.Writer) error {
-	return writeYaml(n, w)
+func (n *NsList) ToYaml(w io.Writer) error {
+	return toYaml(n, w)
 }
 
 func (n *NsList) WriteToDir(name string) error {
@@ -143,7 +143,7 @@ func (n *NsList) WriteToDir(name string) error {
 		if c.ID == "" {
 			continue
 		}
-		if err := c.WriteFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.Name))); err != nil {
+		if err := c.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.Name))); err != nil {
 			return err
 		}
 	}
@@ -159,17 +159,17 @@ type Namespace struct {
 	Type        int    `json:"type"`
 }
 
-func (n *Namespace) WriteJson(w io.Writer) error {
-	return writeJson(n, w)
+func (n *Namespace) ToJson(w io.Writer) error {
+	return toJson(n, w)
 }
 
-func (n *Namespace) WriteYaml(w io.Writer) error {
-	return writeYaml(n, w)
+func (n *Namespace) ToYaml(w io.Writer) error {
+	return toYaml(n, w)
 }
-func (n *Namespace) WriteFile(name string) error {
+func (n *Namespace) ToFile(name string) error {
 	return writeYamlFile(n, name)
 }
 
-func (n *Namespace) LoadFromYaml(name string) error {
+func (n *Namespace) FromYaml(name string) error {
 	return readYamlFile(n, name)
 }

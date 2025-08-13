@@ -46,21 +46,21 @@ func init() {
 
 func CreateResourceFromFile(client *nacos.Client, name string) {
 	ns := &nacos.Namespace{}
-	if err := ns.LoadFromYaml(name); err == nil {
+	if err := ns.FromYaml(name); err == nil {
 		cobra.CheckErr(client.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.ID, Description: ns.Description, Name: ns.Name}))
 		fmt.Printf("namespace/%s created\n", ns.Name)
 		return
 	}
 	nsNames := ListNamespace(client)
 	c := &nacos.Config{}
-	cobra.CheckErr(c.LoadFromYaml(name))
+	cobra.CheckErr(c.FromYaml(name))
 	if !slices.Contains(nsNames, c.NamespaceId) {
 		cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.NamespaceId))
 	}
 	cobra.CheckErr(client.CreateConfig(&nacos.CreateCSOpts{
 		DataID:      c.DataID,
 		Group:       c.Group,
-		NamespaceId: c.NamespaceId,
+		NamespaceID: c.NamespaceId,
 		Content:     c.Content,
 		Type:        c.Type,
 		Desc:        c.Desc,
@@ -86,11 +86,11 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 		cobra.CheckErr(err)
 		if !info.IsDir() {
 			ns := &nacos.Namespace{}
-			if err := ns.LoadFromYaml(path); err == nil {
+			if err := ns.FromYaml(path); err == nil {
 				nss.Items = append(nss.Items, ns)
 			} else {
 				c := &nacos.Config{}
-				cobra.CheckErr(c.LoadFromYaml(path))
+				cobra.CheckErr(c.FromYaml(path))
 				cs.Items = append(cs.Items, c)
 			}
 		}
@@ -112,7 +112,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 		cobra.CheckErr(naClient.CreateConfig(&nacos.CreateCSOpts{
 			DataID:      c.DataID,
 			Group:       c.Group,
-			NamespaceId: c.NamespaceId,
+			NamespaceID: c.NamespaceId,
 			Content:     c.Content,
 			Type:        c.Type,
 			Desc:        c.Desc,
