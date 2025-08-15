@@ -1,6 +1,6 @@
-[![Test](https://github.com/joelee2012/nacosctl/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/joelee2012/nacosctl/actions/workflows/test.yml)
-[![Release](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml)
-[![Codecov](https://codecov.io/gh/joelee2012/nacosctl/branch/main/graph/badge.svg?token=PY470EX7J6)](https://codecov.io/gh/joelee2012/nacosctl)
+[![test](https://github.com/joelee2012/nacosctl/actions/workflows/test.yml/badge.svg)](https://github.com/joelee2012/nacosctl/actions/workflows/test.yml)
+[![goreleaser](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml/badge.svg)](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml)
+[![codecov](https://codecov.io/gh/joelee2012/nacosctl/graph/badge.svg?token=PY470EX7J6)](https://codecov.io/gh/joelee2012/nacosctl)
 # nctl
 Command line tools for [Nacos](https://nacos.io/)
 
