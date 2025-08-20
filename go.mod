@@ -3,7 +3,7 @@ module github.com/joelee2012/nacosctl
 go 1.24.1
 
 require (
-	github.com/goccy/go-yaml v1.17.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.9.0
