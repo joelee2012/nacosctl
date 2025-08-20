@@ -49,7 +49,7 @@ func (c *ConfigList) ToTable(w io.Writer) {
 	toTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 		for _, item := range c.Items {
-			t.AppendRow(table.Row{item.NamespaceId, item.DataID, item.Group, item.AppName, item.Type})
+			t.AppendRow(table.Row{item.NamespaceID, item.DataID, item.Group, item.AppName, item.Type})
 		}
 		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
 	})
@@ -66,10 +66,10 @@ func (c *ConfigList) ToYaml(w io.Writer) error {
 func (cs *ConfigList) WriteToDir(name string) error {
 	var dir string
 	for _, c := range cs.Items {
-		if c.NamespaceId == "" {
+		if c.NamespaceID == "" {
 			dir = filepath.Join(name, "public", c.Group)
 		} else {
-			dir = filepath.Join(name, c.NamespaceId, c.Group)
+			dir = filepath.Join(name, c.NamespaceID, c.Group)
 		}
 		if err := os.MkdirAll(dir, 0750); err != nil {
 			return err
@@ -86,7 +86,7 @@ type Config struct {
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
 	Content          string `json:"content"`
-	NamespaceId      string `json:"tenant"`
+	NamespaceID      string `json:"tenant"`
 	Type             string `json:"type"`
 	Md5              string `json:"md5,omitempty"`
 	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`

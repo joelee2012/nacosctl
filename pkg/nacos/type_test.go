@@ -16,8 +16,8 @@ func TestConfigListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{
 			Items: []*Config{
-				{NamespaceId: "ns1", DataID: "data1", Group: "group1", AppName: "app1", Type: "type1"},
-				{NamespaceId: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
+				{NamespaceID: "ns1", DataID: "data1", Group: "group1", AppName: "app1", Type: "type1"},
+				{NamespaceID: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
 			},
 		}
 		cl.ToTable(&buf)
@@ -39,7 +39,7 @@ func TestConfigListWriteTable(t *testing.T) {
 func TestConfigListWriteJson(t *testing.T) {
 	cl := &ConfigList{
 		Items: []*Config{
-			{NamespaceId: "ns1", DataID: "data1"},
+			{NamespaceID: "ns1", DataID: "data1"},
 		},
 	}
 	var buf bytes.Buffer
@@ -52,8 +52,8 @@ func TestConfigListWriteJson(t *testing.T) {
 func TestConfigListWriteToDir(t *testing.T) {
 	cl := &ConfigList{
 		Items: []*Config{
-			{NamespaceId: "ns1", DataID: "data1", Group: "group1"},
-			{NamespaceId: "", DataID: "public_data", Group: "public_group"},
+			{NamespaceID: "ns1", DataID: "data1", Group: "group1"},
+			{NamespaceID: "", DataID: "public_data", Group: "public_group"},
 		},
 	}
 	t.Run("successful write", func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestConfigListWriteToDir(t *testing.T) {
 func TestConfigWriteFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "config.yaml")
-	config := &Config{NamespaceId: "test"}
+	config := &Config{NamespaceID: "test"}
 	err := config.ToFile(tmpFile)
 	assert.NoError(t, err)
 	assert.FileExists(t, tmpFile)

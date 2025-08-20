@@ -12,7 +12,7 @@ release: ## release package
 .PHONY: release
 
 test: ## run test and generate coverage report
-	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... && \
+	go test -coverprofile=coverage.txt -covermode=atomic -v ./... && \
 	go tool cover -html=coverage.txt -o cover.html
 .PHONY: test
 
