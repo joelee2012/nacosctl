@@ -63,8 +63,13 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		NamespaceID: c.NamespaceID,
 		Content:     c.Content,
 		Type:        c.Type,
+<<<<<<< HEAD
 		Description: c.Description,
 		Application: c.Application,
+=======
+		Desc:        c.Description,
+		AppName:     c.Application,
+>>>>>>> bbaac18 (add readable obj)
 		Tags:        c.Tags,
 	}))
 	fmt.Printf("configuration/%s created\n", c.DataID)

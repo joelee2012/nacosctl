@@ -61,6 +61,6 @@ func GetCs(args []string) {
 	if cmdOpts.OutDir != "" {
 		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
 	} else {
-		nacos.WriteAsFormat(cmdOpts.Output, allCs, os.Stdout)
+		nacos.WriteAsFormat(cmdOpts.Output, allCs.ToList("v1"), os.Stdout)
 	}
 }

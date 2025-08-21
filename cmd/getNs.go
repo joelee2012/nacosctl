@@ -51,6 +51,6 @@ func GetNamespace(args []string) {
 	if cmdOpts.OutDir != "" {
 		cobra.CheckErr(nss.WriteToDir(cmdOpts.OutDir))
 	} else {
-		nacos.WriteAsFormat(cmdOpts.Output, nss, os.Stdout)
+		nacos.WriteAsFormat(cmdOpts.Output, nss.ToList("v1"), os.Stdout)
 	}
 }
