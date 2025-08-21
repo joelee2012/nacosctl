@@ -294,7 +294,7 @@ func TestDeleteConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestClientListUser(t *testing.T) {
+func TestListUser(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
@@ -305,7 +305,7 @@ func TestClientListUser(t *testing.T) {
 	}
 }
 
-func TestClientCreateUser(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
@@ -313,7 +313,7 @@ func TestClientCreateUser(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestClientDeleteUser(t *testing.T) {
+func TestDeleteUser(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
@@ -321,7 +321,7 @@ func TestClientDeleteUser(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestClientGetUser(t *testing.T) {
+func TestGetUser(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
