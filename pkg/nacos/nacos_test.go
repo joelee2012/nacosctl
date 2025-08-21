@@ -320,3 +320,13 @@ func TestClientDeleteUser(t *testing.T) {
 	err := c.DeleteUser("user3")
 	assert.NoError(t, err)
 }
+
+func TestClientGetUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	user, err := c.GetUser("user1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "user1", user.Name)
+	}
+}

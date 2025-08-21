@@ -384,6 +384,20 @@ func (c *Client) ListUser() (*UserList, error) {
 	return allUsers, nil
 }
 
+func (c *Client) GetUser(name string) (*User, error) {
+	users, err := c.ListUser()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users.Items {
+		if user.Name == name {
+			return user, nil
+		}
+	}
+	return nil, fmt.Errorf("404 Not Found %s", name)
+}
+
 func checkStatus(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
