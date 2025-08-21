@@ -173,3 +173,15 @@ func (n *Namespace) ToFile(name string) error {
 func (n *Namespace) FromYaml(name string) error {
 	return readYamlFile(n, name)
 }
+
+type UserList struct {
+	TotalCount     int     `json:"totalCount,omitempty"`
+	PageNumber     int     `json:"pageNumber,omitempty"`
+	PagesAvailable int     `json:"pagesAvailable,omitempty"`
+	Items          []*User `json:"pageItems"`
+}
+
+type User struct {
+	Name     string `json:"username"`
+	Password string `json:"password"`
+}

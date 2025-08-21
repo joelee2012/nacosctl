@@ -334,6 +334,64 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	return checkErr(resp, err)
 }
 
+func (c *Client) CreateUser(name, password string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", name)
+	v.Add("password", password)
+	v.Add("accessToken", token)
+	resp, err := http.PostForm(c.URL+"/v1/auth/users", v)
+	return checkErr(resp, err)
+}
+
+func (c *Client) DeleteUser(name string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", name)
+	v.Add("accessToken", token)
+	url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	return checkErr(resp, err)
+}
+
+func (c *Client) ListUser() (*UserList, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	allUsers := new(UserList)
+	v := url.Values{}
+	v.Add("serach", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		users := new(UserList)
+		url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, users); err != nil {
+			return nil, err
+		}
+		allUsers.Items = append(allUsers.Items, users.Items...)
+		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
+	}
+	return allUsers, nil
+}
+
 func checkStatus(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
