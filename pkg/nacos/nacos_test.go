@@ -312,3 +312,11 @@ func TestClientCreateUser(t *testing.T) {
 	err := c.CreateUser("user3", "password")
 	assert.NoError(t, err)
 }
+
+func TestClientDeleteUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.DeleteUser("user3")
+	assert.NoError(t, err)
+}
