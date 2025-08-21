@@ -104,7 +104,6 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	v.Add("namespaceName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
 	return checkErr(resp, err)
 }
@@ -117,7 +116,6 @@ func (c *Client) DeleteNamespace(id string) error {
 	v := url.Values{}
 	v.Add("namespaceId", id)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -137,8 +135,6 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	v.Add("namespaceShowName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
-
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
@@ -194,7 +190,6 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("show", "all")
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	config := new(Config)
@@ -238,7 +233,6 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	configs := new(ConfigList)
 	resp, err := http.Get(url)
@@ -306,7 +300,6 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("desc", opts.Desc)
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
 	return checkErr(resp, err)
 }
@@ -323,7 +316,6 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	v.Add("group", opts.Group)
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -332,6 +324,78 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 
 	resp, err := http.DefaultClient.Do(req)
 	return checkErr(resp, err)
+}
+
+func (c *Client) CreateUser(name, password string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", name)
+	v.Add("password", password)
+	v.Add("accessToken", token)
+	resp, err := http.PostForm(c.URL+"/v1/auth/users", v)
+	return checkErr(resp, err)
+}
+
+func (c *Client) DeleteUser(name string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", name)
+	v.Add("accessToken", token)
+	url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	return checkErr(resp, err)
+}
+
+func (c *Client) ListUser() (*UserList, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	allUsers := new(UserList)
+	v := url.Values{}
+	v.Add("serach", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		users := new(UserList)
+		url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, users); err != nil {
+			return nil, err
+		}
+		allUsers.Items = append(allUsers.Items, users.Items...)
+		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
+	}
+	return allUsers, nil
+}
+
+func (c *Client) GetUser(name string) (*User, error) {
+	users, err := c.ListUser()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users.Items {
+		if user.Name == name {
+			return user, nil
+		}
+	}
+	return nil, fmt.Errorf("404 Not Found %s", name)
 }
 
 func checkStatus(resp *http.Response) error {

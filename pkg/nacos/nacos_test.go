@@ -69,6 +69,23 @@ var namespace = `
 	"type": 0
 }
 `
+var users = `
+{
+  "totalCount": 2,
+  "pageNumber": 1,
+  "pagesAvailable": 1,
+  "pageItems": [
+    {
+      "username": "user1",
+      "password": "$2a$10$C3B9EQgp93M6mvXwXiCebe1T9HvxGRj29x2dHIYCH.bUCdbJcrugO"
+    },
+    {
+      "username": "user2",
+      "password": "$2a$10$OHWIUaiy9cC8wHxANJ7j/O6CDNe1fy5WUD/6vUA2TdeWNjZLPUA.C"
+    }
+  ]
+}
+`
 
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
@@ -77,7 +94,7 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, "password", c.Password)
 }
 
-func startServer() *httptest.Server {
+func startServer() (*httptest.Server, *Client) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if r.URL.Path == "/v1/console/namespaces" {
@@ -96,15 +113,16 @@ func startServer() *httptest.Server {
 			w.Write([]byte(`{"version": "1.0.0"}`))
 		} else if r.URL.Path == "/v1/auth/login" {
 			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
+		} else if r.URL.Path == "/v1/auth/users" {
+			w.Write([]byte(users))
 		}
 	}))
-	return ts
+	c := NewClient(ts.URL, "user", "password")
+	return ts, c
 }
 func TestGetVersion(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
-
-	c := NewClient(ts.URL, "user", "password")
 	version, err := c.GetVersion()
 	if assert.NoError(t, err) {
 		assert.Equal(t, "1.0.0", version)
@@ -112,7 +130,7 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	okServer := startServer()
+	okServer, _ := startServer()
 	defer okServer.Close()
 	nokServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -155,10 +173,9 @@ func TestGetToken(t *testing.T) {
 }
 
 func TestListNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	namespaces, err := c.ListNamespace()
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(namespaces.Items))
@@ -167,47 +184,42 @@ func TestListNamespace(t *testing.T) {
 }
 
 func TestCreateNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	err := n.CreateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
+	err := c.CreateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 
 func TestGetNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	n := NewClient(ts.URL, "user", "password")
-	ns, err := n.GetNamespace("test")
+	ns, err := c.GetNamespace("test")
 	if assert.NoError(t, err) {
 		assert.Equal(t, "test", ns.ID)
 	}
 }
 
 func TestDeleteNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	err := c.DeleteNamespace("test-id")
 	assert.NoError(t, err)
 }
 
 func TestUpdateNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	tests := []struct {
 		name string
 		data CreateNSOpts
@@ -224,10 +236,9 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	config, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
 	if assert.NoError(t, err) {
 		assert.Equal(t, "test", config.DataID)
@@ -235,10 +246,9 @@ func TestGetConfig(t *testing.T) {
 }
 
 func TestListConfig(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
 	configs, err := c.ListConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(configs.Items))
@@ -247,9 +257,9 @@ func TestListConfig(t *testing.T) {
 }
 
 func TestListConfigInNs(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
-	c := NewClient(ts.URL, "user", "password")
+
 	configs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(configs.Items))
@@ -258,9 +268,9 @@ func TestListConfigInNs(t *testing.T) {
 }
 
 func TestListAllConfig(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
-	c := NewClient(ts.URL, "user", "password")
+
 	configs, err := c.ListAllConfig()
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(configs.Items))
@@ -269,21 +279,54 @@ func TestListAllConfig(t *testing.T) {
 }
 
 func TestCreateConfig(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
-	c.Token = &Token{AccessToken: "test-token"}
 	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceID: "test-tenant", Type: "properties"})
 	assert.NoError(t, err)
 }
 
 func TestDeleteConfig(t *testing.T) {
-	ts := startServer()
+	ts, c := startServer()
 	defer ts.Close()
 
-	c := NewClient(ts.URL, "user", "password")
-	c.Token = &Token{AccessToken: "test-token"}
 	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceID: "test-tenant"})
 	assert.NoError(t, err)
+}
+
+func TestListUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	users, err := c.ListUser()
+	if assert.NoError(t, err) {
+		assert.Equal(t, "user1", users.Items[0].Name)
+		assert.Equal(t, "user2", users.Items[1].Name)
+	}
+}
+
+func TestCreateUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.CreateUser("user3", "password")
+	assert.NoError(t, err)
+}
+
+func TestDeleteUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.DeleteUser("user3")
+	assert.NoError(t, err)
+}
+
+func TestGetUser(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	user, err := c.GetUser("user1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "user1", user.Name)
+	}
 }
