@@ -104,7 +104,6 @@ func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
 	v.Add("namespaceName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
 	return checkErr(resp, err)
 }
@@ -117,7 +116,6 @@ func (c *Client) DeleteNamespace(id string) error {
 	v := url.Values{}
 	v.Add("namespaceId", id)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -137,8 +135,6 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	v.Add("namespaceShowName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
-
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
@@ -194,7 +190,6 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("show", "all")
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
 	config := new(Config)
@@ -238,7 +233,6 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	configs := new(ConfigList)
 	resp, err := http.Get(url)
@@ -306,7 +300,6 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("desc", opts.Desc)
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
 	return checkErr(resp, err)
 }
@@ -323,7 +316,6 @@ func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
 	v.Add("group", opts.Group)
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("accessToken", token)
-	v.Add("username", c.User)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
