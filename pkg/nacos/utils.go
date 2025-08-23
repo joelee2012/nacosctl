@@ -26,7 +26,8 @@ func readYamlFile(v any, name string) error {
 		return err
 	}
 	defer f.Close()
-	return yaml.NewDecoder(f).Decode(v)
+	dec := yaml.NewDecoder(f, yaml.DisallowUnknownField())
+	return dec.Decode(v)
 }
 
 func writeYamlFile(v any, name string) error {

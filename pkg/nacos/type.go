@@ -81,16 +81,6 @@ func (cs *ConfigList) WriteToDir(name string) error {
 	return nil
 }
 
-func (cs *ConfigList) ToList(apiVersion string) *ObjList {
-	o := new(ObjList)
-	o.Kind = "List"
-	o.APIVersion = apiVersion
-	for _, c := range cs.Items {
-		o.Items = append(o.Items, c.ToReadable(apiVersion))
-	}
-	return o
-}
-
 type Config struct {
 	ID               string `json:"id"`
 	DataID           string `json:"dataId"`
@@ -105,21 +95,6 @@ type Config struct {
 	ModifyTime       int64  `json:"modifyTime,omitempty"`
 	Description      string `json:"desc,omitempty"`
 	Tags             string `json:"configTags,omitempty"`
-}
-
-type ReadableConfiguration struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Application string `yaml:"application"`
-		Group       string `yaml:"group"`
-		Name        string `yaml:"name"`
-		Namespace   string `yaml:"namespace"`
-		Type        string `yaml:"type"`
-		Tags        string `yaml:"tags"`
-		Description string `yaml:"description"`
-	} `yaml:"metadata"`
-	Data string `yaml:"data"`
 }
 
 func (c *Config) ToJson(w io.Writer) error {
@@ -137,21 +112,6 @@ func (c *Config) ToFile(name string) error {
 // FromYaml load from YAML file
 func (c *Config) FromYaml(name string) error {
 	return readYamlFile(c, name)
-}
-
-func (c *Config) ToReadable(apiVersion string) *ReadableConfiguration {
-	var rc ReadableConfiguration
-	rc.APIVersion = apiVersion
-	rc.Kind = "Configruation"
-	rc.Metadata.Name = c.DataID
-	rc.Metadata.Namespace = c.NamespaceID
-	rc.Metadata.Group = c.Group
-	rc.Metadata.Application = c.Application
-	rc.Metadata.Type = c.Type
-	rc.Metadata.Tags = c.Tags
-	rc.Metadata.Description = c.Description
-	rc.Data = c.Content
-	return &rc
 }
 
 type NsList struct {
@@ -190,16 +150,6 @@ func (n *NsList) WriteToDir(name string) error {
 	return nil
 }
 
-func (n *NsList) ToList(apiVersion string) *ObjList {
-	o := new(ObjList)
-	o.Kind = "List"
-	o.APIVersion = apiVersion
-	for _, e := range n.Items {
-		o.Items = append(o.Items, e.ToReadable(apiVersion))
-	}
-	return o
-}
-
 type Namespace struct {
 	ID          string `json:"namespace"`
 	Name        string `json:"namespaceShowName"`
@@ -207,34 +157,6 @@ type Namespace struct {
 	Quota       int    `json:"quota"`
 	ConfigCount int    `json:"configCount"`
 	Type        int    `json:"type"`
-}
-
-type ObjList struct {
-	APIVersion string `yaml:"apiVersion"`
-	Items      []any  `json:"items"`
-	Kind       string `json:"kind"`
-}
-
-func (o *ObjList) ToYaml(w io.Writer) error {
-	return toYaml(o, w)
-}
-
-func (o *ObjList) ToJson(w io.Writer) error {
-	return toJson(o, w)
-}
-
-func (o *ObjList) ToTable(w io.Writer) {
-	toJson(o, w)
-}
-
-type ReadableNamespace struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Name        string `yaml:"name"`
-		ID          string `yaml:"id"`
-		Description string `yaml:"description"`
-	} `yaml:"metadata"`
 }
 
 func (n *Namespace) ToJson(w io.Writer) error {
@@ -250,16 +172,6 @@ func (n *Namespace) ToFile(name string) error {
 
 func (n *Namespace) FromYaml(name string) error {
 	return readYamlFile(n, name)
-}
-
-func (n *Namespace) ToReadable(apiVersion string) *ReadableNamespace {
-	var rs ReadableNamespace
-	rs.APIVersion = apiVersion
-	rs.Kind = "Namespace"
-	rs.Metadata.Name = n.Name
-	rs.Metadata.ID = n.ID
-	rs.Metadata.Description = n.Description
-	return &rs
 }
 
 type UserList struct {
