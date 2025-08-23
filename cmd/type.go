@@ -48,7 +48,7 @@ func toJson(v any, w io.Writer) error {
 }
 
 func toYaml(v any, w io.Writer) error {
-	enc := yaml.NewEncoder(w)
+	enc := yaml.NewEncoder(w, yaml.UseLiteralStyleIfMultiline(true))
 	return enc.Encode(v)
 }
 
