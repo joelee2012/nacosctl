@@ -39,9 +39,10 @@ type State struct {
 
 func NewClient(url, user, password string) *Client {
 	return &Client{
-		URL:      url,
-		User:     user,
-		Password: password,
+		URL:        url,
+		User:       user,
+		Password:   password,
+		APIVersion: "v1",
 	}
 }
 
@@ -202,13 +203,13 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 }
 
 type ListCSOpts struct {
+	Application string
+	Content     string
 	DataID      string
 	Group       string
-	Content     string
-	AppName     string
 	NamespaceID string
-	PageNumber  int
 	Tags        string
+	PageNumber  int
 	PageSize    int
 }
 
@@ -220,7 +221,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
-	v.Add("appName", opts.AppName)
+	v.Add("appName", opts.Application)
 	v.Add("config_tags", opts.Tags)
 	if opts.PageNumber == 0 {
 		opts.PageNumber = 1
@@ -274,14 +275,14 @@ func (c *Client) ListAllConfig() (*ConfigList, error) {
 }
 
 type CreateCSOpts struct {
-	DataID      string
-	Group       string
-	Content     string
 	Application string
+	Content     string
+	DataID      string
+	Desc        string
+	Group       string
 	NamespaceID string
 	Tags        string
 	Type        string
-	Description string
 }
 
 func (c *Client) CreateConfig(opts *CreateCSOpts) error {
@@ -297,7 +298,7 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("appName", opts.Application)
-	v.Add("desc", opts.Description)
+	v.Add("desc", opts.Desc)
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
