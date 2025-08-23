@@ -66,7 +66,7 @@ func TestNamespaceListWriteToDir(t *testing.T) {
 		tmpDir := t.TempDir()
 		err := nl.WriteToDir(tmpDir)
 		assert.NoError(t, err)
-		ns1File := filepath.Join(tmpDir, "showname.yaml")
+		ns1File := filepath.Join(tmpDir, "ns1.yaml")
 		assert.FileExists(t, ns1File)
 	})
 
