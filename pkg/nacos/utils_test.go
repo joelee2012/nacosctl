@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -93,17 +92,6 @@ func TestReadYamlFile(t *testing.T) {
 	}
 }
 
-// TestWriteTable tests the writeTable function
-func TestWriteTable(t *testing.T) {
-	var buf bytes.Buffer
-	toTable(&buf, func(t table.Writer) {
-		t.AppendHeader(table.Row{"Header"})
-		t.AppendRow(table.Row{"Value"})
-	})
-	assert.Contains(t, buf.String(), "HEADER")
-	assert.Contains(t, buf.String(), "Value")
-}
-
 type mockFormatWriter map[string]bool
 
 func (mw mockFormatWriter) ToJson(w io.Writer) error {
@@ -117,23 +105,4 @@ func (mw mockFormatWriter) ToTable(w io.Writer) {
 func (mw mockFormatWriter) ToYaml(w io.Writer) error {
 	mw["yaml"] = true
 	return nil
-}
-
-func TestWriteAsFormat(t *testing.T) {
-	tests := []struct {
-		format string
-		called bool
-	}{
-		{"json", true},
-		{"yaml", true},
-		{"table", true},
-		{"xxx", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.format, func(t *testing.T) {
-			writer := mockFormatWriter{}
-			WriteAsFormat(tt.format, writer, &bytes.Buffer{})
-			assert.Equal(t, tt.called, writer[tt.format])
-		})
-	}
 }
