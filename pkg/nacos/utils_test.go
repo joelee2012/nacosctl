@@ -91,18 +91,3 @@ func TestReadYamlFile(t *testing.T) {
 		})
 	}
 }
-
-type mockFormatWriter map[string]bool
-
-func (mw mockFormatWriter) ToJson(w io.Writer) error {
-	mw["json"] = true
-	return nil
-}
-func (mw mockFormatWriter) ToTable(w io.Writer) {
-	mw["table"] = true
-}
-
-func (mw mockFormatWriter) ToYaml(w io.Writer) error {
-	mw["yaml"] = true
-	return nil
-}
