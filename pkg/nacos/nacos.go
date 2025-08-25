@@ -398,6 +398,152 @@ func (c *Client) GetUser(name string) (*User, error) {
 	return nil, fmt.Errorf("404 Not Found %s", name)
 }
 
+func (c *Client) CreateRole(name, username string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", username)
+	v.Add("role", name)
+	v.Add("accessToken", token)
+	resp, err := http.PostForm(c.URL+"/v1/auth/roles", v)
+	return checkErr(resp, err)
+}
+
+func (c *Client) DeleteRole(name, username string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("username", username)
+	v.Add("role", name)
+	v.Add("accessToken", token)
+	url := fmt.Sprintf("%s/v1/auth/roles?%s", c.URL, v.Encode())
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	return checkErr(resp, err)
+}
+
+func (c *Client) ListRole() (*RoleList, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	allRoles := new(RoleList)
+	v := url.Values{}
+	v.Add("serach", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		users := new(RoleList)
+		url := fmt.Sprintf("%s/v1/auth/roles?%s", c.URL, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, users); err != nil {
+			return nil, err
+		}
+		allRoles.Items = append(allRoles.Items, users.Items...)
+		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
+	}
+	return allRoles, nil
+}
+
+func (c *Client) GetRole(name string) (*Role, error) {
+	users, err := c.ListRole()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, role := range users.Items {
+		if role.Name == name {
+			return role, nil
+		}
+	}
+	return nil, fmt.Errorf("404 Not Found %s", name)
+}
+
+func (c *Client) CreatePermission(role, resource, permission string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("action", permission)
+	v.Add("resource", resource)
+	v.Add("role", role)
+	v.Add("accessToken", token)
+	resp, err := http.PostForm(c.URL+"/v1/auth/permissions", v)
+	return checkErr(resp, err)
+}
+
+func (c *Client) DeletePermission(role, resource, permission string) error {
+	token, err := c.GetToken()
+	if err != nil {
+		return err
+	}
+	v := url.Values{}
+	v.Add("action", permission)
+	v.Add("resource", resource)
+	v.Add("role", role)
+	v.Add("accessToken", token)
+	url := fmt.Sprintf("%s/v1/auth/permissions?%s", c.URL, v.Encode())
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	return checkErr(resp, err)
+}
+
+func (c *Client) ListPermission() (*PermissionList, error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	allPerms := new(PermissionList)
+	v := url.Values{}
+	v.Add("serach", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		perms := new(PermissionList)
+		url := fmt.Sprintf("%s/v1/auth/permissions?%s", c.URL, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, perms); err != nil {
+			return nil, err
+		}
+		allPerms.Items = append(allPerms.Items, perms.Items...)
+		if perms.PagesAvailable == 0 || perms.PagesAvailable == perms.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(perms.PageNumber+1))
+	}
+	return allPerms, nil
+}
+
+func (c *Client) GetPermission(role, resource, permission string) (*Permission, error) {
+	perms, err := c.ListPermission()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range perms.Items {
+		if p.Role == role && p.Resource == resource && p.Permission == permission {
+			return p, nil
+		}
+	}
+	return nil, fmt.Errorf("404 Not Found %s:%s:%s", role, resource, permission)
+}
+
 func checkStatus(resp *http.Response) error {
 	if resp.StatusCode != http.StatusOK {
 		data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
