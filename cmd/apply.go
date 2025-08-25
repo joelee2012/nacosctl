@@ -63,17 +63,8 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		NamespaceID: c.NamespaceID,
 		Content:     c.Content,
 		Type:        c.Type,
-<<<<<<< HEAD
 		Description: c.Description,
 		Application: c.Application,
-=======
-		Desc:        c.Description,
-<<<<<<< HEAD
-		AppName:     c.Application,
->>>>>>> bbaac18 (add readable obj)
-=======
-		Application: c.Application,
->>>>>>> 19f82bc (improve output)
 		Tags:        c.Tags,
 	}))
 	fmt.Printf("configuration/%s created\n", c.DataID)
@@ -124,11 +115,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 			NamespaceID: c.NamespaceID,
 			Content:     c.Content,
 			Type:        c.Type,
-<<<<<<< HEAD
 			Description: c.Description,
-=======
-			Desc:        c.Description,
->>>>>>> 19f82bc (improve output)
 			Application: c.Application,
 			Tags:        c.Tags,
 		}))
