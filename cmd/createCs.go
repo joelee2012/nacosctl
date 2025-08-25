@@ -44,8 +44,8 @@ func init() {
 	createCsCmd.Flags().StringVarP(&createOpts.Content, "content", "c", "", "content of configuration")
 	createCsCmd.MarkFlagRequired("content")
 	createCsCmd.Flags().StringVarP(&createOpts.Type, "type", "t", "text", "configuration type")
-	createCsCmd.Flags().StringVarP(&createOpts.Desc, "desc", "d", "", "description of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.Description, "desc", "d", "", "description of configuration")
 	createCsCmd.Flags().StringVarP(&createOpts.Tags, "tags", "T", "", "tags of configuration")
-	createCsCmd.Flags().StringVarP(&createOpts.AppName, "appname", "a", "", "appname of configuration")
+	createCsCmd.Flags().StringVarP(&createOpts.Application, "appname", "a", "", "appname of configuration")
 
 }

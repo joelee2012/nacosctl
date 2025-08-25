@@ -49,7 +49,7 @@ func (c *ConfigList) ToTable(w io.Writer) {
 	toTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 		for _, item := range c.Items {
-			t.AppendRow(table.Row{item.NamespaceID, item.DataID, item.Group, item.AppName, item.Type})
+			t.AppendRow(table.Row{item.NamespaceID, item.DataID, item.Group, item.Application, item.Type})
 		}
 		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
 	})
@@ -90,7 +90,7 @@ type Config struct {
 	Type             string `json:"type"`
 	Md5              string `json:"md5,omitempty"`
 	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
-	AppName          string `json:"appName,omitempty"`
+	Application      string `json:"appName,omitempty"`
 	CreateTime       int64  `json:"createTime,omitempty"`
 	ModifyTime       int64  `json:"modifyTime,omitempty"`
 	Desc             string `json:"desc,omitempty"`
