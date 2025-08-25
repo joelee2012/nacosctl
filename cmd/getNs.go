@@ -48,11 +48,5 @@ func GetNamespace(args []string) {
 		}
 		nss.Items = items
 	}
-	var nsList NamespaceList
-	nsList.FromNacosNsList("v1", nss)
-	if cmdOpts.OutDir != "" {
-		cobra.CheckErr(nsList.WriteToDir(cmdOpts.OutDir))
-	} else {
-		WriteAsFormat(cmdOpts.Output, &nsList, os.Stdout)
-	}
+	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewNamespaceList("v1", nss), os.Stdout))
 }
