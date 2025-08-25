@@ -45,29 +45,29 @@ func init() {
 }
 
 func CreateResourceFromFile(client *nacos.Client, name string) {
-	ns := &nacos.Namespace{}
+	ns := new(Namespace)
 	if err := ns.FromYaml(name); err == nil {
-		cobra.CheckErr(client.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.ID, Description: ns.Description, Name: ns.Name}))
-		fmt.Printf("namespace/%s created\n", ns.Name)
+		cobra.CheckErr(client.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
+		fmt.Printf("namespace/%s created\n", ns.Metadata.Name)
 		return
 	}
 	nsNames := ListNamespace(client)
-	c := &nacos.Configuration{}
+	c := new(Configuration)
 	cobra.CheckErr(c.FromYaml(name))
-	if !slices.Contains(nsNames, c.NamespaceID) {
-		cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.NamespaceID))
+	if !slices.Contains(nsNames, c.Metadata.Namespace) {
+		cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Metadata.Namespace))
 	}
 	cobra.CheckErr(client.CreateConfig(&nacos.CreateCSOpts{
-		DataID:      c.DataID,
-		Group:       c.Group,
-		NamespaceID: c.NamespaceID,
-		Content:     c.Content,
-		Type:        c.Type,
-		Description: c.Description,
-		Application: c.Application,
-		Tags:        c.Tags,
+		DataID:      c.Metadata.DataID,
+		Group:       c.Metadata.Group,
+		NamespaceID: c.Metadata.Namespace,
+		Content:     c.Spec.Content,
+		Type:        c.Spec.Type,
+		Description: c.Spec.Description,
+		Application: c.Spec.Application,
+		Tags:        c.Spec.Tags,
 	}))
-	fmt.Printf("configuration/%s created\n", c.DataID)
+	fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
 }
 
 func ListNamespace(client *nacos.Client) []string {
@@ -80,16 +80,16 @@ func ListNamespace(client *nacos.Client) []string {
 	return nsNames
 }
 func CreateResourceFromDir(naClient *nacos.Client, dir string) {
-	nss := new(nacos.NamespaceList)
-	cs := new(nacos.ConfigurationList)
+	nss := new(NamespaceList)
+	cs := new(ConfigurationList)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		cobra.CheckErr(err)
 		if !info.IsDir() {
-			ns := &nacos.Namespace{}
+			ns := new(Namespace)
 			if err := ns.FromYaml(path); err == nil {
 				nss.Items = append(nss.Items, ns)
 			} else {
-				c := &nacos.Configuration{}
+				c := new(Configuration)
 				cobra.CheckErr(c.FromYaml(path))
 				cs.Items = append(cs.Items, c)
 			}
@@ -99,26 +99,26 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 	cobra.CheckErr(err)
 	nsNames := ListNamespace(naClient)
 	for _, ns := range nss.Items {
-		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.ID, Description: ns.Description, Name: ns.Name}))
-		fmt.Printf("namespace/%s created\n", ns.Name)
-		if !slices.Contains(nsNames, ns.Name) {
-			nsNames = append(nsNames, ns.Name)
+		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
+		fmt.Printf("namespace/%s created\n", ns.Metadata.Name)
+		if !slices.Contains(nsNames, ns.Metadata.Name) {
+			nsNames = append(nsNames, ns.Metadata.Name)
 		}
 	}
 	for _, c := range cs.Items {
-		if !slices.Contains(nsNames, c.NamespaceID) {
-			cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.NamespaceID))
+		if !slices.Contains(nsNames, c.Metadata.Namespace) {
+			cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Metadata.Namespace))
 		}
 		cobra.CheckErr(naClient.CreateConfig(&nacos.CreateCSOpts{
-			DataID:      c.DataID,
-			Group:       c.Group,
-			NamespaceID: c.NamespaceID,
-			Content:     c.Content,
-			Type:        c.Type,
-			Description: c.Description,
-			Application: c.Application,
-			Tags:        c.Tags,
+			DataID:      c.Metadata.DataID,
+			Group:       c.Metadata.Group,
+			NamespaceID: c.Metadata.Namespace,
+			Content:     c.Spec.Content,
+			Type:        c.Spec.Type,
+			Description: c.Spec.Description,
+			Application: c.Spec.Application,
+			Tags:        c.Spec.Tags,
 		}))
-		fmt.Printf("configuration/%s created\n", c.DataID)
+		fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
 	}
 }
