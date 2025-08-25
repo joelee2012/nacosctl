@@ -277,11 +277,11 @@ type CreateCSOpts struct {
 	DataID      string
 	Group       string
 	Content     string
-	AppName     string
+	Application string
 	NamespaceID string
 	Tags        string
 	Type        string
-	Desc        string
+	Description string
 }
 
 func (c *Client) CreateConfig(opts *CreateCSOpts) error {
@@ -296,8 +296,8 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	v.Add("type", opts.Type)
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("namespaceId", opts.NamespaceID)
-	v.Add("appName", opts.AppName)
-	v.Add("desc", opts.Desc)
+	v.Add("appName", opts.Application)
+	v.Add("desc", opts.Description)
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
 	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)

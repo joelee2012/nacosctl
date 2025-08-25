@@ -16,8 +16,8 @@ func TestConfigListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := &ConfigList{
 			Items: []*Config{
-				{NamespaceID: "ns1", DataID: "data1", Group: "group1", AppName: "app1", Type: "type1"},
-				{NamespaceID: "ns2", DataID: "data2", Group: "group2", AppName: "app2", Type: "type2"},
+				{NamespaceID: "ns1", DataID: "data1", Group: "group1", Application: "app1", Type: "type1"},
+				{NamespaceID: "ns2", DataID: "data2", Group: "group2", Application: "app2", Type: "type2"},
 			},
 		}
 		cl.ToTable(&buf)
