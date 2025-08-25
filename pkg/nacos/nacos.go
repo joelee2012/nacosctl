@@ -75,7 +75,7 @@ func (c *Client) GetToken() (string, error) {
 	return c.AccessToken, err
 }
 
-func (c *Client) ListNamespace() (*NsList, error) {
+func (c *Client) ListNamespace() (*NamespaceList, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	namespaces := new(NsList)
+	namespaces := new(NamespaceList)
 	err = decode(resp, err, namespaces)
 	return namespaces, err
 }
@@ -179,7 +179,7 @@ type GetCSOpts struct {
 	NamespaceID string
 }
 
-func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
+func (c *Client) GetConfig(opts *GetCSOpts) (*Configuration, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	config := new(Config)
+	config := new(Configuration)
 	err = decode(resp, err, config)
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
@@ -213,7 +213,7 @@ type ListCSOpts struct {
 	PageSize    int
 }
 
-func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
+func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigurationList, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -235,14 +235,14 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
-	configs := new(ConfigList)
+	configs := new(ConfigurationList)
 	resp, err := http.Get(url)
 	err = decode(resp, err, configs)
 	return configs, err
 }
 
-func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
-	nsCs := new(ConfigList)
+func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
+	nsCs := new(ConfigurationList)
 	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceID: namespace}
 	for {
 		cs, err := c.ListConfig(&listOpts)
@@ -258,8 +258,8 @@ func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
 	return nsCs, nil
 }
 
-func (c *Client) ListAllConfig() (*ConfigList, error) {
-	allCs := new(ConfigList)
+func (c *Client) ListAllConfig() (*ConfigurationList, error) {
+	allCs := new(ConfigurationList)
 	nss, err := c.ListNamespace()
 	if err != nil {
 		return nil, err

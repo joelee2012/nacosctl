@@ -18,8 +18,8 @@ import (
 func TestConfigurationListWriteTable(t *testing.T) {
 	t.Run("with items", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := NewConfigurationList("v1", &nacos.ConfigList{
-			Items: []*nacos.Config{
+		cl := NewConfigurationList("v1", &nacos.ConfigurationList{
+			Items: []*nacos.Configuration{
 				{NamespaceID: "ns1", DataID: "data1", Group: "group1", Application: "app1", Type: "type1"},
 				{NamespaceID: "ns2", DataID: "data2", Group: "group2", Application: "app2", Type: "type2"},
 			},
@@ -41,8 +41,8 @@ func TestConfigurationListWriteTable(t *testing.T) {
 
 // TestConfigurationListWriteJson tests ConfigurationList.WriteJson method
 func TestConfigurationListWriteJson(t *testing.T) {
-	cl := NewConfigurationList("v1", &nacos.ConfigList{
-		Items: []*nacos.Config{
+	cl := NewConfigurationList("v1", &nacos.ConfigurationList{
+		Items: []*nacos.Configuration{
 			{NamespaceID: "ns1", DataID: "data1"},
 		},
 	})
@@ -54,8 +54,8 @@ func TestConfigurationListWriteJson(t *testing.T) {
 
 // TestConfigurationListWriteToDir tests ConfigurationList.WriteToDir method
 func TestConfigurationListWriteToDir(t *testing.T) {
-	cl := NewConfigurationList("v1", &nacos.ConfigList{
-		Items: []*nacos.Config{
+	cl := NewConfigurationList("v1", &nacos.ConfigurationList{
+		Items: []*nacos.Configuration{
 			{NamespaceID: "ns1", DataID: "data1", Group: "group1"},
 			{NamespaceID: "", DataID: "public_data", Group: "public_group"},
 		},
@@ -81,7 +81,7 @@ func TestConfigurationListWriteToDir(t *testing.T) {
 func TestConfigWriteFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "config.yaml")
-	config := NewConfiguration("v1", &nacos.Config{NamespaceID: "test"})
+	config := NewConfiguration("v1", &nacos.Configuration{NamespaceID: "test"})
 	err := config.ToFile(tmpFile)
 	assert.NoError(t, err)
 	assert.FileExists(t, tmpFile)
@@ -90,7 +90,7 @@ func TestConfigWriteFile(t *testing.T) {
 func TestNamespaceListWriteTable(t *testing.T) {
 	t.Run("with items", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := NewNamespaceList("v1", &nacos.NsList{
+		cl := NewNamespaceList("v1", &nacos.NamespaceList{
 			Items: []*nacos.Namespace{
 				{ID: "ns1", Name: "data1", Description: "group1"},
 			},
@@ -104,14 +104,14 @@ func TestNamespaceListWriteTable(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := NewNamespaceList("v1", &nacos.NsList{Items: []*nacos.Namespace{}})
+		cl := NewNamespaceList("v1", &nacos.NamespaceList{Items: []*nacos.Namespace{}})
 		cl.ToTable(&buf)
 		assert.Equal(t, buf.String(), " NAME  ID  DESCRIPTION  COUNT \n")
 	})
 }
 
 func TestNamespaceListWriteToDir(t *testing.T) {
-	nl := NewNamespaceList("v1", &nacos.NsList{
+	nl := NewNamespaceList("v1", &nacos.NamespaceList{
 		Items: []*nacos.Namespace{
 			{ID: "ns1", Name: "showname", Description: "description"},
 		},

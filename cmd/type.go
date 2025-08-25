@@ -65,7 +65,7 @@ type Configuration struct {
 	} `json:"status,omitempty"`
 }
 
-func NewConfiguration(apiVersion string, nc *nacos.Config) *Configuration {
+func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration {
 	c := new(Configuration)
 	c.APIVersion = apiVersion
 	c.Kind = "Configuration"
@@ -107,7 +107,7 @@ type ConfigurationList struct {
 	Kind       string           `json:"kind"`
 }
 
-func NewConfigurationList(apiVersion string, cs *nacos.ConfigList) *ConfigurationList {
+func NewConfigurationList(apiVersion string, cs *nacos.ConfigurationList) *ConfigurationList {
 	list := new(ConfigurationList)
 	list.Kind = "List"
 	list.APIVersion = apiVersion
@@ -159,7 +159,7 @@ type NamespaceList struct {
 	Kind       string       `json:"kind"`
 }
 
-func NewNamespaceList(apiVersion string, ns *nacos.NsList) *NamespaceList {
+func NewNamespaceList(apiVersion string, ns *nacos.NamespaceList) *NamespaceList {
 	list := new(NamespaceList)
 	list.Kind = "List"
 	list.APIVersion = apiVersion
