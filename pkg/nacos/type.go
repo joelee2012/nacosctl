@@ -93,7 +93,7 @@ type Config struct {
 	Application      string `json:"appName,omitempty"`
 	CreateTime       int64  `json:"createTime,omitempty"`
 	ModifyTime       int64  `json:"modifyTime,omitempty"`
-	Desc             string `json:"desc,omitempty"`
+	Description      string `json:"desc,omitempty"`
 	Tags             string `json:"configTags,omitempty"`
 }
 

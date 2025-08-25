@@ -63,7 +63,7 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		NamespaceID: c.NamespaceID,
 		Content:     c.Content,
 		Type:        c.Type,
-		Description: c.Desc,
+		Description: c.Description,
 		Application: c.Application,
 		Tags:        c.Tags,
 	}))
@@ -115,7 +115,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 			NamespaceID: c.NamespaceID,
 			Content:     c.Content,
 			Type:        c.Type,
-			Description: c.Desc,
+			Description: c.Description,
 			Application: c.Application,
 			Tags:        c.Tags,
 		}))
