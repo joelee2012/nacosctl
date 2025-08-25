@@ -52,7 +52,7 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		return
 	}
 	nsNames := ListNamespace(client)
-	c := &nacos.Config{}
+	c := &nacos.Configuration{}
 	cobra.CheckErr(c.FromYaml(name))
 	if !slices.Contains(nsNames, c.NamespaceID) {
 		cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.NamespaceID))
@@ -80,8 +80,8 @@ func ListNamespace(client *nacos.Client) []string {
 	return nsNames
 }
 func CreateResourceFromDir(naClient *nacos.Client, dir string) {
-	nss := new(nacos.NsList)
-	cs := new(nacos.ConfigList)
+	nss := new(nacos.NamespaceList)
+	cs := new(nacos.ConfigurationList)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		cobra.CheckErr(err)
 		if !info.IsDir() {
@@ -89,7 +89,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 			if err := ns.FromYaml(path); err == nil {
 				nss.Items = append(nss.Items, ns)
 			} else {
-				c := &nacos.Config{}
+				c := &nacos.Configuration{}
 				cobra.CheckErr(c.FromYaml(path))
 				cs.Items = append(cs.Items, c)
 			}

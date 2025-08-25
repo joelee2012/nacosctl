@@ -1,72 +1,13 @@
 package nacos
 
-import (
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-)
-
-type FormatWriter interface {
-	FileWriter
-	JsonWriter
-	YamlWriter
+type ConfigurationList struct {
+	TotalCount     int              `json:"totalCount,omitempty"`
+	PageNumber     int              `json:"pageNumber,omitempty"`
+	PagesAvailable int              `json:"pagesAvailable,omitempty"`
+	Items          []*Configuration `json:"pageItems"`
 }
 
-type JsonWriter interface {
-	ToJson(w io.Writer) error
-}
-type YamlWriter interface {
-	ToYaml(w io.Writer) error
-}
-
-type FileWriter interface {
-	ToFile(w io.Writer) error
-}
-
-type DirWriter interface {
-	WriteToDir(name string) error
-}
-
-// YamlFileLoader interface for loading from YAML
-type YamlFileLoader interface {
-	FromYaml(name string) error
-}
-
-type ConfigList struct {
-	TotalCount     int       `json:"totalCount,omitempty"`
-	PageNumber     int       `json:"pageNumber,omitempty"`
-	PagesAvailable int       `json:"pagesAvailable,omitempty"`
-	Items          []*Config `json:"pageItems"`
-}
-
-func (c *ConfigList) ToJson(w io.Writer) error {
-	return toJson(c, w)
-}
-
-func (c *ConfigList) ToYaml(w io.Writer) error {
-	return toYaml(c, w)
-}
-
-func (cs *ConfigList) WriteToDir(name string) error {
-	var dir string
-	for _, c := range cs.Items {
-		if c.NamespaceID == "" {
-			dir = filepath.Join(name, "public", c.Group)
-		} else {
-			dir = filepath.Join(name, c.NamespaceID, c.Group)
-		}
-		if err := os.MkdirAll(dir, 0750); err != nil {
-			return err
-		}
-		if err := c.ToFile(filepath.Join(dir, c.DataID)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type Config struct {
+type Configuration struct {
 	ID               string `json:"id"`
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
@@ -82,47 +23,10 @@ type Config struct {
 	Tags             string `json:"configTags,omitempty"`
 }
 
-func (c *Config) ToJson(w io.Writer) error {
-	return toJson(c, w)
-}
-
-func (c *Config) ToYaml(w io.Writer) error {
-	return toYaml(c, w)
-}
-
-func (c *Config) ToFile(name string) error {
-	return writeYamlFile(c, name)
-}
-
-// FromYaml load from YAML file
-func (c *Config) FromYaml(name string) error {
-	return readYamlFile(c, name)
-}
-
-type NsList struct {
+type NamespaceList struct {
 	// Code    int          `json:"code,omitempty"`
 	// Message interface{}  `json:"message,omitempty"`
 	Items []*Namespace `json:"data"`
-}
-
-func (n *NsList) ToJson(w io.Writer) error {
-	return toJson(n, w)
-}
-
-func (n *NsList) ToYaml(w io.Writer) error {
-	return toYaml(n, w)
-}
-
-func (n *NsList) WriteToDir(name string) error {
-	for _, e := range n.Items {
-		if e.ID == "" {
-			continue
-		}
-		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.ID))); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 type Namespace struct {
@@ -132,21 +36,6 @@ type Namespace struct {
 	Quota       int    `json:"quota,omitempty"`
 	ConfigCount int    `json:"configCount,omitempty"`
 	Type        int    `json:"type,omitempty"`
-}
-
-func (n *Namespace) ToJson(w io.Writer) error {
-	return toJson(n, w)
-}
-
-func (n *Namespace) ToYaml(w io.Writer) error {
-	return toYaml(n, w)
-}
-func (n *Namespace) ToFile(name string) error {
-	return writeYamlFile(n, name)
-}
-
-func (n *Namespace) FromYaml(name string) error {
-	return readYamlFile(n, name)
 }
 
 type UserList struct {
