@@ -41,79 +41,21 @@ type YamlFileLoader interface {
 	FromYaml(name string) error
 }
 
-func toJson(v any, w io.Writer) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(v)
-}
-
-func toYaml(v any, w io.Writer) error {
-	enc := yaml.NewEncoder(w, yaml.UseLiteralStyleIfMultiline(true))
-	return enc.Encode(v)
-}
-
-func readYamlFile(v any, name string) error {
-	f, err := os.Open(name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	dec := yaml.NewDecoder(f, yaml.DisallowUnknownField())
-	return dec.Decode(v)
-}
-
-func writeYamlFile(v any, name string) error {
-	f, err := os.Create(name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return toYaml(v, f)
-}
-
-func toTable(w io.Writer, fn func(t table.Writer)) {
-	tb := table.NewWriter()
-	tb.SetOutputMirror(w)
-	fn(tb)
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	tb.SetStyle(s)
-	tb.Render()
-}
-
-func WriteAsFormat(format string, writable FormatWriter, w io.Writer) {
-	switch format {
-	case "json":
-		writable.ToJson(w)
-	case "yaml":
-		writable.ToYaml(w)
-	case "table":
-		writable.ToTable(w)
-	default:
-		writable.ToTable(w)
-	}
-}
-
-func WriteToDir(name string, writable DirWriter) error {
-	return writable.WriteToDir(name)
-}
-func LoadFromYaml(name string, loader YamlFileLoader) error {
-	return loader.FromYaml(name)
-}
-
 type Configuration struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
 	Metadata   struct {
+		Group     string `json:"group"`
+		DataID    string `json:"name"`
+		Namespace string `json:"namespace"`
+	} `json:"metadata"`
+	Spec struct {
 		Application string `json:"application"`
-		Group       string `json:"group"`
-		DataID      string `json:"name"`
-		Namespace   string `json:"namespace"`
+		Description string `json:"description"`
+		Content     string `json:"data"`
 		Type        string `json:"type"`
 		Tags        string `json:"tags"`
-		Description string `json:"description"`
-	} `json:"metadata"`
-	Data   string `json:"data"`
+	} `json:"spec"`
 	Status struct {
 		Md5              string `json:"md5,omitempty"`
 		EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
@@ -145,11 +87,11 @@ func (c *Configuration) FromNacosConfig(apiVersion string, nc *nacos.Config) {
 	c.Metadata.DataID = nc.DataID
 	c.Metadata.Namespace = nc.NamespaceID
 	c.Metadata.Group = nc.Group
-	c.Metadata.Application = nc.Application
-	c.Metadata.Type = nc.Type
-	c.Metadata.Tags = nc.Tags
-	c.Metadata.Description = nc.Description
-	c.Data = nc.Content
+	c.Spec.Application = nc.Application
+	c.Spec.Type = nc.Type
+	c.Spec.Tags = nc.Tags
+	c.Spec.Description = nc.Description
+	c.Spec.Content = nc.Content
 	c.Status.Md5 = nc.Md5
 	c.Status.CreateTime = nc.CreateTime
 	c.Status.ModifyTime = nc.ModifyTime
@@ -166,7 +108,7 @@ func (list *ConfigurationList) ToTable(w io.Writer) {
 	toTable(w, func(t table.Writer) {
 		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
 		for _, item := range list.Items {
-			t.AppendRow(table.Row{item.Metadata.Namespace, item.Metadata.DataID, item.Metadata.Group, item.Metadata.Application, item.Metadata.Type})
+			t.AppendRow(table.Row{item.Metadata.Namespace, item.Metadata.DataID, item.Metadata.Group, item.Spec.Application, item.Spec.Type})
 		}
 		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
 	})
@@ -293,4 +235,64 @@ func (n *Namespace) FromNacosNamespace(apiVersion string, e *nacos.Namespace) {
 	n.Status.ConfigCount = e.ConfigCount
 	n.Status.Quota = e.Quota
 	n.Status.Type = e.Type
+}
+
+func toJson(v any, w io.Writer) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
+}
+
+func toYaml(v any, w io.Writer) error {
+	enc := yaml.NewEncoder(w, yaml.UseLiteralStyleIfMultiline(true))
+	return enc.Encode(v)
+}
+
+func readYamlFile(v any, name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	dec := yaml.NewDecoder(f, yaml.DisallowUnknownField())
+	return dec.Decode(v)
+}
+
+func writeYamlFile(v any, name string) error {
+	f, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return toYaml(v, f)
+}
+
+func toTable(w io.Writer, fn func(t table.Writer)) {
+	tb := table.NewWriter()
+	tb.SetOutputMirror(w)
+	fn(tb)
+	s := table.StyleLight
+	s.Options = table.OptionsNoBordersAndSeparators
+	tb.SetStyle(s)
+	tb.Render()
+}
+
+func WriteAsFormat(format string, writable FormatWriter, w io.Writer) {
+	switch format {
+	case "json":
+		writable.ToJson(w)
+	case "yaml":
+		writable.ToYaml(w)
+	case "table":
+		writable.ToTable(w)
+	default:
+		writable.ToTable(w)
+	}
+}
+
+func WriteToDir(name string, writable DirWriter) error {
+	return writable.WriteToDir(name)
+}
+func LoadFromYaml(name string, loader YamlFileLoader) error {
+	return loader.FromYaml(name)
 }
