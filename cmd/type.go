@@ -62,7 +62,7 @@ type Configuration struct {
 		EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
 		CreateTime       int64  `json:"createTime,omitempty"`
 		ModifyTime       int64  `json:"modifyTime,omitempty"`
-	} `json:"status,omitempty"`
+	} `json:"status"`
 }
 
 func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration {
@@ -211,7 +211,7 @@ type Namespace struct {
 		Quota       int `json:"quota,omitempty"`
 		ConfigCount int `json:"configCount,omitempty"`
 		Type        int `json:"type,omitempty"`
-	} `json:"status,omitempty"`
+	} `json:"status"`
 }
 
 func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
