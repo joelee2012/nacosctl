@@ -58,11 +58,5 @@ func GetCs(args []string) {
 			allCs = cs
 		}
 	}
-	var sourceList ConfigurationList
-	sourceList.FromNacosConfigList("V1", allCs)
-	if cmdOpts.OutDir != "" {
-		cobra.CheckErr(sourceList.WriteToDir(cmdOpts.OutDir))
-	} else {
-		WriteAsFormat(cmdOpts.Output, &sourceList, os.Stdout)
-	}
+	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewConfigurationList("V1", allCs), os.Stdout))
 }

@@ -16,6 +16,7 @@ type FormatWriter interface {
 	TableWriter
 	JsonWriter
 	YamlWriter
+	DirWriter
 }
 
 type TableWriter interface {
@@ -64,6 +65,25 @@ type Configuration struct {
 	} `json:"status"`
 }
 
+func NewConfiguration(apiVersion string, nc *nacos.Config) *Configuration {
+	c := new(Configuration)
+	c.APIVersion = apiVersion
+	c.Kind = "Configuration"
+	c.Metadata.DataID = nc.DataID
+	c.Metadata.Namespace = nc.NamespaceID
+	c.Metadata.Group = nc.Group
+	c.Spec.Application = nc.Application
+	c.Spec.Type = nc.Type
+	c.Spec.Tags = nc.Tags
+	c.Spec.Description = nc.Description
+	c.Spec.Content = nc.Content
+	c.Status.Md5 = nc.Md5
+	c.Status.CreateTime = nc.CreateTime
+	c.Status.ModifyTime = nc.ModifyTime
+	c.Status.EncryptedDataKey = nc.EncryptedDataKey
+	return c
+}
+
 func (c *Configuration) ToJson(w io.Writer) error {
 	return toJson(c, w)
 }
@@ -81,27 +101,20 @@ func (c *Configuration) FromYaml(name string) error {
 	return readYamlFile(c, name)
 }
 
-func (c *Configuration) FromNacosConfig(apiVersion string, nc *nacos.Config) {
-	c.APIVersion = apiVersion
-	c.Kind = "Configuration"
-	c.Metadata.DataID = nc.DataID
-	c.Metadata.Namespace = nc.NamespaceID
-	c.Metadata.Group = nc.Group
-	c.Spec.Application = nc.Application
-	c.Spec.Type = nc.Type
-	c.Spec.Tags = nc.Tags
-	c.Spec.Description = nc.Description
-	c.Spec.Content = nc.Content
-	c.Status.Md5 = nc.Md5
-	c.Status.CreateTime = nc.CreateTime
-	c.Status.ModifyTime = nc.ModifyTime
-	c.Status.EncryptedDataKey = nc.EncryptedDataKey
-}
-
 type ConfigurationList struct {
 	APIVersion string           `json:"apiVersion"`
 	Items      []*Configuration `json:"items"`
 	Kind       string           `json:"kind"`
+}
+
+func NewConfigurationList(apiVersion string, cs *nacos.ConfigList) *ConfigurationList {
+	list := new(ConfigurationList)
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range cs.Items {
+		list.Items = append(list.Items, NewConfiguration("v1", item))
+	}
+	return list
 }
 
 func (list *ConfigurationList) ToTable(w io.Writer) {
@@ -120,16 +133,6 @@ func (list *ConfigurationList) ToJson(w io.Writer) error {
 
 func (list *ConfigurationList) ToYaml(w io.Writer) error {
 	return toYaml(list, w)
-}
-
-func (list *ConfigurationList) FromNacosConfigList(apiVersion string, cs *nacos.ConfigList) {
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range cs.Items {
-		var c Configuration
-		c.FromNacosConfig("v1", item)
-		list.Items = append(list.Items, &c)
-	}
 }
 
 func (list *ConfigurationList) WriteToDir(name string) error {
@@ -156,22 +159,22 @@ type NamespaceList struct {
 	Kind       string       `json:"kind"`
 }
 
+func NewNamespaceList(apiVersion string, ns *nacos.NsList) *NamespaceList {
+	list := new(NamespaceList)
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range ns.Items {
+		list.Items = append(list.Items, NewNamespace("v1", item))
+	}
+	return list
+}
+
 func (list *NamespaceList) ToJson(w io.Writer) error {
 	return toJson(list, w)
 }
 
 func (list *NamespaceList) ToYaml(w io.Writer) error {
 	return toYaml(list, w)
-}
-
-func (list *NamespaceList) FromNacosNsList(apiVersion string, ns *nacos.NsList) {
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range ns.Items {
-		var n Namespace
-		n.FromNacosNamespace("v1", item)
-		list.Items = append(list.Items, &n)
-	}
 }
 
 func (list *NamespaceList) ToTable(w io.Writer) {
@@ -211,6 +214,19 @@ type Namespace struct {
 	} `json:"status"`
 }
 
+func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
+	n := new(Namespace)
+	n.APIVersion = apiVersion
+	n.Kind = "Namespace"
+	n.Metadata.Name = e.Name
+	n.Metadata.ID = e.ID
+	n.Metadata.Description = e.Description
+	n.Status.ConfigCount = e.ConfigCount
+	n.Status.Quota = e.Quota
+	n.Status.Type = e.Type
+	return n
+}
+
 func (n *Namespace) ToJson(w io.Writer) error {
 	return toJson(n, w)
 }
@@ -224,17 +240,6 @@ func (n *Namespace) ToFile(name string) error {
 
 func (n *Namespace) FromYaml(name string) error {
 	return readYamlFile(n, name)
-}
-
-func (n *Namespace) FromNacosNamespace(apiVersion string, e *nacos.Namespace) {
-	n.APIVersion = apiVersion
-	n.Kind = "Namespace"
-	n.Metadata.Name = e.Name
-	n.Metadata.ID = e.ID
-	n.Metadata.Description = e.Description
-	n.Status.ConfigCount = e.ConfigCount
-	n.Status.Quota = e.Quota
-	n.Status.Type = e.Type
 }
 
 func toJson(v any, w io.Writer) error {
@@ -277,17 +282,18 @@ func toTable(w io.Writer, fn func(t table.Writer)) {
 	tb.Render()
 }
 
-func WriteAsFormat(format string, writable FormatWriter, w io.Writer) {
+func WriteAsFormat(format string, writable FormatWriter, w io.Writer) error {
 	switch format {
 	case "json":
-		writable.ToJson(w)
+		return writable.ToJson(w)
 	case "yaml":
-		writable.ToYaml(w)
+		return writable.ToYaml(w)
 	case "table":
 		writable.ToTable(w)
 	default:
-		writable.ToTable(w)
+		return writable.WriteToDir(format)
 	}
+	return nil
 }
 
 func WriteToDir(name string, writable DirWriter) error {
