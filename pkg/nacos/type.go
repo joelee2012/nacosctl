@@ -129,9 +129,9 @@ type Namespace struct {
 	ID          string `json:"namespace"`
 	Name        string `json:"namespaceShowName"`
 	Description string `json:"namespaceDesc"`
-	Quota       int    `json:"quota"`
-	ConfigCount int    `json:"configCount"`
-	Type        int    `json:"type"`
+	Quota       int    `json:"quota,omitempty"`
+	ConfigCount int    `json:"configCount,omitempty"`
+	Type        int    `json:"type,omitempty"`
 }
 
 func (n *Namespace) ToJson(w io.Writer) error {

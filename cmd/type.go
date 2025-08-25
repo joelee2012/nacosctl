@@ -51,18 +51,18 @@ type Configuration struct {
 		Namespace string `json:"namespace"`
 	} `json:"metadata"`
 	Spec struct {
-		Application string `json:"application"`
-		Description string `json:"description"`
 		Content     string `json:"data"`
 		Type        string `json:"type"`
-		Tags        string `json:"tags"`
+		Application string `json:"application,omitempty"`
+		Description string `json:"description,omitempty"`
+		Tags        string `json:"tags,omitempty"`
 	} `json:"spec"`
 	Status struct {
 		Md5              string `json:"md5,omitempty"`
 		EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
 		CreateTime       int64  `json:"createTime,omitempty"`
 		ModifyTime       int64  `json:"modifyTime,omitempty"`
-	} `json:"status"`
+	} `json:"status,omitempty"`
 }
 
 func NewConfiguration(apiVersion string, nc *nacos.Config) *Configuration {
@@ -208,10 +208,10 @@ type Namespace struct {
 		Description string `json:"description"`
 	} `json:"metadata"`
 	Status struct {
-		Quota       int `json:"quota"`
-		ConfigCount int `json:"configCount"`
-		Type        int `json:"type"`
-	} `json:"status"`
+		Quota       int `json:"quota,omitempty"`
+		ConfigCount int `json:"configCount,omitempty"`
+		Type        int `json:"type,omitempty"`
+	} `json:"status,omitempty"`
 }
 
 func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
