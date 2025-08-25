@@ -441,28 +441,28 @@ func (c *Client) ListRole() (*RoleList, error) {
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
 	for {
-		users := new(RoleList)
+		roles := new(RoleList)
 		url := fmt.Sprintf("%s/v1/auth/roles?%s", c.URL, v.Encode())
 		resp, err := http.Get(url)
-		if err := decode(resp, err, users); err != nil {
+		if err := decode(resp, err, roles); err != nil {
 			return nil, err
 		}
-		allRoles.Items = append(allRoles.Items, users.Items...)
-		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
+		allRoles.Items = append(allRoles.Items, roles.Items...)
+		if roles.PagesAvailable == 0 || roles.PagesAvailable == roles.PageNumber {
 			break
 		}
-		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
+		v.Set("pageNo", strconv.Itoa(roles.PageNumber+1))
 	}
 	return allRoles, nil
 }
 
 func (c *Client) GetRole(name string) (*Role, error) {
-	users, err := c.ListRole()
+	roles, err := c.ListRole()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, role := range users.Items {
+	for _, role := range roles.Items {
 		if role.Name == name {
 			return role, nil
 		}
