@@ -185,3 +185,28 @@ type User struct {
 	Name     string `json:"username"`
 	Password string `json:"password"`
 }
+
+type RoleList struct {
+	TotalCount     int     `json:"totalCount,omitempty"`
+	PageNumber     int     `json:"pageNumber,omitempty"`
+	PagesAvailable int     `json:"pagesAvailable,omitempty"`
+	Items          []*Role `json:"pageItems"`
+}
+
+type Role struct {
+	Name     string `json:"role"`
+	Username string `json:"username"`
+}
+
+type PermissionList struct {
+	TotalCount     int           `json:"totalCount,omitempty"`
+	PageNumber     int           `json:"pageNumber,omitempty"`
+	PagesAvailable int           `json:"pagesAvailable,omitempty"`
+	Items          []*Permission `json:"pageItems"`
+}
+
+type Permission struct {
+	Role       string `json:"role"`
+	Resource   string `json:"resource"`
+	Permission string `json:"action"`
+}

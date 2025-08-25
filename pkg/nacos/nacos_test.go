@@ -87,6 +87,35 @@ var users = `
 }
 `
 
+var roles = `
+{
+  "totalCount": 1,
+  "pageNumber": 1,
+  "pagesAvailable": 1,
+  "pageItems": [
+    {
+      "role": "ROLE_ADMIN",
+      "username": "nacos"
+    }
+  ]
+}
+`
+
+var permissions = `
+{
+  "totalCount": 1,
+  "pageNumber": 1,
+  "pagesAvailable": 1,
+  "pageItems": [
+    {
+      "role": "ROLE_ADMIN",
+      "resource": "backend:*:*",
+      "action": "rw"
+    }
+  ]
+}
+`
+
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
 	assert.Equal(t, "http://localhost:8848", c.URL)
@@ -115,6 +144,10 @@ func startServer() (*httptest.Server, *Client) {
 			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
 		} else if r.URL.Path == "/v1/auth/users" {
 			w.Write([]byte(users))
+		} else if r.URL.Path == "/v1/auth/roles" {
+			w.Write([]byte(roles))
+		} else if r.URL.Path == "/v1/auth/permissions" {
+			w.Write([]byte(permissions))
 		}
 	}))
 	c := NewClient(ts.URL, "user", "password")
@@ -328,5 +361,82 @@ func TestGetUser(t *testing.T) {
 	user, err := c.GetUser("user1")
 	if assert.NoError(t, err) {
 		assert.Equal(t, "user1", user.Name)
+	}
+}
+
+func TestListRole(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	users, err := c.ListRole()
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ROLE_ADMIN", users.Items[0].Name)
+		assert.Equal(t, "nacos", users.Items[0].Username)
+	}
+}
+
+func TestCreateRole(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.CreateRole("role1", "user1")
+	assert.NoError(t, err)
+}
+
+func TestDeleteRole(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.DeleteRole("role1", "user1")
+	assert.NoError(t, err)
+}
+
+func TestGetRole(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	user, err := c.GetRole("ROLE_ADMIN")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ROLE_ADMIN", user.Name)
+	}
+}
+
+func TestListPermission(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	users, err := c.ListPermission()
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ROLE_ADMIN", users.Items[0].Role)
+		assert.Equal(t, "backend:*:*", users.Items[0].Resource)
+		assert.Equal(t, "rw", users.Items[0].Permission)
+	}
+}
+
+func TestCreatePermission(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.CreatePermission("ROLE_ADMIN", "backend:*:*", "rw")
+	assert.NoError(t, err)
+}
+
+func TestDeletePermission(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	err := c.DeletePermission("ROLE_ADMIN", "backend:*:*", "rw")
+	assert.NoError(t, err)
+}
+
+func TestGetPermission(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+
+	perm, err := c.GetPermission("ROLE_ADMIN", "backend:*:*", "rw")
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ROLE_ADMIN", perm.Role)
+		assert.Equal(t, "backend:*:*", perm.Resource)
+		assert.Equal(t, "rw", perm.Permission)
 	}
 }
