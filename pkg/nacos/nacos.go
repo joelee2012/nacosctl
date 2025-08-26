@@ -363,7 +363,7 @@ func (c *Client) ListUser() (*UserList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allUsers := new(UserList)
+	all := new(UserList)
 	v := url.Values{}
 	v.Add("serach", "accurate")
 	v.Add("accessToken", token)
@@ -376,13 +376,13 @@ func (c *Client) ListUser() (*UserList, error) {
 		if err := decode(resp, err, users); err != nil {
 			return nil, err
 		}
-		allUsers.Items = append(allUsers.Items, users.Items...)
+		all.Items = append(all.Items, users.Items...)
 		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
 	}
-	return allUsers, nil
+	return all, nil
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -435,7 +435,7 @@ func (c *Client) ListRole() (*RoleList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allRoles := new(RoleList)
+	all := new(RoleList)
 	v := url.Values{}
 	v.Add("serach", "accurate")
 	v.Add("accessToken", token)
@@ -448,13 +448,13 @@ func (c *Client) ListRole() (*RoleList, error) {
 		if err := decode(resp, err, roles); err != nil {
 			return nil, err
 		}
-		allRoles.Items = append(allRoles.Items, roles.Items...)
+		all.Items = append(all.Items, roles.Items...)
 		if roles.PagesAvailable == 0 || roles.PagesAvailable == roles.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(roles.PageNumber+1))
 	}
-	return allRoles, nil
+	return all, nil
 }
 
 func (c *Client) GetRole(name string) (*Role, error) {
@@ -509,7 +509,7 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allPerms := new(PermissionList)
+	all := new(PermissionList)
 	v := url.Values{}
 	v.Add("serach", "accurate")
 	v.Add("accessToken", token)
@@ -522,13 +522,13 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 		if err := decode(resp, err, perms); err != nil {
 			return nil, err
 		}
-		allPerms.Items = append(allPerms.Items, perms.Items...)
+		all.Items = append(all.Items, perms.Items...)
 		if perms.PagesAvailable == 0 || perms.PagesAvailable == perms.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(perms.PageNumber+1))
 	}
-	return allPerms, nil
+	return all, nil
 }
 
 func (c *Client) GetPermission(role, resource, permission string) (*Permission, error) {
