@@ -365,7 +365,7 @@ func (c *Client) ListUser() (*UserList, error) {
 	}
 	all := new(UserList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
@@ -437,7 +437,7 @@ func (c *Client) ListRole() (*RoleList, error) {
 	}
 	all := new(RoleList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
@@ -511,7 +511,7 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 	}
 	all := new(PermissionList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
