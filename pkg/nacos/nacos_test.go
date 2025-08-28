@@ -395,7 +395,7 @@ func TestGetRole(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	user, err := c.GetRole("ROLE_ADMIN")
+	user, err := c.GetRole("ROLE_ADMIN", "nacos")
 	if assert.NoError(t, err) {
 		assert.Equal(t, "ROLE_ADMIN", user.Name)
 	}
