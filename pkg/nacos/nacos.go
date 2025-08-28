@@ -39,9 +39,10 @@ type State struct {
 
 func NewClient(url, user, password string) *Client {
 	return &Client{
-		URL:      url,
-		User:     user,
-		Password: password,
+		URL:        url,
+		User:       user,
+		Password:   password,
+		APIVersion: "v1",
 	}
 }
 
@@ -74,7 +75,7 @@ func (c *Client) GetToken() (string, error) {
 	return c.AccessToken, err
 }
 
-func (c *Client) ListNamespace() (*NsList, error) {
+func (c *Client) ListNamespace() (*NamespaceList, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (c *Client) ListNamespace() (*NsList, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	namespaces := new(NsList)
+	namespaces := new(NamespaceList)
 	err = decode(resp, err, namespaces)
 	return namespaces, err
 }
@@ -178,7 +179,7 @@ type GetCSOpts struct {
 	NamespaceID string
 }
 
-func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
+func (c *Client) GetConfig(opts *GetCSOpts) (*Configuration, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -192,7 +193,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
 	resp, err := http.Get(url)
-	config := new(Config)
+	config := new(Configuration)
 	err = decode(resp, err, config)
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
@@ -202,17 +203,17 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Config, error) {
 }
 
 type ListCSOpts struct {
+	Application string
+	Content     string
 	DataID      string
 	Group       string
-	Content     string
-	AppName     string
 	NamespaceID string
-	PageNumber  int
 	Tags        string
+	PageNumber  int
 	PageSize    int
 }
 
-func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
+func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigurationList, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -220,7 +221,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
-	v.Add("appName", opts.AppName)
+	v.Add("appName", opts.Application)
 	v.Add("config_tags", opts.Tags)
 	if opts.PageNumber == 0 {
 		opts.PageNumber = 1
@@ -234,14 +235,14 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigList, error) {
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
-	configs := new(ConfigList)
+	configs := new(ConfigurationList)
 	resp, err := http.Get(url)
 	err = decode(resp, err, configs)
 	return configs, err
 }
 
-func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
-	nsCs := new(ConfigList)
+func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
+	nsCs := new(ConfigurationList)
 	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceID: namespace}
 	for {
 		cs, err := c.ListConfig(&listOpts)
@@ -257,8 +258,8 @@ func (c *Client) ListConfigInNs(namespace, group string) (*ConfigList, error) {
 	return nsCs, nil
 }
 
-func (c *Client) ListAllConfig() (*ConfigList, error) {
-	allCs := new(ConfigList)
+func (c *Client) ListAllConfig() (*ConfigurationList, error) {
+	allCs := new(ConfigurationList)
 	nss, err := c.ListNamespace()
 	if err != nil {
 		return nil, err
@@ -274,14 +275,14 @@ func (c *Client) ListAllConfig() (*ConfigList, error) {
 }
 
 type CreateCSOpts struct {
-	DataID      string
-	Group       string
-	Content     string
 	Application string
+	Content     string
+	DataID      string
+	Description string
+	Group       string
 	NamespaceID string
 	Tags        string
 	Type        string
-	Description string
 }
 
 func (c *Client) CreateConfig(opts *CreateCSOpts) error {
@@ -362,9 +363,9 @@ func (c *Client) ListUser() (*UserList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allUsers := new(UserList)
+	all := new(UserList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
@@ -375,13 +376,13 @@ func (c *Client) ListUser() (*UserList, error) {
 		if err := decode(resp, err, users); err != nil {
 			return nil, err
 		}
-		allUsers.Items = append(allUsers.Items, users.Items...)
+		all.Items = append(all.Items, users.Items...)
 		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
 	}
-	return allUsers, nil
+	return all, nil
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -434,9 +435,9 @@ func (c *Client) ListRole() (*RoleList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allRoles := new(RoleList)
+	all := new(RoleList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
@@ -447,13 +448,13 @@ func (c *Client) ListRole() (*RoleList, error) {
 		if err := decode(resp, err, roles); err != nil {
 			return nil, err
 		}
-		allRoles.Items = append(allRoles.Items, roles.Items...)
+		all.Items = append(all.Items, roles.Items...)
 		if roles.PagesAvailable == 0 || roles.PagesAvailable == roles.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(roles.PageNumber+1))
 	}
-	return allRoles, nil
+	return all, nil
 }
 
 func (c *Client) GetRole(name string) (*Role, error) {
@@ -508,9 +509,9 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 	if err != nil {
 		return nil, err
 	}
-	allPerms := new(PermissionList)
+	all := new(PermissionList)
 	v := url.Values{}
-	v.Add("serach", "accurate")
+	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
@@ -521,13 +522,13 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 		if err := decode(resp, err, perms); err != nil {
 			return nil, err
 		}
-		allPerms.Items = append(allPerms.Items, perms.Items...)
+		all.Items = append(all.Items, perms.Items...)
 		if perms.PagesAvailable == 0 || perms.PagesAvailable == perms.PageNumber {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(perms.PageNumber+1))
 	}
-	return allPerms, nil
+	return all, nil
 }
 
 func (c *Client) GetPermission(role, resource, permission string) (*Permission, error) {

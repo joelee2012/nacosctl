@@ -40,7 +40,7 @@ func init() {
 func GetCs(args []string) {
 	client := NewNacosClient()
 
-	allCs := new(nacos.ConfigList)
+	allCs := new(nacos.ConfigurationList)
 	var err error
 	if cmdOpts.ShowAll {
 		allCs, err = client.ListAllConfig()
@@ -58,9 +58,5 @@ func GetCs(args []string) {
 			allCs = cs
 		}
 	}
-	if cmdOpts.OutDir != "" {
-		cobra.CheckErr(allCs.WriteToDir(cmdOpts.OutDir))
-	} else {
-		nacos.WriteAsFormat(cmdOpts.Output, allCs, os.Stdout)
-	}
+	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewConfigurationList(client.APIVersion, allCs), os.Stdout))
 }
