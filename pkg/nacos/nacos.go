@@ -457,18 +457,18 @@ func (c *Client) ListRole() (*RoleList, error) {
 	return all, nil
 }
 
-func (c *Client) GetRole(name string) (*Role, error) {
+func (c *Client) GetRole(name, username string) (*Role, error) {
 	roles, err := c.ListRole()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, role := range roles.Items {
-		if role.Name == name {
+		if role.Name == name && role.Username == username {
 			return role, nil
 		}
 	}
-	return nil, fmt.Errorf("404 Not Found %s", name)
+	return nil, fmt.Errorf("404 Not Found %s:%s", name, username)
 }
 
 func (c *Client) CreatePermission(role, resource, permission string) error {
