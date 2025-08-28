@@ -5,18 +5,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/jedib0t/go-pretty/table"
 )
 
 type FormatWriter interface {
-	TableWriter
+	FileWriter
 	JsonWriter
 	YamlWriter
-}
-
-type TableWriter interface {
-	ToTable(w io.Writer)
 }
 
 type JsonWriter interface {
@@ -29,6 +23,7 @@ type YamlWriter interface {
 type FileWriter interface {
 	ToFile(w io.Writer) error
 }
+
 type DirWriter interface {
 	WriteToDir(name string) error
 }
@@ -43,16 +38,6 @@ type ConfigList struct {
 	PageNumber     int       `json:"pageNumber,omitempty"`
 	PagesAvailable int       `json:"pagesAvailable,omitempty"`
 	Items          []*Config `json:"pageItems"`
-}
-
-func (c *ConfigList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
-		for _, item := range c.Items {
-			t.AppendRow(table.Row{item.NamespaceID, item.DataID, item.Group, item.Application, item.Type})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
-	})
 }
 
 func (c *ConfigList) ToJson(w io.Writer) error {
@@ -120,16 +105,6 @@ type NsList struct {
 	Items []*Namespace `json:"data"`
 }
 
-func (n *NsList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"})
-		for _, ns := range n.Items {
-			t.AppendRow(table.Row{ns.Name, ns.ID, ns.Description, ns.ConfigCount})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-	})
-}
-
 func (n *NsList) ToJson(w io.Writer) error {
 	return toJson(n, w)
 }
@@ -139,11 +114,11 @@ func (n *NsList) ToYaml(w io.Writer) error {
 }
 
 func (n *NsList) WriteToDir(name string) error {
-	for _, c := range n.Items {
-		if c.ID == "" {
+	for _, e := range n.Items {
+		if e.ID == "" {
 			continue
 		}
-		if err := c.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", c.Name))); err != nil {
+		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.ID))); err != nil {
 			return err
 		}
 	}
@@ -154,9 +129,9 @@ type Namespace struct {
 	ID          string `json:"namespace"`
 	Name        string `json:"namespaceShowName"`
 	Description string `json:"namespaceDesc"`
-	Quota       int    `json:"quota"`
-	ConfigCount int    `json:"configCount"`
-	Type        int    `json:"type"`
+	Quota       int    `json:"quota,omitempty"`
+	ConfigCount int    `json:"configCount,omitempty"`
+	Type        int    `json:"type,omitempty"`
 }
 
 func (n *Namespace) ToJson(w io.Writer) error {
