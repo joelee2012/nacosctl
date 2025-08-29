@@ -112,7 +112,7 @@ func NewConfigurationList(apiVersion string, cs *nacos.ConfigurationList) *Confi
 	list.Kind = "List"
 	list.APIVersion = apiVersion
 	for _, item := range cs.Items {
-		list.Items = append(list.Items, NewConfiguration("v1", item))
+		list.Items = append(list.Items, NewConfiguration(apiVersion, item))
 	}
 	return list
 }
@@ -164,7 +164,7 @@ func NewNamespaceList(apiVersion string, ns *nacos.NamespaceList) *NamespaceList
 	list.Kind = "List"
 	list.APIVersion = apiVersion
 	for _, item := range ns.Items {
-		list.Items = append(list.Items, NewNamespace("v1", item))
+		list.Items = append(list.Items, NewNamespace(apiVersion, item))
 	}
 	return list
 }
@@ -253,6 +253,103 @@ func toYaml(v any, w io.Writer) error {
 	return enc.Encode(v)
 }
 
+type UserList struct {
+	APIVersion string  `json:"apiVersion"`
+	Kind       string  `json:"kind"`
+	Items      []*User `json:"items"`
+}
+
+type User struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Name     string `json:"username"`
+		Password string `json:"password"`
+	} `json:"metadata"`
+}
+
+func NewUserList(apiVersion string, users *nacos.UserList) *UserList {
+	list := new(UserList)
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range users.Items {
+		list.Items = append(list.Items, NewUser(apiVersion, item))
+	}
+	return list
+}
+
+func NewUser(apiVersion string, user *nacos.User) *User {
+	u := new(User)
+	u.APIVersion = apiVersion
+	u.Kind = "User"
+	u.Metadata.Name = user.Name
+	u.Metadata.Password = user.Password
+	return u
+}
+
+// func (list *UserList) ToJson(w io.Writer) error {
+// 	return toJson(list, w)
+// }
+
+// func (list *UserList) ToYaml(w io.Writer) error {
+// 	return toYaml(list, w)
+// }
+
+// func (list *UserList) ToTable(w io.Writer) {
+// 	toTable(w, func(t table.Writer) {
+// 		t.AppendHeader(table.Row{"USERNAME"})
+// 		for _, ns := range list.Items {
+// 			t.AppendRow(table.Row{ns.Metadata.Name, ns.Metadata.ID, ns.Metadata.Description, ns.Status.ConfigCount})
+// 		}
+// 		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
+// 	})
+// }
+
+// func (n *NamespaceList) WriteToDir(name string) error {
+// 	for _, e := range n.Items {
+// 		if e.Metadata.ID == "" {
+// 			continue
+// 		}
+// 		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.Metadata.ID))); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+type RoleList struct {
+	APIVersion string  `json:"apiVersion"`
+	Kind       string  `json:"kind"`
+	Items      []*Role `json:"items"`
+}
+
+type Role struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Name     string `json:"name"`
+		Username string `json:"username"`
+	} `json:"metadata"`
+}
+
+func NewRoleList(apiVersion string, users *nacos.UserList) *UserList {
+	list := new(UserList)
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range users.Items {
+		list.Items = append(list.Items, NewUser(apiVersion, item))
+	}
+	return list
+}
+
+func NewUser(apiVersion string, user *nacos.User) *User {
+	u := new(User)
+	u.APIVersion = apiVersion
+	u.Kind = "User"
+	u.Metadata.Name = user.Name
+	u.Metadata.Password = user.Password
+	return u
+}
 func readYamlFile(v any, name string) error {
 	f, err := os.Open(name)
 	if err != nil {
