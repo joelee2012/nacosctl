@@ -332,23 +332,23 @@ type Role struct {
 	} `json:"metadata"`
 }
 
-func NewRoleList(apiVersion string, users *nacos.UserList) *UserList {
-	list := new(UserList)
+func NewRoleList(apiVersion string, roles *nacos.RoleList) *RoleList {
+	list := new(RoleList)
 	list.Kind = "List"
 	list.APIVersion = apiVersion
-	for _, item := range users.Items {
-		list.Items = append(list.Items, NewUser(apiVersion, item))
+	for _, item := range roles.Items {
+		list.Items = append(list.Items, NewRole(apiVersion, item))
 	}
 	return list
 }
 
-func NewUser(apiVersion string, user *nacos.User) *User {
-	u := new(User)
-	u.APIVersion = apiVersion
-	u.Kind = "User"
-	u.Metadata.Name = user.Name
-	u.Metadata.Password = user.Password
-	return u
+func NewRole(apiVersion string, user *nacos.Role) *Role {
+	r := new(Role)
+	r.APIVersion = apiVersion
+	r.Kind = "Role"
+	r.Metadata.Name = user.Name
+	r.Metadata.Username = user.Username
+	return r
 }
 func readYamlFile(v any, name string) error {
 	f, err := os.Open(name)
