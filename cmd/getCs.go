@@ -39,7 +39,6 @@ func init() {
 
 func GetCs(args []string) {
 	client := NewNacosClient()
-
 	allCs := new(nacos.ConfigurationList)
 	var err error
 	if cmdOpts.ShowAll {

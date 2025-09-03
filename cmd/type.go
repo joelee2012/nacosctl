@@ -287,36 +287,6 @@ func NewUser(apiVersion string, user *nacos.User) *User {
 	return u
 }
 
-// func (list *UserList) ToJson(w io.Writer) error {
-// 	return toJson(list, w)
-// }
-
-// func (list *UserList) ToYaml(w io.Writer) error {
-// 	return toYaml(list, w)
-// }
-
-// func (list *UserList) ToTable(w io.Writer) {
-// 	toTable(w, func(t table.Writer) {
-// 		t.AppendHeader(table.Row{"USERNAME"})
-// 		for _, ns := range list.Items {
-// 			t.AppendRow(table.Row{ns.Metadata.Name, ns.Metadata.ID, ns.Metadata.Description, ns.Status.ConfigCount})
-// 		}
-// 		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-// 	})
-// }
-
-// func (n *NamespaceList) WriteToDir(name string) error {
-// 	for _, e := range n.Items {
-// 		if e.Metadata.ID == "" {
-// 			continue
-// 		}
-// 		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.Metadata.ID))); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
 type RoleList struct {
 	APIVersion string  `json:"apiVersion"`
 	Kind       string  `json:"kind"`
@@ -350,6 +320,49 @@ func NewRole(apiVersion string, user *nacos.Role) *Role {
 	r.Metadata.Username = user.Username
 	return r
 }
+
+type PermissionList struct {
+	APIVersion string        `json:"apiVersion"`
+	Kind       string        `json:"kind"`
+	Items      []*Permission `json:"items"`
+}
+
+func NewPermissionList(apiVersion string, perms *nacos.PermissionList) *PermissionList {
+	list := new(PermissionList)
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range perms.Items {
+		list.Items = append(list.Items, NewPermission(apiVersion, item))
+	}
+	return list
+}
+
+type ObjectList[T User | Role | Permission] struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Items      []*T   `json:"items"`
+}
+
+type Permission struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Role     string `json:"role"`
+		Resource string `json:"resource"`
+		Action   string `json:"action"`
+	} `json:"metadata"`
+}
+
+func NewPermission(apiVersion string, perm *nacos.Permission) *Permission {
+	p := new(Permission)
+	p.APIVersion = apiVersion
+	p.Kind = "Permission"
+	p.Metadata.Role = perm.Role
+	p.Metadata.Resource = perm.Resource
+	p.Metadata.Action = perm.Action
+	return p
+}
+
 func readYamlFile(v any, name string) error {
 	f, err := os.Open(name)
 	if err != nil {

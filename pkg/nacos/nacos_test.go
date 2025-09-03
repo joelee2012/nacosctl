@@ -409,7 +409,7 @@ func TestListPermission(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, "ROLE_ADMIN", users.Items[0].Role)
 		assert.Equal(t, "backend:*:*", users.Items[0].Resource)
-		assert.Equal(t, "rw", users.Items[0].Permission)
+		assert.Equal(t, "rw", users.Items[0].Action)
 	}
 }
 
@@ -437,6 +437,6 @@ func TestGetPermission(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, "ROLE_ADMIN", perm.Role)
 		assert.Equal(t, "backend:*:*", perm.Resource)
-		assert.Equal(t, "rw", perm.Permission)
+		assert.Equal(t, "rw", perm.Action)
 	}
 }
