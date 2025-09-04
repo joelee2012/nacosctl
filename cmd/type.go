@@ -12,34 +12,16 @@ import (
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
-type FormatWriter interface {
-	TableWriter
-	JsonWriter
-	YamlWriter
-	DirWriter
+type DirWriter interface {
+	WriteToDir(name string) error
 }
-
 type TableWriter interface {
 	ToTable(w io.Writer)
 }
 
-type JsonWriter interface {
-	ToJson(w io.Writer) error
-}
-type YamlWriter interface {
-	ToYaml(w io.Writer) error
-}
-
-type FileWriter interface {
-	ToFile(w io.Writer) error
-}
-type DirWriter interface {
-	WriteToDir(name string) error
-}
-
-// YamlFileLoader interface for loading from YAML
-type YamlFileLoader interface {
-	FromYaml(name string) error
+type TableRow interface {
+	TableHeader() table.Row
+	TableRow() table.Row
 }
 
 type Configuration struct {
@@ -84,119 +66,21 @@ func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration
 	return c
 }
 
-func (c *Configuration) ToJson(w io.Writer) error {
-	return toJson(c, w)
+func (c Configuration) TableHeader() table.Row {
+	return table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"}
 }
 
-func (c *Configuration) ToYaml(w io.Writer) error {
-	return toYaml(c, w)
+func (c Configuration) TableRow() table.Row {
+	return table.Row{c.Metadata.Namespace, c.Metadata.DataID, c.Metadata.Group,
+		c.Spec.Application, c.Spec.Type}
 }
 
-func (c *Configuration) ToFile(name string) error {
-	return writeYamlFile(c, name)
-}
-
-// FromYaml load from YAML file
-func (c *Configuration) FromYaml(name string) error {
-	return readYamlFile(c, name)
-}
-
-type ConfigurationList struct {
-	APIVersion string           `json:"apiVersion"`
-	Items      []*Configuration `json:"items"`
-	Kind       string           `json:"kind"`
-}
-
-func NewConfigurationList(apiVersion string, cs *nacos.ConfigurationList) *ConfigurationList {
-	list := new(ConfigurationList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range cs.Items {
-		list.Items = append(list.Items, NewConfiguration("v1", item))
+func (c Configuration) WriteToDir(base string) error {
+	dir := filepath.Join(base, c.Metadata.Namespace, c.Metadata.Group)
+	if err := os.MkdirAll(dir, 0750); err != nil {
+		return err
 	}
-	return list
-}
-
-func (list *ConfigurationList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
-		for _, item := range list.Items {
-			t.AppendRow(table.Row{item.Metadata.Namespace, item.Metadata.DataID, item.Metadata.Group, item.Spec.Application, item.Spec.Type})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
-	})
-}
-
-func (list *ConfigurationList) ToJson(w io.Writer) error {
-	return toJson(list, w)
-}
-
-func (list *ConfigurationList) ToYaml(w io.Writer) error {
-	return toYaml(list, w)
-}
-
-func (list *ConfigurationList) WriteToDir(name string) error {
-	var dir string
-	for _, c := range list.Items {
-		if c.Metadata.Namespace == "" {
-			dir = filepath.Join(name, "public", c.Metadata.Group)
-		} else {
-			dir = filepath.Join(name, c.Metadata.Namespace, c.Metadata.Group)
-		}
-		if err := os.MkdirAll(dir, 0750); err != nil {
-			return err
-		}
-		if err := c.ToFile(filepath.Join(dir, c.Metadata.DataID)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type NamespaceList struct {
-	APIVersion string       `json:"apiVersion"`
-	Items      []*Namespace `json:"items"`
-	Kind       string       `json:"kind"`
-}
-
-func NewNamespaceList(apiVersion string, ns *nacos.NamespaceList) *NamespaceList {
-	list := new(NamespaceList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range ns.Items {
-		list.Items = append(list.Items, NewNamespace("v1", item))
-	}
-	return list
-}
-
-func (list *NamespaceList) ToJson(w io.Writer) error {
-	return toJson(list, w)
-}
-
-func (list *NamespaceList) ToYaml(w io.Writer) error {
-	return toYaml(list, w)
-}
-
-func (list *NamespaceList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"})
-		for _, ns := range list.Items {
-			t.AppendRow(table.Row{ns.Metadata.Name, ns.Metadata.ID, ns.Metadata.Description, ns.Status.ConfigCount})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-	})
-}
-
-func (n *NamespaceList) WriteToDir(name string) error {
-	for _, e := range n.Items {
-		if e.Metadata.ID == "" {
-			continue
-		}
-		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.Metadata.ID))); err != nil {
-			return err
-		}
-	}
-	return nil
+	return writeYamlFile(c, filepath.Join(dir, c.Metadata.DataID))
 }
 
 type Namespace struct {
@@ -226,20 +110,104 @@ func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
 	n.Status.Type = e.Type
 	return n
 }
-
-func (n *Namespace) ToJson(w io.Writer) error {
-	return toJson(n, w)
+func (n Namespace) TableHeader() table.Row {
+	return table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"}
+}
+func (n Namespace) TableRow() table.Row {
+	return table.Row{n.Metadata.Name, n.Metadata.ID, n.Metadata.Description,
+		fmt.Sprintf("%d", n.Status.ConfigCount)}
+}
+func (n Namespace) WriteToDir(base string) error {
+	if n.Metadata.ID == "" {
+		return nil
+	}
+	return writeYamlFile(n, filepath.Join(base, n.Metadata.ID+".yaml"))
 }
 
-func (n *Namespace) ToYaml(w io.Writer) error {
-	return toYaml(n, w)
-}
-func (n *Namespace) ToFile(name string) error {
-	return writeYamlFile(n, name)
+type User struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Name     string `json:"username"`
+		Password string `json:"password"`
+	} `json:"metadata"`
 }
 
-func (n *Namespace) FromYaml(name string) error {
-	return readYamlFile(n, name)
+func NewUser(apiVersion string, user *nacos.User) *User {
+	u := new(User)
+	u.APIVersion = apiVersion
+	u.Kind = "User"
+	u.Metadata.Name = user.Name
+	u.Metadata.Password = user.Password
+	return u
+}
+
+func (u User) TableHeader() table.Row {
+	return table.Row{"NAME", "PASSWORD"}
+}
+func (u User) TableRow() table.Row {
+	return table.Row{u.Metadata.Name, u.Metadata.Password}
+}
+func (u User) WriteToDir(base string) error {
+	return writeYamlFile(u, filepath.Join(base, u.Metadata.Name+".yaml"))
+}
+
+type Role struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Name     string `json:"name"`
+		Username string `json:"username"`
+	} `json:"metadata"`
+}
+
+func NewRole(apiVersion string, user *nacos.Role) *Role {
+	r := new(Role)
+	r.APIVersion = apiVersion
+	r.Kind = "Role"
+	r.Metadata.Name = user.Name
+	r.Metadata.Username = user.Username
+	return r
+}
+
+func (r Role) TableHeader() table.Row {
+	return table.Row{"NAME", "USERNAME"}
+}
+func (r Role) TableRow() table.Row {
+	return table.Row{r.Metadata.Name, r.Metadata.Username}
+}
+func (r Role) WriteToDir(base string) error {
+	return writeYamlFile(r, filepath.Join(base, r.Metadata.Name+r.Metadata.Username+".yaml"))
+}
+
+type Permission struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Metadata   struct {
+		Role     string `json:"role"`
+		Resource string `json:"resource"`
+		Action   string `json:"action"`
+	} `json:"metadata"`
+}
+
+func NewPermission(apiVersion string, perm *nacos.Permission) *Permission {
+	p := new(Permission)
+	p.APIVersion = apiVersion
+	p.Kind = "Permission"
+	p.Metadata.Role = perm.Role
+	p.Metadata.Resource = perm.Resource
+	p.Metadata.Action = perm.Action
+	return p
+}
+
+func (p Permission) TableHeader() table.Row {
+	return table.Row{"ROLE", "RESOURCE", "ACTION"}
+}
+func (p Permission) TableRow() table.Row {
+	return table.Row{p.Metadata.Role, p.Metadata.Resource, p.Metadata.Action}
+}
+func (p Permission) WriteToDir(base string) error {
+	return writeYamlFile(p, filepath.Join(base, p.Metadata.Role+p.Metadata.Resource+p.Metadata.Action+".yaml"))
 }
 
 func toJson(v any, w io.Writer) error {
@@ -272,33 +240,21 @@ func writeYamlFile(v any, name string) error {
 	return toYaml(v, f)
 }
 
-func toTable(w io.Writer, fn func(t table.Writer)) {
-	tb := table.NewWriter()
-	tb.SetOutputMirror(w)
-	fn(tb)
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	tb.SetStyle(s)
-	tb.Render()
+type FormatWriter interface {
+	TableWriter
+	DirWriter
 }
 
-func WriteAsFormat(format string, writable FormatWriter, w io.Writer) error {
+func WriteFormat(fw FormatWriter, format string, w io.Writer) error {
 	switch format {
 	case "json":
-		return writable.ToJson(w)
+		return toJson(fw, w)
 	case "yaml":
-		return writable.ToYaml(w)
+		return toYaml(fw, w)
 	case "table":
-		writable.ToTable(w)
+		fw.ToTable(w)
 	default:
-		return writable.WriteToDir(format)
+		return fw.WriteToDir(format)
 	}
 	return nil
-}
-
-func WriteToDir(name string, writable DirWriter) error {
-	return writable.WriteToDir(name)
-}
-func LoadFromYaml(name string, loader YamlFileLoader) error {
-	return loader.FromYaml(name)
 }

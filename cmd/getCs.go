@@ -39,7 +39,6 @@ func init() {
 
 func GetCs(args []string) {
 	client := NewNacosClient()
-
 	allCs := new(nacos.ConfigurationList)
 	var err error
 	if cmdOpts.ShowAll {
@@ -58,5 +57,7 @@ func GetCs(args []string) {
 			allCs = cs
 		}
 	}
-	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewConfigurationList(client.APIVersion, allCs), os.Stdout))
+	list := NewList(client.APIVersion, allCs.Items, NewConfiguration)
+	// toJson(list, os.Stdout)
+	cobra.CheckErr(WriteFormat(list, cmdOpts.Output, os.Stdout))
 }

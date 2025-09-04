@@ -70,7 +70,7 @@ type PermissionList struct {
 }
 
 type Permission struct {
-	Role       string `json:"role"`
-	Resource   string `json:"resource"`
-	Permission string `json:"action"`
+	Role     string `json:"role"`
+	Resource string `json:"resource"`
+	Action   string `json:"action"`
 }

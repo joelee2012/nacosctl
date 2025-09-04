@@ -531,18 +531,18 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 	return all, nil
 }
 
-func (c *Client) GetPermission(role, resource, permission string) (*Permission, error) {
+func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {
 	perms, err := c.ListPermission()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, p := range perms.Items {
-		if p.Role == role && p.Resource == resource && p.Permission == permission {
+		if p.Role == role && p.Resource == resource && p.Action == action {
 			return p, nil
 		}
 	}
-	return nil, fmt.Errorf("404 Not Found %s:%s:%s", role, resource, permission)
+	return nil, fmt.Errorf("404 Not Found %s:%s:%s", role, resource, action)
 }
 
 func checkStatus(resp *http.Response) error {
