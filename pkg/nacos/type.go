@@ -65,12 +65,21 @@ type ObjectList[T ResourceTypes] struct {
 	Items          []*T `json:"pageItems"`
 }
 
+func (o *ObjectList[T]) Contains(t T) bool {
+	for _, it := range o.Items {
+		if *it == t {
+			return true
+		}
+	}
+	return false
+}
+
 type ConfigurationList = ObjectList[Configuration]
 type UserList = ObjectList[User]
 type RoleList = ObjectList[Role]
 type PermissionList = ObjectList[Permission]
 
-func listResource[T ResourceTypes](c *Client, endpoint string) (*ObjectList[T], error) {
+func listResource[T User | Role | Permission](c *Client, endpoint string) (*ObjectList[T], error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err

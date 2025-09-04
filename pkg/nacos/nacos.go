@@ -424,11 +424,9 @@ func (c *Client) GetRole(name, username string) (*Role, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	for _, role := range roles.Items {
-		if role.Name == name && role.Username == username {
-			return role, nil
-		}
+	r := Role{Name: name, Username: username}
+	if roles.Contains(r) {
+		return &r, nil
 	}
 	return nil, fmt.Errorf("404 Not Found %s:%s", name, username)
 }
