@@ -14,8 +14,8 @@ import (
 
 type FormatWriter interface {
 	TableWriter
-	JsonWriter
-	YamlWriter
+	// JsonWriter
+	// YamlWriter
 	DirWriter
 }
 
@@ -337,12 +337,6 @@ func NewPermissionList(apiVersion string, perms *nacos.PermissionList) *Permissi
 	return list
 }
 
-type ObjectList[T User | Role | Permission] struct {
-	APIVersion string `json:"apiVersion"`
-	Kind       string `json:"kind"`
-	Items      []*T   `json:"items"`
-}
-
 type Permission struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -395,9 +389,9 @@ func toTable(w io.Writer, fn func(t table.Writer)) {
 func WriteAsFormat(format string, writable FormatWriter, w io.Writer) error {
 	switch format {
 	case "json":
-		return writable.ToJson(w)
+		return toJson(writable, w)
 	case "yaml":
-		return writable.ToYaml(w)
+		return toYaml(writable, w)
 	case "table":
 		writable.ToTable(w)
 	default:

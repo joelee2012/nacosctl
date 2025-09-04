@@ -57,5 +57,7 @@ func GetCs(args []string) {
 			allCs = cs
 		}
 	}
-	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewConfigurationList(client.APIVersion, allCs), os.Stdout))
+	list := NewList(client.APIVersion, allCs.Items, NewConfiguration)
+	// toJson(list, os.Stdout)
+	cobra.CheckErr(WriteFormat(list, cmdOpts.Output, os.Stdout))
 }

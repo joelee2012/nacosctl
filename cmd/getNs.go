@@ -48,5 +48,6 @@ func GetNamespace(args []string) {
 		}
 		nss.Items = items
 	}
-	cobra.CheckErr(WriteAsFormat(cmdOpts.Output, NewNamespaceList(client.APIVersion, nss), os.Stdout))
+	list := NewList(client.APIVersion, nss.Items, NewNamespace)
+	cobra.CheckErr(WriteFormat(list, cmdOpts.Output, os.Stdout))
 }
