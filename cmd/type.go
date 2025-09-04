@@ -15,8 +15,11 @@ import (
 type DirWriter interface {
 	WriteToDir(name string) error
 }
-
 type TableWriter interface {
+	ToTable(w io.Writer)
+}
+
+type TableRow interface {
 	TableHeader() table.Row
 	TableRow() table.Row
 }
@@ -237,12 +240,21 @@ func writeYamlFile(v any, name string) error {
 	return toYaml(v, f)
 }
 
-func toTable(w io.Writer, fn func(t table.Writer)) {
-	tb := table.NewWriter()
-	tb.SetOutputMirror(w)
-	fn(tb)
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	tb.SetStyle(s)
-	tb.Render()
+type FormatWriter interface {
+	TableWriter
+	DirWriter
+}
+
+func WriteFormat(fw FormatWriter, format string, w io.Writer) error {
+	switch format {
+	case "json":
+		return toJson(fw, w)
+	case "yaml":
+		return toYaml(fw, w)
+	case "table":
+		fw.ToTable(w)
+	default:
+		return fw.WriteToDir(format)
+	}
+	return nil
 }

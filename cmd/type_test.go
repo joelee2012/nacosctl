@@ -7,82 +7,69 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/stretchr/testify/assert"
 )
 
-// TestWriteJson tests the writeJson function
+var apiVersion = "v1"
+var cs = []*nacos.Configuration{
+	{NamespaceID: "ns1", DataID: "data1", Group: "group1", Application: "app1", Type: "type1"},
+	{NamespaceID: "ns2", DataID: "data2", Group: "group2", Application: "app2", Type: "type2"},
+}
+var ns = []*nacos.Namespace{
+	{ID: "ns1", Name: "data1", Description: "group1"},
+}
+
+var us = []*nacos.User{
+	{Name: "user1", Password: "password1"},
+}
 
 // TestConfigurationListWriteTable tests ConfigurationList.WriteTable method
-// func TestConfigurationListWriteTable(t *testing.T) {
-// 	t.Run("with items", func(t *testing.T) {
-// 		var buf bytes.Buffer
-// 		cl := NewConfigurationList("v1", &nacos.ConfigurationList{
-// 			Items: []*nacos.Configuration{
-// 				{NamespaceID: "ns1", DataID: "data1", Group: "group1", Application: "app1", Type: "type1"},
-// 				{NamespaceID: "ns2", DataID: "data2", Group: "group2", Application: "app2", Type: "type2"},
-// 			},
-// 		})
-// 		cl.ToTable(&buf)
-// 		output := buf.String()
-// 		assert.Contains(t, output, "NAMESPACEID")
-// 		assert.Contains(t, output, "ns1")
-// 		assert.Contains(t, output, "data1")
-// 	})
+func TestConfigurationListWriteTable(t *testing.T) {
+	t.Run("with items", func(t *testing.T) {
+		var buf bytes.Buffer
+		cl := NewList(apiVersion, cs, NewConfiguration)
+		cl.ToTable(&buf)
+		output := buf.String()
+		assert.Contains(t, output, "NAMESPACEID")
+		assert.Contains(t, output, "ns1")
+		assert.Contains(t, output, "data1")
+	})
 
-// 	t.Run("empty list", func(t *testing.T) {
-// 		var buf bytes.Buffer
-// 		cl := &ConfigurationList{Items: []*Configuration{}}
-// 		cl.ToTable(&buf)
-// 		assert.Equal(t, buf.String(), " NAMESPACEID  DATAID  GROUP  APPLICATION  TYPE \n")
-// 	})
-// }
+	t.Run("empty list", func(t *testing.T) {
+		var buf bytes.Buffer
+		cl := ObjectList[Configuration]{}
+		cl.ToTable(&buf)
+		assert.Equal(t, "", buf.String())
+	})
+}
 
-// // TestConfigurationListWriteJson tests ConfigurationList.WriteJson method
-// func TestConfigurationListWriteJson(t *testing.T) {
-// 	cl := NewConfigurationList("v1", &nacos.ConfigurationList{
-// 		Items: []*nacos.Configuration{
-// 			{NamespaceID: "ns1", DataID: "data1"},
-// 		},
-// 	})
-// 	var buf bytes.Buffer
-// 	err := cl.ToJson(&buf)
-// 	assert.NoError(t, err)
-// 	assert.Contains(t, buf.String(), `"namespace": "ns1"`)
-// }
+// TestConfigurationListWriteToDir tests ConfigurationList.WriteToDir method
+func TestConfigurationListWriteToDir(t *testing.T) {
+	cl := NewList(apiVersion, cs, NewConfiguration)
+	t.Run("successful write", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		err := cl.WriteToDir(tmpDir)
+		assert.NoError(t, err)
+		ns1File := filepath.Join(tmpDir, "ns1", "group1", "data1")
+		assert.FileExists(t, ns1File)
 
-// // TestConfigurationListWriteToDir tests ConfigurationList.WriteToDir method
-// func TestConfigurationListWriteToDir(t *testing.T) {
-// 	cl := NewConfigurationList("v1", &nacos.ConfigurationList{
-// 		Items: []*nacos.Configuration{
-// 			{NamespaceID: "ns1", DataID: "data1", Group: "group1"},
-// 			{NamespaceID: "", DataID: "public_data", Group: "public_group"},
-// 		},
-// 	})
-// 	t.Run("successful write", func(t *testing.T) {
-// 		tmpDir := t.TempDir()
-// 		err := cl.WriteToDir(tmpDir)
-// 		assert.NoError(t, err)
-// 		ns1File := filepath.Join(tmpDir, "ns1", "group1", "data1")
-// 		assert.FileExists(t, ns1File)
+		publicFile := filepath.Join(tmpDir, "ns2", "group2", "data2")
+		assert.FileExists(t, publicFile)
+	})
 
-// 		publicFile := filepath.Join(tmpDir, "public", "public_group", "public_data")
-// 		assert.FileExists(t, publicFile)
-// 	})
-
-// 	t.Run("directory creation error", func(t *testing.T) {
-// 		err := cl.WriteToDir("/invalid/path")
-// 		assert.Error(t, err)
-// 	})
-// }
+	t.Run("directory creation error", func(t *testing.T) {
+		err := cl.WriteToDir("/invalid/path")
+		assert.Error(t, err)
+	})
+}
 
 // TestConfigWriteFile tests Config.WriteFile method
 func TestConfigWriteFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	tmpFile := filepath.Join(tmpDir, "config.yaml")
-	config := NewConfiguration("v1", &nacos.Configuration{NamespaceID: "test"})
-	err := config.ToFile(tmpFile)
+	c := NewConfiguration(apiVersion, cs[0])
+	tmpFile := filepath.Join(tmpDir, c.Metadata.Namespace, c.Metadata.Group, c.Metadata.DataID)
+	err := c.WriteToDir(tmpDir)
 	assert.NoError(t, err)
 	assert.FileExists(t, tmpFile)
 }
@@ -90,11 +77,7 @@ func TestConfigWriteFile(t *testing.T) {
 func TestNamespaceListWriteTable(t *testing.T) {
 	t.Run("with items", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := NewNamespaceList("v1", &nacos.NamespaceList{
-			Items: []*nacos.Namespace{
-				{ID: "ns1", Name: "data1", Description: "group1"},
-			},
-		})
+		cl := NewList(apiVersion, ns, NewNamespace)
 		cl.ToTable(&buf)
 		output := buf.String()
 		assert.Contains(t, output, "NAME")
@@ -104,18 +87,14 @@ func TestNamespaceListWriteTable(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := NewNamespaceList("v1", &nacos.NamespaceList{Items: []*nacos.Namespace{}})
+		cl := ObjectList[Namespace]{}
 		cl.ToTable(&buf)
-		assert.Equal(t, buf.String(), " NAME  ID  DESCRIPTION  COUNT \n")
+		assert.Equal(t, "", buf.String())
 	})
 }
 
 func TestNamespaceListWriteToDir(t *testing.T) {
-	nl := NewNamespaceList("v1", &nacos.NamespaceList{
-		Items: []*nacos.Namespace{
-			{ID: "ns1", Name: "showname", Description: "description"},
-		},
-	})
+	nl := NewList(apiVersion, ns, NewNamespace)
 	t.Run("successful write", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		err := nl.WriteToDir(tmpDir)
@@ -211,30 +190,10 @@ func TestReadYamlFile(t *testing.T) {
 	}
 }
 
-// TestWriteTable tests the writeTable function
-func TestWriteTable(t *testing.T) {
-	var buf bytes.Buffer
-	toTable(&buf, func(t table.Writer) {
-		t.AppendHeader(table.Row{"Header"})
-		t.AppendRow(table.Row{"Value"})
-	})
-	assert.Contains(t, buf.String(), "HEADER")
-	assert.Contains(t, buf.String(), "Value")
-}
-
 type mockFormatWriter map[string]bool
 
-func (mw mockFormatWriter) ToJson(w io.Writer) error {
-	mw["json"] = true
-	return nil
-}
 func (mw mockFormatWriter) ToTable(w io.Writer) {
 	mw["table"] = true
-}
-
-func (mw mockFormatWriter) ToYaml(w io.Writer) error {
-	mw["yaml"] = true
-	return nil
 }
 
 func (mw mockFormatWriter) WriteToDir(w string) error {
@@ -246,16 +205,33 @@ func TestWriteAsFormat(t *testing.T) {
 		format string
 		called bool
 	}{
-		{"json", true},
-		{"yaml", true},
 		{"table", true},
 		{"xxx", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
 			writer := mockFormatWriter{}
-			WriteAsFormat(tt.format, writer, &bytes.Buffer{})
+			WriteFormat(writer, tt.format, &bytes.Buffer{})
 			assert.Equal(t, tt.called, writer[tt.format])
 		})
 	}
+}
+
+func TestUserListWriteTable(t *testing.T) {
+	t.Run("with items", func(t *testing.T) {
+		var buf bytes.Buffer
+		ul := NewList(apiVersion, us, NewUser)
+		ul.ToTable(&buf)
+		output := buf.String()
+		assert.Contains(t, output, "NAME")
+		assert.Contains(t, output, "user1")
+		assert.Contains(t, output, "password1")
+	})
+
+	t.Run("empty list", func(t *testing.T) {
+		var buf bytes.Buffer
+		cl := ObjectList[User]{}
+		cl.ToTable(&buf)
+		assert.Equal(t, "", buf.String())
+	})
 }
