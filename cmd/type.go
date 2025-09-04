@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/goccy/go-yaml"
 	"github.com/jedib0t/go-pretty/table"
@@ -12,6 +14,11 @@ import (
 
 type DirWriter interface {
 	WriteToDir(name string) error
+}
+
+type TableWriter interface {
+	TableHeader() table.Row
+	TableRow() table.Row
 }
 
 type Configuration struct {
@@ -56,6 +63,23 @@ func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration
 	return c
 }
 
+func (c Configuration) TableHeader() table.Row {
+	return table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"}
+}
+
+func (c Configuration) TableRow() table.Row {
+	return table.Row{c.Metadata.Namespace, c.Metadata.DataID, c.Metadata.Group,
+		c.Spec.Application, c.Spec.Type}
+}
+
+func (c Configuration) WriteToDir(base string) error {
+	dir := filepath.Join(base, c.Metadata.Namespace, c.Metadata.Group)
+	if err := os.MkdirAll(dir, 0750); err != nil {
+		return err
+	}
+	return writeYamlFile(c, filepath.Join(dir, c.Metadata.DataID))
+}
+
 type Namespace struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -83,6 +107,19 @@ func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
 	n.Status.Type = e.Type
 	return n
 }
+func (n Namespace) TableHeader() table.Row {
+	return table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"}
+}
+func (n Namespace) TableRow() table.Row {
+	return table.Row{n.Metadata.Name, n.Metadata.ID, n.Metadata.Description,
+		fmt.Sprintf("%d", n.Status.ConfigCount)}
+}
+func (n Namespace) WriteToDir(base string) error {
+	if n.Metadata.ID == "" {
+		return nil
+	}
+	return writeYamlFile(n, filepath.Join(base, n.Metadata.ID+".yaml"))
+}
 
 type User struct {
 	APIVersion string `json:"apiVersion"`
@@ -102,6 +139,16 @@ func NewUser(apiVersion string, user *nacos.User) *User {
 	return u
 }
 
+func (u User) TableHeader() table.Row {
+	return table.Row{"NAME", "PASSWORD"}
+}
+func (u User) TableRow() table.Row {
+	return table.Row{u.Metadata.Name, u.Metadata.Password}
+}
+func (u User) WriteToDir(base string) error {
+	return writeYamlFile(u, filepath.Join(base, u.Metadata.Name+".yaml"))
+}
+
 type Role struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -118,6 +165,16 @@ func NewRole(apiVersion string, user *nacos.Role) *Role {
 	r.Metadata.Name = user.Name
 	r.Metadata.Username = user.Username
 	return r
+}
+
+func (r Role) TableHeader() table.Row {
+	return table.Row{"NAME", "USERNAME"}
+}
+func (r Role) TableRow() table.Row {
+	return table.Row{r.Metadata.Name, r.Metadata.Username}
+}
+func (r Role) WriteToDir(base string) error {
+	return writeYamlFile(r, filepath.Join(base, r.Metadata.Name+r.Metadata.Username+".yaml"))
 }
 
 type Permission struct {
@@ -139,6 +196,17 @@ func NewPermission(apiVersion string, perm *nacos.Permission) *Permission {
 	p.Metadata.Action = perm.Action
 	return p
 }
+
+func (p Permission) TableHeader() table.Row {
+	return table.Row{"ROLE", "RESOURCE", "ACTION"}
+}
+func (p Permission) TableRow() table.Row {
+	return table.Row{p.Metadata.Role, p.Metadata.Resource, p.Metadata.Action}
+}
+func (p Permission) WriteToDir(base string) error {
+	return writeYamlFile(p, filepath.Join(base, p.Metadata.Role+p.Metadata.Resource+p.Metadata.Action+".yaml"))
+}
+
 func toJson(v any, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")

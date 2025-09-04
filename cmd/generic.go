@@ -1,23 +1,15 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
-type TableRow interface {
-	TableHeader() table.Row
-	TableRow() table.Row
-}
-
 type ItemTypes interface {
 	User | Role | Permission | Configuration | Namespace
-	TableRow
+	TableWriter
 	DirWriter
 }
 
@@ -60,35 +52,9 @@ func (o *ObjectList[T]) WriteToDir(base string) error {
 	return nil
 }
 
-func (c Configuration) TableHeader() table.Row {
-	return table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"}
-}
-
-func (c Configuration) TableRow() table.Row {
-	return table.Row{c.Metadata.Namespace, c.Metadata.DataID, c.Metadata.Group,
-		c.Spec.Application, c.Spec.Type}
-}
-
-func (c Configuration) WriteToDir(base string) error {
-	dir := filepath.Join(base, c.Metadata.Namespace, c.Metadata.Group)
-	if err := os.MkdirAll(dir, 0750); err != nil {
-		return err
-	}
-	return writeYamlFile(c, filepath.Join(dir, c.Metadata.DataID))
-}
-
-func (n Namespace) TableHeader() table.Row {
-	return table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"}
-}
-func (n Namespace) TableRow() table.Row {
-	return table.Row{n.Metadata.Name, n.Metadata.ID, n.Metadata.Description,
-		fmt.Sprintf("%d", n.Status.ConfigCount)}
-}
-func (n Namespace) WriteToDir(base string) error {
-	if n.Metadata.ID == "" {
-		return nil
-	}
-	return writeYamlFile(n, filepath.Join(base, n.Metadata.ID+".yaml"))
+type FormatWriter interface {
+	TableWriter
+	DirWriter
 }
 
 func WriteFormat[T ItemTypes](obj *ObjectList[T], format string, w io.Writer) error {
