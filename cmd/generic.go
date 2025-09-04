@@ -51,25 +51,8 @@ func (o *ObjectList[T]) ToTable(w io.Writer) {
 	})
 }
 
-func PrintTable[T TableRow](items []T, w io.Writer) {
-	tw := table.NewWriter()
-	tw.SetOutputMirror(w)
-	if len(items) == 0 {
-		return
-	}
-	tw.AppendHeader(items[0].TableHeader())
-	for _, it := range items {
-		tw.AppendRow(it.TableRow())
-	}
-	s := table.StyleLight
-	s.Options = table.OptionsNoBordersAndSeparators
-	tw.SetStyle(s)
-	tw.Render()
-}
-
-// 把列表里的每个元素写入目录
-func WriteDir[T DirWriter](items []T, base string) error {
-	for _, it := range items {
+func (o *ObjectList[T]) WriteToDir(base string) error {
+	for _, it := range o.Items {
 		if err := it.WriteToDir(base); err != nil {
 			return err
 		}
@@ -91,7 +74,7 @@ func (c Configuration) WriteToDir(base string) error {
 	if err := os.MkdirAll(dir, 0750); err != nil {
 		return err
 	}
-	return c.ToFile(filepath.Join(dir, c.Metadata.DataID))
+	return writeYamlFile(c, filepath.Join(dir, c.Metadata.DataID))
 }
 
 func (n Namespace) TableHeader() table.Row {
@@ -105,7 +88,7 @@ func (n Namespace) WriteToDir(base string) error {
 	if n.Metadata.ID == "" {
 		return nil
 	}
-	return n.ToFile(filepath.Join(base, n.Metadata.ID+".yaml"))
+	return writeYamlFile(n, filepath.Join(base, n.Metadata.ID+".yaml"))
 }
 
 func WriteFormat[T ItemTypes](obj *ObjectList[T], format string, w io.Writer) error {
@@ -115,9 +98,9 @@ func WriteFormat[T ItemTypes](obj *ObjectList[T], format string, w io.Writer) er
 	case "yaml":
 		return toYaml(obj, w)
 	case "table":
-		PrintTable(obj.Items, w)
+		obj.ToTable(w)
 	default:
-		return WriteDir(obj.Items, format)
+		return obj.WriteToDir(format)
 	}
 	return nil
 }

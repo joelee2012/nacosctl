@@ -2,44 +2,16 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/goccy/go-yaml"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 )
 
-type FormatWriter interface {
-	TableWriter
-	// JsonWriter
-	// YamlWriter
-	DirWriter
-}
-
-type TableWriter interface {
-	ToTable(w io.Writer)
-}
-
-type JsonWriter interface {
-	ToJson(w io.Writer) error
-}
-type YamlWriter interface {
-	ToYaml(w io.Writer) error
-}
-
-type FileWriter interface {
-	ToFile(w io.Writer) error
-}
 type DirWriter interface {
 	WriteToDir(name string) error
-}
-
-// YamlFileLoader interface for loading from YAML
-type YamlFileLoader interface {
-	FromYaml(name string) error
 }
 
 type Configuration struct {
@@ -84,121 +56,6 @@ func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration
 	return c
 }
 
-func (c *Configuration) ToJson(w io.Writer) error {
-	return toJson(c, w)
-}
-
-func (c *Configuration) ToYaml(w io.Writer) error {
-	return toYaml(c, w)
-}
-
-func (c *Configuration) ToFile(name string) error {
-	return writeYamlFile(c, name)
-}
-
-// FromYaml load from YAML file
-func (c *Configuration) FromYaml(name string) error {
-	return readYamlFile(c, name)
-}
-
-type ConfigurationList struct {
-	APIVersion string           `json:"apiVersion"`
-	Items      []*Configuration `json:"items"`
-	Kind       string           `json:"kind"`
-}
-
-func NewConfigurationList(apiVersion string, cs *nacos.ConfigurationList) *ConfigurationList {
-	list := new(ConfigurationList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range cs.Items {
-		list.Items = append(list.Items, NewConfiguration(apiVersion, item))
-	}
-	return list
-}
-
-func (list *ConfigurationList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAMESPACEID", "DATAID", "GROUP", "APPLICATION", "TYPE"})
-		for _, item := range list.Items {
-			t.AppendRow(table.Row{item.Metadata.Namespace, item.Metadata.DataID, item.Metadata.Group, item.Spec.Application, item.Spec.Type})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAMESPACEID", Mode: table.Asc}, {Name: "DATAID", Mode: table.Asc}})
-	})
-}
-
-func (list *ConfigurationList) ToJson(w io.Writer) error {
-	return toJson(list, w)
-}
-
-func (list *ConfigurationList) ToYaml(w io.Writer) error {
-	return toYaml(list, w)
-}
-
-func (list *ConfigurationList) WriteToDir(name string) error {
-	var dir string
-	for _, c := range list.Items {
-		if c.Metadata.Namespace == "" {
-			dir = filepath.Join(name, "public", c.Metadata.Group)
-		} else {
-			dir = filepath.Join(name, c.Metadata.Namespace, c.Metadata.Group)
-		}
-		if err := os.MkdirAll(dir, 0750); err != nil {
-			return err
-		}
-		if err := c.ToFile(filepath.Join(dir, c.Metadata.DataID)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type NamespaceList struct {
-	APIVersion string       `json:"apiVersion"`
-	Items      []*Namespace `json:"items"`
-	Kind       string       `json:"kind"`
-}
-
-func NewNamespaceList(apiVersion string, ns *nacos.NamespaceList) *NamespaceList {
-	list := new(NamespaceList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range ns.Items {
-		list.Items = append(list.Items, NewNamespace(apiVersion, item))
-	}
-	return list
-}
-
-func (list *NamespaceList) ToJson(w io.Writer) error {
-	return toJson(list, w)
-}
-
-func (list *NamespaceList) ToYaml(w io.Writer) error {
-	return toYaml(list, w)
-}
-
-func (list *NamespaceList) ToTable(w io.Writer) {
-	toTable(w, func(t table.Writer) {
-		t.AppendHeader(table.Row{"NAME", "ID", "DESCRIPTION", "COUNT"})
-		for _, ns := range list.Items {
-			t.AppendRow(table.Row{ns.Metadata.Name, ns.Metadata.ID, ns.Metadata.Description, ns.Status.ConfigCount})
-		}
-		t.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
-	})
-}
-
-func (n *NamespaceList) WriteToDir(name string) error {
-	for _, e := range n.Items {
-		if e.Metadata.ID == "" {
-			continue
-		}
-		if err := e.ToFile(filepath.Join(name, fmt.Sprintf("%s.yaml", e.Metadata.ID))); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 type Namespace struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -227,38 +84,6 @@ func NewNamespace(apiVersion string, e *nacos.Namespace) *Namespace {
 	return n
 }
 
-func (n *Namespace) ToJson(w io.Writer) error {
-	return toJson(n, w)
-}
-
-func (n *Namespace) ToYaml(w io.Writer) error {
-	return toYaml(n, w)
-}
-func (n *Namespace) ToFile(name string) error {
-	return writeYamlFile(n, name)
-}
-
-func (n *Namespace) FromYaml(name string) error {
-	return readYamlFile(n, name)
-}
-
-func toJson(v any, w io.Writer) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(v)
-}
-
-func toYaml(v any, w io.Writer) error {
-	enc := yaml.NewEncoder(w, yaml.UseLiteralStyleIfMultiline(true))
-	return enc.Encode(v)
-}
-
-type UserList struct {
-	APIVersion string  `json:"apiVersion"`
-	Kind       string  `json:"kind"`
-	Items      []*User `json:"items"`
-}
-
 type User struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -266,16 +91,6 @@ type User struct {
 		Name     string `json:"username"`
 		Password string `json:"password"`
 	} `json:"metadata"`
-}
-
-func NewUserList(apiVersion string, users *nacos.UserList) *UserList {
-	list := new(UserList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range users.Items {
-		list.Items = append(list.Items, NewUser(apiVersion, item))
-	}
-	return list
 }
 
 func NewUser(apiVersion string, user *nacos.User) *User {
@@ -287,12 +102,6 @@ func NewUser(apiVersion string, user *nacos.User) *User {
 	return u
 }
 
-type RoleList struct {
-	APIVersion string  `json:"apiVersion"`
-	Kind       string  `json:"kind"`
-	Items      []*Role `json:"items"`
-}
-
 type Role struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
@@ -302,16 +111,6 @@ type Role struct {
 	} `json:"metadata"`
 }
 
-func NewRoleList(apiVersion string, roles *nacos.RoleList) *RoleList {
-	list := new(RoleList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range roles.Items {
-		list.Items = append(list.Items, NewRole(apiVersion, item))
-	}
-	return list
-}
-
 func NewRole(apiVersion string, user *nacos.Role) *Role {
 	r := new(Role)
 	r.APIVersion = apiVersion
@@ -319,22 +118,6 @@ func NewRole(apiVersion string, user *nacos.Role) *Role {
 	r.Metadata.Name = user.Name
 	r.Metadata.Username = user.Username
 	return r
-}
-
-type PermissionList struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       string        `json:"kind"`
-	Items      []*Permission `json:"items"`
-}
-
-func NewPermissionList(apiVersion string, perms *nacos.PermissionList) *PermissionList {
-	list := new(PermissionList)
-	list.Kind = "List"
-	list.APIVersion = apiVersion
-	for _, item := range perms.Items {
-		list.Items = append(list.Items, NewPermission(apiVersion, item))
-	}
-	return list
 }
 
 type Permission struct {
@@ -355,6 +138,16 @@ func NewPermission(apiVersion string, perm *nacos.Permission) *Permission {
 	p.Metadata.Resource = perm.Resource
 	p.Metadata.Action = perm.Action
 	return p
+}
+func toJson(v any, w io.Writer) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
+}
+
+func toYaml(v any, w io.Writer) error {
+	enc := yaml.NewEncoder(w, yaml.UseLiteralStyleIfMultiline(true))
+	return enc.Encode(v)
 }
 
 func readYamlFile(v any, name string) error {
@@ -384,25 +177,4 @@ func toTable(w io.Writer, fn func(t table.Writer)) {
 	s.Options = table.OptionsNoBordersAndSeparators
 	tb.SetStyle(s)
 	tb.Render()
-}
-
-func WriteAsFormat(format string, writable FormatWriter, w io.Writer) error {
-	switch format {
-	case "json":
-		return toJson(writable, w)
-	case "yaml":
-		return toYaml(writable, w)
-	case "table":
-		writable.ToTable(w)
-	default:
-		return writable.WriteToDir(format)
-	}
-	return nil
-}
-
-func WriteToDir(name string, writable DirWriter) error {
-	return writable.WriteToDir(name)
-}
-func LoadFromYaml(name string, loader YamlFileLoader) error {
-	return loader.FromYaml(name)
 }
