@@ -1,11 +1,11 @@
 package nacos
 
-type ConfigurationList struct {
-	TotalCount     int              `json:"totalCount,omitempty"`
-	PageNumber     int              `json:"pageNumber,omitempty"`
-	PagesAvailable int              `json:"pagesAvailable,omitempty"`
-	Items          []*Configuration `json:"pageItems"`
-}
+import (
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+)
 
 type Configuration struct {
 	ID               string `json:"id"`
@@ -38,23 +38,9 @@ type Namespace struct {
 	Type        int    `json:"type,omitempty"`
 }
 
-type UserList struct {
-	TotalCount     int     `json:"totalCount,omitempty"`
-	PageNumber     int     `json:"pageNumber,omitempty"`
-	PagesAvailable int     `json:"pagesAvailable,omitempty"`
-	Items          []*User `json:"pageItems"`
-}
-
 type User struct {
 	Name     string `json:"username"`
 	Password string `json:"password"`
-}
-
-type RoleList struct {
-	TotalCount     int     `json:"totalCount,omitempty"`
-	PageNumber     int     `json:"pageNumber,omitempty"`
-	PagesAvailable int     `json:"pagesAvailable,omitempty"`
-	Items          []*Role `json:"pageItems"`
 }
 
 type Role struct {
@@ -62,15 +48,51 @@ type Role struct {
 	Username string `json:"username"`
 }
 
-type PermissionList struct {
-	TotalCount     int           `json:"totalCount,omitempty"`
-	PageNumber     int           `json:"pageNumber,omitempty"`
-	PagesAvailable int           `json:"pagesAvailable,omitempty"`
-	Items          []*Permission `json:"pageItems"`
-}
-
 type Permission struct {
 	Role     string `json:"role"`
 	Resource string `json:"resource"`
 	Action   string `json:"action"`
+}
+
+type ResourceTypes interface {
+	User | Role | Permission | Configuration
+}
+
+type ObjectList[T ResourceTypes] struct {
+	TotalCount     int  `json:"totalCount,omitempty"`
+	PageNumber     int  `json:"pageNumber,omitempty"`
+	PagesAvailable int  `json:"pagesAvailable,omitempty"`
+	Items          []*T `json:"pageItems"`
+}
+
+type ConfigurationList = ObjectList[Configuration]
+type UserList = ObjectList[User]
+type RoleList = ObjectList[Role]
+type PermissionList = ObjectList[Permission]
+
+func listResource[T ResourceTypes](c *Client, endpoint string) (*ObjectList[T], error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	all := new(ObjectList[T])
+	v := url.Values{}
+	v.Add("search", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		perms := new(ObjectList[T])
+		url := fmt.Sprintf("%s/%s?%s", c.URL, endpoint, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, perms); err != nil {
+			return nil, err
+		}
+		all.Items = append(all.Items, perms.Items...)
+		if perms.PagesAvailable == 0 || perms.PagesAvailable == perms.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(perms.PageNumber+1))
+	}
+	return all, nil
 }
