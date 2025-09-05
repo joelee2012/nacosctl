@@ -82,7 +82,7 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		Application: c.Spec.Application,
 		Tags:        c.Spec.Tags,
 	}))
-	fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
+	fmt.Printf("configuration/%s/%s/%s created\n", c.Metadata.Namespace, c.Metadata.Group, c.Metadata.DataID)
 }
 
 func ListNamespace(client *nacos.Client) []string {
@@ -100,9 +100,9 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		cobra.CheckErr(err)
 		if !info.IsDir() {
-			var ns Namespace
-			if err := readYamlFile(ns, path); err == nil {
-				nss.Items = append(nss.Items, ns)
+			var n Namespace
+			if err := readYamlFile(n, path); err == nil {
+				nss.Items = append(nss.Items, n)
 			} else {
 				var c Configuration
 				cobra.CheckErr(readYamlFile(c, path))
@@ -134,6 +134,6 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 			Application: c.Spec.Application,
 			Tags:        c.Spec.Tags,
 		}))
-		fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
+		fmt.Printf("configuration/%s/%s/%s created\n", c.Metadata.Namespace, c.Metadata.Group, c.Metadata.DataID)
 	}
 }

@@ -31,7 +31,7 @@ var createCsCmd = &cobra.Command{
 		client := NewNacosClient()
 		createOpts.DataID = args[0]
 		cobra.CheckErr(client.CreateConfig(&createOpts))
-		fmt.Printf("configuration/%s created\n", createOpts.DataID)
+		fmt.Printf("configuration/%s/%s/%s created\n", createOpts.NamespaceID, createOpts.Group, createOpts.DataID)
 
 	},
 	Args: cobra.ExactArgs(1),
