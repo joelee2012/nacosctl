@@ -27,7 +27,7 @@ var configUseCmd = &cobra.Command{
 		if err := cliConfig.SetContext(args[0]); err != nil {
 			return err
 		}
-		return cliConfig.Write(cmdOpts.ConfigFile)
+		return cliConfig.WriteFile(cmdOpts.ConfigFile)
 	},
 	Args: cobra.MaximumNArgs(1),
 }

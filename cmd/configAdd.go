@@ -25,7 +25,7 @@ var configAddCmd = &cobra.Command{
 	Short: "Add a new nacos server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cliConfig.AddServer(args[0], server)
-		return cliConfig.Write(cmdOpts.ConfigFile)
+		return cliConfig.WriteFile(cmdOpts.ConfigFile)
 	},
 	Args: cobra.ExactArgs(1),
 }

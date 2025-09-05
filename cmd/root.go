@@ -78,7 +78,7 @@ func initConfig() {
 		cmdOpts.ConfigFile = filepath.Join(home, ".nacos.yaml")
 	}
 
-	err := cliConfig.Read(cmdOpts.ConfigFile)
+	err := cliConfig.ReadFile(cmdOpts.ConfigFile)
 	cobra.CheckErr(err)
 }
 

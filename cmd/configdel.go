@@ -26,7 +26,7 @@ var configDelCmd = &cobra.Command{
 	Short:   "Delete nacos server config",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cliConfig.DeleteServer(args[0])
-		return cliConfig.Write(cmdOpts.ConfigFile)
+		return cliConfig.WriteFile(cmdOpts.ConfigFile)
 	},
 }
 

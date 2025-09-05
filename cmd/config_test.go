@@ -27,7 +27,7 @@ func TestReadFile(t *testing.T) {
 				t.Error(err)
 			}
 			c := &CLIConfig{}
-			err := c.Read(tmpFile)
+			err := c.ReadFile(tmpFile)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
