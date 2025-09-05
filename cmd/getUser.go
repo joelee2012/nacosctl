@@ -14,7 +14,7 @@ import (
 // getUserCmd represents the getCs command
 var getUserCmd = &cobra.Command{
 	Use:     "user [name]",
-	Aliases: []string{"user"},
+	Aliases: []string{"u"},
 	Short:   "Display one or many user",
 	Run: func(cmd *cobra.Command, args []string) {
 		getUser(args)

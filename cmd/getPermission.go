@@ -11,8 +11,8 @@ import (
 
 // getPermCmd represents the getCs command
 var getPermCmd = &cobra.Command{
-	Use:     "permission [name]",
-	Aliases: []string{"perm"},
+	Use:     "perm [name]",
+	Aliases: []string{"permission"},
 	Short:   "Display one or many permission",
 	Run: func(cmd *cobra.Command, args []string) {
 		getPermission(args)
