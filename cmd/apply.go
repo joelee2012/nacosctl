@@ -54,6 +54,7 @@ func init() {
 	// and all subcommands, e.g.:
 	// configCmd.PersistentFlags().String("foo", "", "A help for foo")
 	applyCmd.Flags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files or dir that contain the configurations")
+	applyCmd.MarkFlagRequired("filename")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
