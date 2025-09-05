@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
@@ -56,22 +55,11 @@ type Server struct {
 }
 
 func (c *CLIConfig) ReadFile(name string) error {
-	f, err := os.Open(name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return yaml.NewDecoder(f).Decode(c)
+	return readYamlFile(c, name)
 }
 
 func (c *CLIConfig) WriteFile(name string) error {
-	f, err := os.Create(name)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	enc := yaml.NewEncoder(f)
-	return enc.Encode(c)
+	return writeYamlFile(c, name)
 }
 
 func (c *CLIConfig) GetServer(name string) *Server {
