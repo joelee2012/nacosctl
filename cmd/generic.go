@@ -37,6 +37,7 @@ func (o *List[T]) ToTable(w io.Writer) {
 	tb := table.NewWriter()
 	tb.SetOutputMirror(w)
 	if len(o.Items) == 0 {
+		w.Write([]byte("No resources found"))
 		return
 	}
 	tb.AppendHeader(o.Items[0].TableHeader())

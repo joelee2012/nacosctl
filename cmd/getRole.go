@@ -12,7 +12,7 @@ import (
 // getRoleCmd represents the getCs command
 var getRoleCmd = &cobra.Command{
 	Use:     "role [name]",
-	Aliases: []string{"role"},
+	Aliases: []string{"r"},
 	Short:   "Display one or many role",
 	Run: func(cmd *cobra.Command, args []string) {
 		getRole(args)

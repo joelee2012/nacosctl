@@ -40,7 +40,7 @@ func TestConfigurationListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := List[Configuration]{}
 		cl.ToTable(&buf)
-		assert.Equal(t, "", buf.String())
+		assert.Equal(t, "No resources found", buf.String())
 	})
 }
 
@@ -89,7 +89,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := List[Namespace]{}
 		cl.ToTable(&buf)
-		assert.Equal(t, "", buf.String())
+		assert.Equal(t, "No resources found", buf.String())
 	})
 }
 
@@ -232,6 +232,6 @@ func TestUserListWriteTable(t *testing.T) {
 		var buf bytes.Buffer
 		cl := List[User]{}
 		cl.ToTable(&buf)
-		assert.Equal(t, "", buf.String())
+		assert.Equal(t, "No resources found", buf.String())
 	})
 }
