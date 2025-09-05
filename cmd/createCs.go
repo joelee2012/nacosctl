@@ -25,7 +25,7 @@ var createCsCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 }
 
-var createOpts nacos.CreateCSOpts
+var createOpts nacos.CreateCfgOpts
 
 func init() {
 	createCmd.AddCommand(createCsCmd)

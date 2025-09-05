@@ -47,7 +47,7 @@ func init() {
 func CreateResourceFromFile(client *nacos.Client, name string) {
 	ns := new(Namespace)
 	if err := readYamlFile(ns, name); err == nil {
-		cobra.CheckErr(client.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
+		cobra.CheckErr(client.CreateOrUpdateNamespace(&nacos.CreateNsOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
 		fmt.Printf("namespace/%s created\n", ns.Metadata.Name)
 		return
 	}
@@ -57,7 +57,7 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 	if !slices.Contains(nsNames, c.Metadata.Namespace) {
 		cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Metadata.Namespace))
 	}
-	cobra.CheckErr(client.CreateConfig(&nacos.CreateCSOpts{
+	cobra.CheckErr(client.CreateConfig(&nacos.CreateCfgOpts{
 		DataID:      c.Metadata.DataID,
 		Group:       c.Metadata.Group,
 		NamespaceID: c.Metadata.Namespace,
@@ -99,7 +99,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 	cobra.CheckErr(err)
 	nsNames := ListNamespace(naClient)
 	for _, ns := range nss.Items {
-		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&nacos.CreateNSOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
+		cobra.CheckErr(naClient.CreateOrUpdateNamespace(&nacos.CreateNsOpts{ID: ns.Metadata.ID, Description: ns.Metadata.Description, Name: ns.Metadata.Name}))
 		fmt.Printf("namespace/%s created\n", ns.Metadata.Name)
 		if !slices.Contains(nsNames, ns.Metadata.Name) {
 			nsNames = append(nsNames, ns.Metadata.Name)
@@ -109,7 +109,7 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 		if !slices.Contains(nsNames, c.Metadata.Namespace) {
 			cobra.CheckErr(fmt.Errorf("namespace/%s not found", c.Metadata.Namespace))
 		}
-		cobra.CheckErr(naClient.CreateConfig(&nacos.CreateCSOpts{
+		cobra.CheckErr(naClient.CreateConfig(&nacos.CreateCfgOpts{
 			DataID:      c.Metadata.DataID,
 			Group:       c.Metadata.Group,
 			NamespaceID: c.Metadata.Namespace,

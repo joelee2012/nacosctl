@@ -89,13 +89,13 @@ func (c *Client) ListNamespace() (*NamespaceList, error) {
 	return namespaces, err
 }
 
-type CreateNSOpts struct {
+type CreateNsOpts struct {
 	Name        string
 	Description string
 	ID          string
 }
 
-func (c *Client) CreateNamespace(opts *CreateNSOpts) error {
+func (c *Client) CreateNamespace(opts *CreateNsOpts) error {
 	token, err := c.GetToken()
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (c *Client) DeleteNamespace(id string) error {
 	return checkErr(resp, err)
 }
 
-func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
+func (c *Client) UpdateNamespace(opts *CreateNsOpts) error {
 	token, err := c.GetToken()
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func (c *Client) UpdateNamespace(opts *CreateNSOpts) error {
 	return checkErr(resp, err)
 }
 
-func (c *Client) CreateOrUpdateNamespace(opts *CreateNSOpts) error {
+func (c *Client) CreateOrUpdateNamespace(opts *CreateNsOpts) error {
 	nsList, err := c.ListNamespace()
 	if err != nil {
 		return err
@@ -173,13 +173,13 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	return nil, fmt.Errorf("404 Not Found %s", id)
 }
 
-type GetCSOpts struct {
+type GetCfgOpts struct {
 	DataID      string
 	Group       string
 	NamespaceID string
 }
 
-func (c *Client) GetConfig(opts *GetCSOpts) (*Configuration, error) {
+func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (c *Client) GetConfig(opts *GetCSOpts) (*Configuration, error) {
 	return config, err
 }
 
-type ListCSOpts struct {
+type ListCfgOpts struct {
 	Application string
 	Content     string
 	DataID      string
@@ -213,7 +213,7 @@ type ListCSOpts struct {
 	PageSize    int
 }
 
-func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigurationList, error) {
+func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -243,7 +243,7 @@ func (c *Client) ListConfig(opts *ListCSOpts) (*ConfigurationList, error) {
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
 	nsCs := new(ConfigurationList)
-	listOpts := ListCSOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceID: namespace}
+	listOpts := ListCfgOpts{PageNumber: 1, PageSize: 100, Group: group, NamespaceID: namespace}
 	for {
 		cs, err := c.ListConfig(&listOpts)
 		if err != nil {
@@ -274,7 +274,7 @@ func (c *Client) ListAllConfig() (*ConfigurationList, error) {
 	return allCs, nil
 }
 
-type CreateCSOpts struct {
+type CreateCfgOpts struct {
 	Application string
 	Content     string
 	DataID      string
@@ -285,7 +285,7 @@ type CreateCSOpts struct {
 	Type        string
 }
 
-func (c *Client) CreateConfig(opts *CreateCSOpts) error {
+func (c *Client) CreateConfig(opts *CreateCfgOpts) error {
 	token, err := c.GetToken()
 	if err != nil {
 		return err
@@ -305,9 +305,9 @@ func (c *Client) CreateConfig(opts *CreateCSOpts) error {
 	return checkErr(resp, err)
 }
 
-type DeleteCSOpts = GetCSOpts
+type DeleteCfgOpts = GetCfgOpts
 
-func (c *Client) DeleteConfig(opts *DeleteCSOpts) error {
+func (c *Client) DeleteConfig(opts *DeleteCfgOpts) error {
 	token, err := c.GetToken()
 	if err != nil {
 		return err
