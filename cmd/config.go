@@ -54,11 +54,11 @@ type Server struct {
 	User     string `json:"user"`
 }
 
-func (c *CLIConfig) ReadFile(name string) error {
+func (c *CLIConfig) Read(name string) error {
 	return readYamlFile(c, name)
 }
 
-func (c *CLIConfig) WriteFile(name string) error {
+func (c *CLIConfig) Write(name string) error {
 	return writeYamlFile(c, name)
 }
 
