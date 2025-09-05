@@ -23,7 +23,7 @@ var createNsCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 }
 
-var nsOpts nacos.CreateNSOpts
+var nsOpts nacos.CreateNsOpts
 
 func init() {
 	createCmd.AddCommand(createNsCmd)

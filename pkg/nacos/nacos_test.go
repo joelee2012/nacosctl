@@ -212,7 +212,7 @@ func TestCreateNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	err := c.CreateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
+	err := c.CreateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 
@@ -238,7 +238,7 @@ func TestUpdateNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	err := c.UpdateNamespace(&CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
+	err := c.UpdateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
 	assert.NoError(t, err)
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
@@ -247,10 +247,10 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 
 	tests := []struct {
 		name string
-		data CreateNSOpts
+		data CreateNsOpts
 	}{
-		{name: "Create", data: CreateNSOpts{Name: "test", Description: "Test namespace", ID: "test"}},
-		{name: "Update", data: CreateNSOpts{Name: "test-id", Description: "Test namespace", ID: "test-id"}},
+		{name: "Create", data: CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test"}},
+		{name: "Update", data: CreateNsOpts{Name: "test-id", Description: "Test namespace", ID: "test-id"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestGetConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	cfg, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
+	cfg, err := c.GetConfig(&GetCfgOpts{DataID: "test", Group: "DEFAULT_GROUP"})
 	if assert.NoError(t, err) {
 		assert.Equal(t, "test", cfg.DataID)
 	}
@@ -274,7 +274,7 @@ func TestListConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	cfgs, err := c.ListConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	cfgs, err := c.ListConfig(&ListCfgOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
 	if assert.NoError(t, err) {
 		assert.Equal(t, 1, len(cfgs.Items))
 		assert.Equal(t, "test", cfgs.Items[0].DataID)
@@ -307,7 +307,7 @@ func TestCreateConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	err := c.CreateConfig(&CreateCSOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceID: "test-tenant", Type: "properties"})
+	err := c.CreateConfig(&CreateCfgOpts{DataID: "test", Group: "DEFAULT_GROUP", Content: "test content", NamespaceID: "test-tenant", Type: "properties"})
 	assert.NoError(t, err)
 }
 
@@ -315,7 +315,7 @@ func TestDeleteConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	err := c.DeleteConfig(&DeleteCSOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceID: "test-tenant"})
+	err := c.DeleteConfig(&DeleteCfgOpts{DataID: "test", Group: "DEFAULT_GROUP", NamespaceID: "test-tenant"})
 	assert.NoError(t, err)
 }
 

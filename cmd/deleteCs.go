@@ -18,7 +18,7 @@ var deleteCsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := NewNacosClient()
 		for _, dataId := range args {
-			err := client.DeleteConfig(&nacos.DeleteCSOpts{
+			err := client.DeleteConfig(&nacos.DeleteCfgOpts{
 				DataID:      dataId,
 				Group:       cmdOpts.Group,
 				NamespaceID: cmdOpts.NamespaceID,
