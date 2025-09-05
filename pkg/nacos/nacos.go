@@ -359,11 +359,7 @@ func (c *Client) DeleteUser(name string) error {
 }
 
 func (c *Client) ListUser() (*UserList, error) {
-	pl, err := listResource[User](c, "v1/auth/users")
-	if err != nil {
-		return nil, err
-	}
-	return pl, err
+	return listResource[User](c, "v1/auth/users")
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -412,11 +408,7 @@ func (c *Client) DeleteRole(name, username string) error {
 }
 
 func (c *Client) ListRole() (*RoleList, error) {
-	pl, err := listResource[Role](c, "v1/auth/roles")
-	if err != nil {
-		return nil, err
-	}
-	return pl, err
+	return listResource[Role](c, "v1/auth/roles")
 }
 
 func (c *Client) GetRole(name, username string) (*Role, error) {
@@ -465,11 +457,7 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 }
 
 func (c *Client) ListPermission() (*PermissionList, error) {
-	pl, err := listResource[Permission](c, "v1/auth/permissions")
-	if err != nil {
-		return nil, err
-	}
-	return pl, err
+	return listResource[Permission](c, "v1/auth/permissions")
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {
@@ -477,11 +465,9 @@ func (c *Client) GetPermission(role, resource, action string) (*Permission, erro
 	if err != nil {
 		return nil, err
 	}
-
-	for _, p := range perms.Items {
-		if p.Role == role && p.Resource == resource && p.Action == action {
-			return p, nil
-		}
+	p := Permission{Role: role, Resource: resource, Action: action}
+	if perms.Contains(p) {
+		return &p, nil
 	}
 	return nil, fmt.Errorf("404 Not Found %s:%s:%s", role, resource, action)
 }
