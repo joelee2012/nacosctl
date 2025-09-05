@@ -80,8 +80,8 @@ func ListNamespace(client *nacos.Client) []string {
 	return nsNames
 }
 func CreateResourceFromDir(naClient *nacos.Client, dir string) {
-	nss := new(ObjectList[Namespace])
-	cs := new(ObjectList[Configuration])
+	nss := new(NamespaceList)
+	cs := new(ConfigurationList)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		cobra.CheckErr(err)
 		if !info.IsDir() {

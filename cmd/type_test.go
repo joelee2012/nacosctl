@@ -38,7 +38,7 @@ func TestConfigurationListWriteTable(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := ObjectList[Configuration]{}
+		cl := List[Configuration]{}
 		cl.ToTable(&buf)
 		assert.Equal(t, "", buf.String())
 	})
@@ -87,7 +87,7 @@ func TestNamespaceListWriteTable(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := ObjectList[Namespace]{}
+		cl := List[Namespace]{}
 		cl.ToTable(&buf)
 		assert.Equal(t, "", buf.String())
 	})
@@ -230,7 +230,7 @@ func TestUserListWriteTable(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		var buf bytes.Buffer
-		cl := ObjectList[User]{}
+		cl := List[User]{}
 		cl.ToTable(&buf)
 		assert.Equal(t, "", buf.String())
 	})

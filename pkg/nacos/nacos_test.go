@@ -126,27 +126,28 @@ func TestNewClient(t *testing.T) {
 func startServer() (*httptest.Server, *Client) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if r.URL.Path == "/v1/console/namespaces" {
+		switch r.URL.Path {
+		case "/v1/console/namespaces":
 			if r.URL.Query().Get("show") == "all" {
 				w.Write([]byte(namespace))
 			} else {
 				w.Write([]byte(nsList))
 			}
-		} else if r.URL.Path == "/v1/cs/configs" {
+		case "/v1/cs/configs":
 			if r.URL.Query().Get("show") == "all" {
 				w.Write([]byte(config))
 			} else {
 				w.Write([]byte(csList))
 			}
-		} else if r.URL.Path == "/v1/console/server/state" {
+		case "/v1/console/server/state":
 			w.Write([]byte(`{"version": "1.0.0"}`))
-		} else if r.URL.Path == "/v1/auth/login" {
+		case "/v1/auth/login":
 			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
-		} else if r.URL.Path == "/v1/auth/users" {
+		case "/v1/auth/users":
 			w.Write([]byte(users))
-		} else if r.URL.Path == "/v1/auth/roles" {
+		case "/v1/auth/roles":
 			w.Write([]byte(roles))
-		} else if r.URL.Path == "/v1/auth/permissions" {
+		case "/v1/auth/permissions":
 			w.Write([]byte(permissions))
 		}
 	}))
@@ -193,26 +194,17 @@ func TestGetToken(t *testing.T) {
 			}
 		})
 	}
-	// c := NewClient(okServer.URL, "user", "password")
-	// token, err := c.GetToken()
-	// if assert.NoError(t, err) {
-	// 	assert.Equal(t, "test-token", token)
-	// }
-	// c = NewClient("http://wrong.context:8080", "user", "password")
-	// token, err = c.GetToken()
-	// if assert.Error(t, err) {
-	// 	assert.Equal(t, "", token)
-	// }
+
 }
 
 func TestListNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	namespaces, err := c.ListNamespace()
+	ns, err := c.ListNamespace()
 	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(namespaces.Items))
-		assert.Equal(t, "test", namespaces.Items[0].ID)
+		assert.Equal(t, 1, len(ns.Items))
+		assert.Equal(t, "test", ns.Items[0].ID)
 	}
 }
 
@@ -228,9 +220,9 @@ func TestGetNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	ns, err := c.GetNamespace("test")
+	n, err := c.GetNamespace("test")
 	if assert.NoError(t, err) {
-		assert.Equal(t, "test", ns.ID)
+		assert.Equal(t, "test", n.ID)
 	}
 }
 
@@ -272,9 +264,9 @@ func TestGetConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	config, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
+	cfg, err := c.GetConfig(&GetCSOpts{DataID: "test", Group: "DEFAULT_GROUP"})
 	if assert.NoError(t, err) {
-		assert.Equal(t, "test", config.DataID)
+		assert.Equal(t, "test", cfg.DataID)
 	}
 }
 
@@ -282,10 +274,10 @@ func TestListConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	configs, err := c.ListConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+	cfgs, err := c.ListConfig(&ListCSOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
 	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(configs.Items))
-		assert.Equal(t, "test", configs.Items[0].DataID)
+		assert.Equal(t, 1, len(cfgs.Items))
+		assert.Equal(t, "test", cfgs.Items[0].DataID)
 	}
 }
 
@@ -293,10 +285,10 @@ func TestListConfigInNs(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	configs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
+	cfgs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
 	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(configs.Items))
-		assert.Equal(t, "test", configs.Items[0].DataID)
+		assert.Equal(t, 1, len(cfgs.Items))
+		assert.Equal(t, "test", cfgs.Items[0].DataID)
 	}
 }
 
@@ -304,10 +296,10 @@ func TestListAllConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	configs, err := c.ListAllConfig()
+	cfgs, err := c.ListAllConfig()
 	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(configs.Items))
-		assert.Equal(t, "test", configs.Items[0].DataID)
+		assert.Equal(t, 1, len(cfgs.Items))
+		assert.Equal(t, "test", cfgs.Items[0].DataID)
 	}
 }
 
@@ -368,10 +360,10 @@ func TestListRole(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	users, err := c.ListRole()
+	roles, err := c.ListRole()
 	if assert.NoError(t, err) {
-		assert.Equal(t, "ROLE_ADMIN", users.Items[0].Name)
-		assert.Equal(t, "nacos", users.Items[0].Username)
+		assert.Equal(t, "ROLE_ADMIN", roles.Items[0].Name)
+		assert.Equal(t, "nacos", roles.Items[0].Username)
 	}
 }
 
@@ -395,9 +387,9 @@ func TestGetRole(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	user, err := c.GetRole("ROLE_ADMIN", "nacos")
+	role, err := c.GetRole("ROLE_ADMIN", "nacos")
 	if assert.NoError(t, err) {
-		assert.Equal(t, "ROLE_ADMIN", user.Name)
+		assert.Equal(t, "ROLE_ADMIN", role.Name)
 	}
 }
 
@@ -405,11 +397,11 @@ func TestListPermission(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	users, err := c.ListPermission()
+	perms, err := c.ListPermission()
 	if assert.NoError(t, err) {
-		assert.Equal(t, "ROLE_ADMIN", users.Items[0].Role)
-		assert.Equal(t, "backend:*:*", users.Items[0].Resource)
-		assert.Equal(t, "rw", users.Items[0].Action)
+		assert.Equal(t, "ROLE_ADMIN", perms.Items[0].Role)
+		assert.Equal(t, "backend:*:*", perms.Items[0].Resource)
+		assert.Equal(t, "rw", perms.Items[0].Action)
 	}
 }
 

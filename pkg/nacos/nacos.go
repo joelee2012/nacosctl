@@ -359,30 +359,7 @@ func (c *Client) DeleteUser(name string) error {
 }
 
 func (c *Client) ListUser() (*UserList, error) {
-	token, err := c.GetToken()
-	if err != nil {
-		return nil, err
-	}
-	all := new(UserList)
-	v := url.Values{}
-	v.Add("search", "accurate")
-	v.Add("accessToken", token)
-	v.Add("pageNo", "1")
-	v.Add("pageSize", "100")
-	for {
-		users := new(UserList)
-		url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
-		resp, err := http.Get(url)
-		if err := decode(resp, err, users); err != nil {
-			return nil, err
-		}
-		all.Items = append(all.Items, users.Items...)
-		if users.PagesAvailable == 0 || users.PagesAvailable == users.PageNumber {
-			break
-		}
-		v.Set("pageNo", strconv.Itoa(users.PageNumber+1))
-	}
-	return all, nil
+	return listResource[User](c, "v1/auth/users")
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -431,30 +408,7 @@ func (c *Client) DeleteRole(name, username string) error {
 }
 
 func (c *Client) ListRole() (*RoleList, error) {
-	token, err := c.GetToken()
-	if err != nil {
-		return nil, err
-	}
-	all := new(RoleList)
-	v := url.Values{}
-	v.Add("search", "accurate")
-	v.Add("accessToken", token)
-	v.Add("pageNo", "1")
-	v.Add("pageSize", "100")
-	for {
-		roles := new(RoleList)
-		url := fmt.Sprintf("%s/v1/auth/roles?%s", c.URL, v.Encode())
-		resp, err := http.Get(url)
-		if err := decode(resp, err, roles); err != nil {
-			return nil, err
-		}
-		all.Items = append(all.Items, roles.Items...)
-		if roles.PagesAvailable == 0 || roles.PagesAvailable == roles.PageNumber {
-			break
-		}
-		v.Set("pageNo", strconv.Itoa(roles.PageNumber+1))
-	}
-	return all, nil
+	return listResource[Role](c, "v1/auth/roles")
 }
 
 func (c *Client) GetRole(name, username string) (*Role, error) {
@@ -462,11 +416,9 @@ func (c *Client) GetRole(name, username string) (*Role, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	for _, role := range roles.Items {
-		if role.Name == name && role.Username == username {
-			return role, nil
-		}
+	r := Role{Name: name, Username: username}
+	if roles.Contains(r) {
+		return &r, nil
 	}
 	return nil, fmt.Errorf("404 Not Found %s:%s", name, username)
 }
@@ -505,30 +457,7 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 }
 
 func (c *Client) ListPermission() (*PermissionList, error) {
-	token, err := c.GetToken()
-	if err != nil {
-		return nil, err
-	}
-	all := new(PermissionList)
-	v := url.Values{}
-	v.Add("search", "accurate")
-	v.Add("accessToken", token)
-	v.Add("pageNo", "1")
-	v.Add("pageSize", "100")
-	for {
-		perms := new(PermissionList)
-		url := fmt.Sprintf("%s/v1/auth/permissions?%s", c.URL, v.Encode())
-		resp, err := http.Get(url)
-		if err := decode(resp, err, perms); err != nil {
-			return nil, err
-		}
-		all.Items = append(all.Items, perms.Items...)
-		if perms.PagesAvailable == 0 || perms.PagesAvailable == perms.PageNumber {
-			break
-		}
-		v.Set("pageNo", strconv.Itoa(perms.PageNumber+1))
-	}
-	return all, nil
+	return listResource[Permission](c, "v1/auth/permissions")
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {
@@ -536,11 +465,9 @@ func (c *Client) GetPermission(role, resource, action string) (*Permission, erro
 	if err != nil {
 		return nil, err
 	}
-
-	for _, p := range perms.Items {
-		if p.Role == role && p.Resource == resource && p.Action == action {
-			return p, nil
-		}
+	p := Permission{Role: role, Resource: resource, Action: action}
+	if perms.Contains(p) {
+		return &p, nil
 	}
 	return nil, fmt.Errorf("404 Not Found %s:%s:%s", role, resource, action)
 }

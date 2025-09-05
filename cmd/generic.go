@@ -6,19 +6,25 @@ import (
 	"github.com/jedib0t/go-pretty/table"
 )
 
-type ItemTypes interface {
+type ListTypes interface {
 	TableRow
 	DirWriter
 }
 
-type ObjectList[T ItemTypes] struct {
+type List[T ListTypes] struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
 	Items      []T    `json:"items"`
 }
 
-func NewList[T ItemTypes, S any](apiVersion string, items []*S, covert func(apiVersion string, s *S) *T) *ObjectList[T] {
-	list := new(ObjectList[T])
+type ConfigurationList = List[Configuration]
+type NamespaceList = List[Namespace]
+type PermissionList = List[Permission]
+type RoleList = List[Role]
+type UserList = List[User]
+
+func NewList[T ListTypes, S any](apiVersion string, items []*S, covert func(apiVersion string, s *S) *T) *List[T] {
+	list := new(List[T])
 	list.Kind = "List"
 	list.APIVersion = apiVersion
 	for _, item := range items {
@@ -27,7 +33,7 @@ func NewList[T ItemTypes, S any](apiVersion string, items []*S, covert func(apiV
 	return list
 }
 
-func (o *ObjectList[T]) ToTable(w io.Writer) {
+func (o *List[T]) ToTable(w io.Writer) {
 	tb := table.NewWriter()
 	tb.SetOutputMirror(w)
 	if len(o.Items) == 0 {
@@ -44,7 +50,7 @@ func (o *ObjectList[T]) ToTable(w io.Writer) {
 	tb.Render()
 }
 
-func (o *ObjectList[T]) WriteToDir(base string) error {
+func (o *List[T]) WriteToDir(base string) error {
 	for _, it := range o.Items {
 		if err := it.WriteToDir(base); err != nil {
 			return err
