@@ -52,6 +52,17 @@ type State struct {
 	FunctionMode   string `json:"function_mode"`
 }
 
+var api = map[string]map[string]string{
+	"v1": {
+		"state": "/v1/console/server/state",
+		"token": "/v1/auth/login",
+	},
+	"v3": {
+		"state": "/v3/admin/core/state",
+		"token": "/v3/auth/user/login",
+	},
+}
+
 func NewClient(url, user, password string) *Client {
 	return &Client{
 		URL:        url,
@@ -61,11 +72,21 @@ func NewClient(url, user, password string) *Client {
 	}
 }
 
+func (c *Client) DetectAPIVersion() {
+	for ver := range api {
+		c.APIVersion = ver
+		v, err := c.GetVersion()
+		if err == nil && v != "" {
+			return
+		}
+	}
+}
+
 func (c *Client) GetVersion() (string, error) {
 	if c.State != nil {
 		return c.Version, nil
 	}
-	resp, err := http.Get(c.URL + "/v1/console/server/state")
+	resp, err := http.Get(c.URL + api[c.APIVersion]["state"])
 	err = decode(resp, err, &c.State)
 	if err != nil {
 		return "", err

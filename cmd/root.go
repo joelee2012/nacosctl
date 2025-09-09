@@ -87,5 +87,7 @@ func NewNacosClient() *nacos.Client {
 		cobra.CheckErr(fmt.Errorf("no context set in config file: %s", cmdOpts.ConfigFile))
 	}
 	server := cliConfig.GetCurrentServer()
-	return nacos.NewClient(server.URL, server.User, server.Password)
+	client := nacos.NewClient(server.URL, server.User, server.Password)
+	client.DetectAPIVersion()
+	return client
 }
