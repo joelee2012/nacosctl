@@ -54,6 +54,7 @@ func init() {
 	// and all subcommands, e.g.:
 	// configCmd.PersistentFlags().String("foo", "", "A help for foo")
 	applyCmd.Flags().StringVarP(&cmdOpts.OutDir, "filename", "f", "", "The files or dir that contain the configurations")
+	applyCmd.MarkFlagRequired("filename")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -82,7 +83,7 @@ func CreateResourceFromFile(client *nacos.Client, name string) {
 		Application: c.Spec.Application,
 		Tags:        c.Spec.Tags,
 	}))
-	fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
+	fmt.Printf("configuration/%s/%s/%s created\n", c.Metadata.Namespace, c.Metadata.Group, c.Metadata.DataID)
 }
 
 func ListNamespace(client *nacos.Client) []string {
@@ -100,9 +101,9 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		cobra.CheckErr(err)
 		if !info.IsDir() {
-			var ns Namespace
-			if err := readYamlFile(ns, path); err == nil {
-				nss.Items = append(nss.Items, ns)
+			var n Namespace
+			if err := readYamlFile(n, path); err == nil {
+				nss.Items = append(nss.Items, n)
 			} else {
 				var c Configuration
 				cobra.CheckErr(readYamlFile(c, path))
@@ -134,6 +135,6 @@ func CreateResourceFromDir(naClient *nacos.Client, dir string) {
 			Application: c.Spec.Application,
 			Tags:        c.Spec.Tags,
 		}))
-		fmt.Printf("configuration/%s created\n", c.Metadata.DataID)
+		fmt.Printf("configuration/%s/%s/%s created\n", c.Metadata.Namespace, c.Metadata.Group, c.Metadata.DataID)
 	}
 }
