@@ -72,6 +72,7 @@ var api = map[string]map[string]string{
 		"cs":        "/v3/console/cs/config",
 		"list_cs":   "/v3/console/cs/config/list",
 		"list_user": "/v3/auth/user/list",
+		"user":      "/v3/auth/user",
 	},
 }
 
@@ -270,8 +271,10 @@ func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
+	v.Add("groupName", opts.Group)
 	v.Add("appName", opts.Application)
-	// v.Add("config_tags", opts.Tags)
+	v.Add("config_tags", opts.Tags)
+	v.Add("configTags", opts.Tags)
 	if opts.PageNumber == 0 {
 		opts.PageNumber = 1
 	}
@@ -396,7 +399,7 @@ func (c *Client) CreateUser(name, password string) error {
 	v.Add("username", name)
 	v.Add("password", password)
 	v.Add("accessToken", token)
-	resp, err := http.PostForm(c.URL+"/v1/auth/users", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["user"], v)
 	return checkErr(resp, err)
 }
 
@@ -408,7 +411,7 @@ func (c *Client) DeleteUser(name string) error {
 	v := url.Values{}
 	v.Add("username", name)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/auth/users?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["user"], v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -419,7 +422,10 @@ func (c *Client) DeleteUser(name string) error {
 }
 
 func (c *Client) ListUser() (*UserList, error) {
-	return listResource[User](c, "v1/auth/users")
+	if c.APIVersion == "v1" {
+		return listV1Resource[User](c, api[c.APIVersion]["list_user"])
+	}
+	return listV3Resource[User](c, api[c.APIVersion]["list_user"])
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -468,7 +474,7 @@ func (c *Client) DeleteRole(name, username string) error {
 }
 
 func (c *Client) ListRole() (*RoleList, error) {
-	return listResource[Role](c, "v1/auth/roles")
+	return listV1Resource[Role](c, "v1/auth/roles")
 }
 
 func (c *Client) GetRole(name, username string) (*Role, error) {
@@ -517,7 +523,7 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 }
 
 func (c *Client) ListPermission() (*PermissionList, error) {
-	return listResource[Permission](c, "v1/auth/permissions")
+	return listV1Resource[Permission](c, "v1/auth/permissions")
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {

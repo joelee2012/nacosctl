@@ -55,6 +55,20 @@ type Configuration struct {
 	Tags             string `json:"configTags,omitempty"`
 }
 
+func (c *Configuration) GetGroup() string {
+	if c.Group != "" {
+		return c.Group
+	}
+	return c.GroupName
+}
+
+func (c *Configuration) GetNamespace() string {
+	if c.Tenant != "" {
+		return c.Tenant
+	}
+	return c.NamespaceID
+}
+
 type User struct {
 	Name     string `json:"username"`
 	Password string `json:"password"`
@@ -91,12 +105,37 @@ func (o *List[T]) Contains(other T) bool {
 	return false
 }
 
+func (o *List[T]) Append(other *List[T]) {
+	o.Items = append(o.Items, other.Items...)
+}
+
+func (o *List[T]) Avaliable() bool {
+	return o.PagesAvailable != 0 && o.PagesAvailable != o.PageNumber
+}
+
 type ConfigurationList = List[Configuration]
 type PermissionList = List[Permission]
 type RoleList = List[Role]
 type UserList = List[User]
 
-func listResource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
+type V3List[T ListTypes] struct {
+	Data *List[T] `json:"data"`
+}
+
+func (o *V3List[T]) Append(other *V3List[T]) {
+	o.Data.Items = append(o.Data.Items, other.Data.Items...)
+}
+
+func (o *V3List[T]) Avaliable() bool {
+	return o.Data.PagesAvailable != 0 && o.Data.PagesAvailable != o.Data.PageNumber
+}
+
+type ConfigurationListV3 = V3List[Configuration]
+type PermissionListV3 = V3List[Permission]
+type RoleListV3 = V3List[Role]
+type UserListV3 = V3List[User]
+
+func listV1Resource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -108,26 +147,44 @@ func listResource[T User | Role | Permission](c *Client, endpoint string) (*List
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
 	for {
-		l := new(List[T])
-		url := fmt.Sprintf("%s/%s?%s", c.URL, endpoint, v.Encode())
+		res := new(List[T])
+		url := fmt.Sprintf("%s%s?%s", c.URL, endpoint, v.Encode())
 		resp, err := http.Get(url)
-		if err := decode(resp, err, l); err != nil {
+		if err := decode(resp, err, res); err != nil {
 			return nil, err
 		}
-		all.Items = append(all.Items, l.Items...)
-		if l.PagesAvailable == 0 || l.PagesAvailable == l.PageNumber {
+		all.Items = append(all.Items, res.Items...)
+		if res.PagesAvailable == 0 || res.PagesAvailable == res.PageNumber {
 			break
 		}
-		v.Set("pageNo", strconv.Itoa(l.PageNumber+1))
+		v.Set("pageNo", strconv.Itoa(res.PageNumber+1))
 	}
 	return all, nil
 }
 
-type V3List[T ListTypes] struct {
-	Data *List[T] `json:"data"`
+func listV3Resource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
+	token, err := c.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	all := new(List[T])
+	v := url.Values{}
+	v.Add("search", "accurate")
+	v.Add("accessToken", token)
+	v.Add("pageNo", "1")
+	v.Add("pageSize", "100")
+	for {
+		res := new(V3List[T])
+		url := fmt.Sprintf("%s%s?%s", c.URL, endpoint, v.Encode())
+		resp, err := http.Get(url)
+		if err := decode(resp, err, res); err != nil {
+			return nil, err
+		}
+		all.Items = append(all.Items, res.Data.Items...)
+		if res.Data.PagesAvailable == 0 || res.Data.PagesAvailable == res.Data.PageNumber {
+			break
+		}
+		v.Set("pageNo", strconv.Itoa(res.Data.PageNumber+1))
+	}
+	return all, nil
 }
-
-type ConfigurationListV3 = V3List[Configuration]
-type PermissionListV3 = V3List[Permission]
-type RoleListV3 = V3List[Role]
-type UserListV3 = V3List[User]
