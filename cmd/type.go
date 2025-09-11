@@ -68,7 +68,11 @@ func NewConfiguration(apiVersion string, nc *nacos.Configuration) *Configuration
 	c.Kind = "Configuration"
 	c.Metadata.DataID = nc.DataID
 	c.Metadata.Namespace = nc.NamespaceID
-	c.Metadata.Group = nc.Group
+	if apiVersion == "v1" {
+		c.Metadata.Group = nc.Group
+	} else {
+		c.Metadata.Group = nc.GroupName
+	}
 	c.Spec.Application = nc.Application
 	c.Spec.Type = nc.Type
 	c.Spec.Tags = nc.Tags

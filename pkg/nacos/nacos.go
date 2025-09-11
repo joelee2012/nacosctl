@@ -235,6 +235,7 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
+	v.Add("groupName", opts.Group)
 	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("show", "all")
@@ -349,6 +350,7 @@ func (c *Client) CreateConfig(opts *CreateCfgOpts) error {
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
+	v.Add("groupName", opts.Group)
 	v.Add("content", opts.Content)
 	v.Add("type", opts.Type)
 	v.Add("tenant", opts.NamespaceID)
@@ -370,11 +372,8 @@ func (c *Client) DeleteConfig(opts *DeleteCfgOpts) error {
 	}
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
-	groupName := map[string]string{
-		"v1": "group",
-		"v3": "groupName",
-	}
-	v.Add(groupName[c.APIVersion], opts.Group)
+	v.Add("group", opts.Group)
+	v.Add("groupName", opts.Group)
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("accessToken", token)

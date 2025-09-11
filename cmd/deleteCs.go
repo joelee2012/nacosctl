@@ -57,5 +57,4 @@ func init() {
 	// deleteCsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	deleteCsCmd.Flags().StringVarP(&cmdOpts.NamespaceID, "namespace", "n", "", "namespace id")
 	deleteCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "DEFAULT_GROUP", "name of group")
-	deleteCsCmd.MarkFlagRequired("group")
 }

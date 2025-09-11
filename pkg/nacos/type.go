@@ -41,8 +41,10 @@ type Configuration struct {
 	ID               string `json:"id"`
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
+	GroupName        string `json:"groupName"`
 	Content          string `json:"content"`
-	NamespaceID      string `json:"tenant"`
+	Tenant           string `json:"tenant"`
+	NamespaceID      string `json:"namespaceId"`
 	Type             string `json:"type"`
 	Md5              string `json:"md5,omitempty"`
 	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
