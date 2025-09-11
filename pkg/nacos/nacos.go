@@ -54,12 +54,24 @@ type State struct {
 
 var api = map[string]map[string]string{
 	"v1": {
-		"state": "/v1/console/server/state",
-		"token": "/v1/auth/login",
+		"state":   "/v1/console/server/state",
+		"token":   "/v1/auth/login",
+		"list_ns": "/v1/console/namespaces",
+		"ns":      "/v1/console/namespaces",
+		"cs":      "/v1/cs/configs",
+		"list_cs": "/v1/cs/configs",
+		"user":    "/nacos/v1/auth/users",
+		"role":    "/nacos/v1/auth/roles",
+		"perm":    "/nacos/v1/auth/permissions",
 	},
 	"v3": {
-		"state": "/v3/admin/core/state",
-		"token": "/v3/auth/user/login",
+		"state":     "/v3/admin/core/state",
+		"token":     "/v3/auth/user/login",
+		"list_ns":   "/v3/console/core/namespace/list",
+		"ns":        "/v3/console/core/namespace",
+		"cs":        "/v3/console/cs/config",
+		"list_cs":   "/v3/console/cs/config/list",
+		"list_user": "/v3/auth/user/list",
 	},
 }
 
@@ -102,7 +114,7 @@ func (c *Client) GetToken() (string, error) {
 	v.Add("username", c.User)
 	v.Add("password", c.Password)
 	now := time.Now().Unix()
-	resp, err := http.PostForm(c.URL+"/v1/auth/login", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["token"], v)
 	err = decode(resp, err, &c.Token)
 	if err != nil {
 		return "", err
@@ -118,7 +130,7 @@ func (c *Client) ListNamespace() (*NamespaceList, error) {
 	}
 	v := url.Values{}
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["list_ns"], v.Encode())
 	resp, err := http.Get(url)
 	namespaces := new(NamespaceList)
 	err = decode(resp, err, namespaces)
@@ -141,7 +153,7 @@ func (c *Client) CreateNamespace(opts *CreateNsOpts) error {
 	v.Add("namespaceName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	resp, err := http.PostForm(c.URL+"/v1/console/namespaces", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["ns"], v)
 	return checkErr(resp, err)
 }
 
@@ -153,7 +165,7 @@ func (c *Client) DeleteNamespace(id string) error {
 	v := url.Values{}
 	v.Add("namespaceId", id)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["ns"], v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -172,7 +184,7 @@ func (c *Client) UpdateNamespace(opts *CreateNsOpts) error {
 	v.Add("namespaceShowName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/console/namespaces?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["ns"], v.Encode())
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
@@ -227,7 +239,7 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	v.Add("tenant", opts.NamespaceID)
 	v.Add("show", "all")
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["cs"], v.Encode())
 	resp, err := http.Get(url)
 	config := new(Configuration)
 	err = decode(resp, err, config)
@@ -258,7 +270,7 @@ func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	v.Add("dataId", opts.DataID)
 	v.Add("group", opts.Group)
 	v.Add("appName", opts.Application)
-	v.Add("config_tags", opts.Tags)
+	// v.Add("config_tags", opts.Tags)
 	if opts.PageNumber == 0 {
 		opts.PageNumber = 1
 	}
@@ -268,13 +280,21 @@ func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	v.Add("pageNo", strconv.Itoa(opts.PageNumber))
 	v.Add("pageSize", strconv.Itoa(opts.PageSize))
 	v.Add("tenant", opts.NamespaceID)
+	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
-	configs := new(ConfigurationList)
-	resp, err := http.Get(url)
-	err = decode(resp, err, configs)
-	return configs, err
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["list_cs"], v.Encode())
+	if c.APIVersion == "v1" {
+		configs := new(ConfigurationList)
+		resp, err := http.Get(url)
+		err = decode(resp, err, configs)
+		return configs, err
+	} else {
+		configs := new(ConfigurationListV3)
+		resp, err := http.Get(url)
+		err = decode(resp, err, configs)
+		return configs.Data, err
+	}
 }
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
@@ -337,7 +357,7 @@ func (c *Client) CreateConfig(opts *CreateCfgOpts) error {
 	v.Add("desc", opts.Description)
 	v.Add("config_tags", opts.Tags)
 	v.Add("accessToken", token)
-	resp, err := http.PostForm(c.URL+"/v1/cs/configs", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["cs"], v)
 	return checkErr(resp, err)
 }
 
@@ -350,10 +370,15 @@ func (c *Client) DeleteConfig(opts *DeleteCfgOpts) error {
 	}
 	v := url.Values{}
 	v.Add("dataId", opts.DataID)
-	v.Add("group", opts.Group)
+	groupName := map[string]string{
+		"v1": "group",
+		"v3": "groupName",
+	}
+	v.Add(groupName[c.APIVersion], opts.Group)
 	v.Add("tenant", opts.NamespaceID)
+	v.Add("namespaceId", opts.NamespaceID)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/cs/configs?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["cs"], v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err

@@ -120,3 +120,12 @@ func listResource[T User | Role | Permission](c *Client, endpoint string) (*List
 	}
 	return all, nil
 }
+
+type V3List[T ListTypes] struct {
+	Data *List[T] `json:"data"`
+}
+
+type ConfigurationListV3 = V3List[Configuration]
+type PermissionListV3 = V3List[Permission]
+type RoleListV3 = V3List[Role]
+type UserListV3 = V3List[User]
