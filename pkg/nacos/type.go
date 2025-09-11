@@ -105,14 +105,6 @@ func (o *List[T]) Contains(other T) bool {
 	return false
 }
 
-func (o *List[T]) Append(other *List[T]) {
-	o.Items = append(o.Items, other.Items...)
-}
-
-func (o *List[T]) Avaliable() bool {
-	return o.PagesAvailable != 0 && o.PagesAvailable != o.PageNumber
-}
-
 type ConfigurationList = List[Configuration]
 type PermissionList = List[Permission]
 type RoleList = List[Role]
@@ -120,14 +112,6 @@ type UserList = List[User]
 
 type V3List[T ListTypes] struct {
 	Data *List[T] `json:"data"`
-}
-
-func (o *V3List[T]) Append(other *V3List[T]) {
-	o.Data.Items = append(o.Data.Items, other.Data.Items...)
-}
-
-func (o *V3List[T]) Avaliable() bool {
-	return o.Data.PagesAvailable != 0 && o.Data.PagesAvailable != o.Data.PageNumber
 }
 
 type ConfigurationListV3 = V3List[Configuration]

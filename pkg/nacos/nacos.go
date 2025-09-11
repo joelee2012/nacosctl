@@ -54,15 +54,18 @@ type State struct {
 
 var api = map[string]map[string]string{
 	"v1": {
-		"state":   "/v1/console/server/state",
-		"token":   "/v1/auth/login",
-		"list_ns": "/v1/console/namespaces",
-		"ns":      "/v1/console/namespaces",
-		"cs":      "/v1/cs/configs",
-		"list_cs": "/v1/cs/configs",
-		"user":    "/nacos/v1/auth/users",
-		"role":    "/nacos/v1/auth/roles",
-		"perm":    "/nacos/v1/auth/permissions",
+		"state":     "/v1/console/server/state",
+		"token":     "/v1/auth/login",
+		"list_ns":   "/v1/console/namespaces",
+		"ns":        "/v1/console/namespaces",
+		"cs":        "/v1/cs/configs",
+		"list_cs":   "/v1/cs/configs",
+		"user":      "/v1/auth/users",
+		"list_user": "/v1/auth/users",
+		"role":      "/v1/auth/roles",
+		"list_role": "/v1/auth/roles",
+		"perm":      "/v1/auth/permissions",
+		"list_perm": "/v1/auth/permissions",
 	},
 	"v3": {
 		"state":     "/v3/admin/core/state",
@@ -73,6 +76,10 @@ var api = map[string]map[string]string{
 		"list_cs":   "/v3/console/cs/config/list",
 		"list_user": "/v3/auth/user/list",
 		"user":      "/v3/auth/user",
+		"list_role": "/v3/auth/role/list",
+		"role":      "/v3/auth/role",
+		"perm":      "/v3/auth/permission",
+		"list_perm": "/v3/auth/permission/list",
 	},
 }
 
@@ -451,7 +458,7 @@ func (c *Client) CreateRole(name, username string) error {
 	v.Add("username", username)
 	v.Add("role", name)
 	v.Add("accessToken", token)
-	resp, err := http.PostForm(c.URL+"/v1/auth/roles", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["role"], v)
 	return checkErr(resp, err)
 }
 
@@ -464,7 +471,7 @@ func (c *Client) DeleteRole(name, username string) error {
 	v.Add("username", username)
 	v.Add("role", name)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/auth/roles?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["role"], v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -474,7 +481,10 @@ func (c *Client) DeleteRole(name, username string) error {
 }
 
 func (c *Client) ListRole() (*RoleList, error) {
-	return listV1Resource[Role](c, "v1/auth/roles")
+	if c.APIVersion == "v1" {
+		return listV1Resource[Role](c, api[c.APIVersion]["list_role"])
+	}
+	return listV3Resource[Role](c, api[c.APIVersion]["list_role"])
 }
 
 func (c *Client) GetRole(name, username string) (*Role, error) {
@@ -499,7 +509,7 @@ func (c *Client) CreatePermission(role, resource, permission string) error {
 	v.Add("resource", resource)
 	v.Add("role", role)
 	v.Add("accessToken", token)
-	resp, err := http.PostForm(c.URL+"/v1/auth/permissions", v)
+	resp, err := http.PostForm(c.URL+api[c.APIVersion]["perm"], v)
 	return checkErr(resp, err)
 }
 
@@ -513,7 +523,7 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 	v.Add("resource", resource)
 	v.Add("role", role)
 	v.Add("accessToken", token)
-	url := fmt.Sprintf("%s/v1/auth/permissions?%s", c.URL, v.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["perm"], v.Encode())
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -523,7 +533,10 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 }
 
 func (c *Client) ListPermission() (*PermissionList, error) {
-	return listV1Resource[Permission](c, "v1/auth/permissions")
+	if c.APIVersion == "v1" {
+		return listV1Resource[Permission](c, api[c.APIVersion]["list_perm"])
+	}
+	return listV3Resource[Permission](c, api[c.APIVersion]["list_perm"])
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {
