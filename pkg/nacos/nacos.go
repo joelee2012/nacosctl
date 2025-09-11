@@ -68,7 +68,7 @@ var api = map[string]map[string]string{
 		"list_perm": "/v1/auth/permissions",
 	},
 	"v3": {
-		"state":     "/v3/admin/core/state",
+		"state":     "/v3/console/server/state",
 		"token":     "/v3/auth/user/login",
 		"list_ns":   "/v3/console/core/namespace/list",
 		"ns":        "/v3/console/core/namespace",
@@ -100,6 +100,7 @@ func (c *Client) DetectAPIVersion() {
 			return
 		}
 	}
+	c.APIVersion = "v1"
 }
 
 func (c *Client) GetVersion() (string, error) {
