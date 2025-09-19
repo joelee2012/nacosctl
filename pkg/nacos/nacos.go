@@ -535,9 +535,13 @@ func (c *Client) DeletePermission(role, resource, permission string) error {
 
 func (c *Client) ListPermission() (*PermissionList, error) {
 	if c.APIVersion == "v1" {
-		return listV1Resource[Permission](c, api[c.APIVersion]["list_perm"])
+		return listResource[List[Permission]](c, api[c.APIVersion]["list_perm"])
 	}
-	return listV3Resource[Permission](c, api[c.APIVersion]["list_perm"])
+	return listResource[V3List[Permission]](c, api[c.APIVersion]["list_perm"])
+	// if c.APIVersion == "v1" {
+	// 	return listV1Resource[Permission](c, api[c.APIVersion]["list_perm"])
+	// }
+	// return listV3Resource[Permission](c, api[c.APIVersion]["list_perm"])
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {

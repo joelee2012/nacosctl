@@ -105,6 +105,18 @@ func (o *List[T]) Contains(other T) bool {
 	return false
 }
 
+func (lst List[T]) NextPageNumber() int {
+	return lst.PageNumber + 1
+}
+
+func (lst List[T]) IsEnd() bool {
+	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
+}
+
+func (lst List[T]) GetItems() []*T {
+	return lst.Items
+}
+
 type ConfigurationList = List[Configuration]
 type PermissionList = List[Permission]
 type RoleList = List[Role]
@@ -114,61 +126,53 @@ type V3List[T ListTypes] struct {
 	Data *List[T] `json:"data"`
 }
 
+func (lst V3List[T]) GetItems() []*T {
+	return lst.Data.Items
+}
+
+func (lst V3List[T]) NextPageNumber() int {
+	return lst.Data.PageNumber + 1
+}
+
+func (lst V3List[T]) IsEnd() bool {
+	return lst.Data.PagesAvailable == 0 || lst.Data.PagesAvailable == lst.Data.PageNumber
+}
+
 type ConfigurationListV3 = V3List[Configuration]
 type PermissionListV3 = V3List[Permission]
 type RoleListV3 = V3List[Role]
 type UserListV3 = V3List[User]
 
-func listV1Resource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
-	token, err := c.GetToken()
-	if err != nil {
-		return nil, err
-	}
-	all := new(List[T])
-	v := url.Values{}
-	v.Add("search", "accurate")
-	v.Add("accessToken", token)
-	v.Add("pageNo", "1")
-	v.Add("pageSize", "100")
-	for {
-		res := new(List[T])
-		url := fmt.Sprintf("%s%s?%s", c.URL, endpoint, v.Encode())
-		resp, err := http.Get(url)
-		if err := decode(resp, err, res); err != nil {
-			return nil, err
-		}
-		all.Items = append(all.Items, res.Items...)
-		if res.PagesAvailable == 0 || res.PagesAvailable == res.PageNumber {
-			break
-		}
-		v.Set("pageNo", strconv.Itoa(res.PageNumber+1))
-	}
-	return all, nil
+type Extendable[T any] interface {
+	GetItems() []*T
+	NextPageNumber() int
+	IsEnd() bool
 }
 
-func listV3Resource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
+func listResource[L Extendable[T], T ListTypes](c *Client, endpoint string) (*List[T], error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
 	}
-	all := new(List[T])
+	var all []*T
 	v := url.Values{}
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
 	for {
-		res := new(V3List[T])
+		var lst L
 		url := fmt.Sprintf("%s%s?%s", c.URL, endpoint, v.Encode())
 		resp, err := http.Get(url)
-		if err := decode(resp, err, res); err != nil {
+		if err := decode(resp, err, &lst); err != nil {
 			return nil, err
 		}
-		all.Items = append(all.Items, res.Data.Items...)
-		if res.Data.PagesAvailable == 0 || res.Data.PagesAvailable == res.Data.PageNumber {
+		all = append(all, lst.GetItems()...)
+		if lst.IsEnd() {
 			break
 		}
-		v.Set("pageNo", strconv.Itoa(res.Data.PageNumber+1))
+		v.Set("pageNo", strconv.Itoa(lst.NextPageNumber()))
 	}
-	return all, nil
+	result := List[T]{Items: all}
+	return &result, nil
 }
