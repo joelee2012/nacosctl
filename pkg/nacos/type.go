@@ -96,8 +96,8 @@ type List[T ListTypes] struct {
 	Items          []*T `json:"pageItems"`
 }
 
-func (o *List[T]) Contains(other T) bool {
-	for _, it := range o.Items {
+func (lst *List[T]) Contains(other T) bool {
+	for _, it := range lst.Items {
 		if *it == other {
 			return true
 		}
@@ -113,7 +113,7 @@ func (lst List[T]) IsEnd() bool {
 	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
 }
 
-func (lst List[T]) GetItems() []*T {
+func (lst List[T]) AllItems() []*T {
 	return lst.Items
 }
 
@@ -126,7 +126,7 @@ type V3List[T ListTypes] struct {
 	Data *List[T] `json:"data"`
 }
 
-func (lst V3List[T]) GetItems() []*T {
+func (lst V3List[T]) AllItems() []*T {
 	return lst.Data.Items
 }
 
