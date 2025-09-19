@@ -431,9 +431,9 @@ func (c *Client) DeleteUser(name string) error {
 
 func (c *Client) ListUser() (*UserList, error) {
 	if c.APIVersion == "v1" {
-		return listV1Resource[User](c, api[c.APIVersion]["list_user"])
+		return listResource[List[User]](c, api[c.APIVersion]["list_user"])
 	}
-	return listV3Resource[User](c, api[c.APIVersion]["list_user"])
+	return listResource[V3List[User]](c, api[c.APIVersion]["list_user"])
 }
 
 func (c *Client) GetUser(name string) (*User, error) {
@@ -483,9 +483,9 @@ func (c *Client) DeleteRole(name, username string) error {
 
 func (c *Client) ListRole() (*RoleList, error) {
 	if c.APIVersion == "v1" {
-		return listV1Resource[Role](c, api[c.APIVersion]["list_role"])
+		return listResource[List[Role]](c, api[c.APIVersion]["list_role"])
 	}
-	return listV3Resource[Role](c, api[c.APIVersion]["list_role"])
+	return listResource[V3List[Role]](c, api[c.APIVersion]["list_role"])
 }
 
 func (c *Client) GetRole(name, username string) (*Role, error) {
@@ -538,10 +538,6 @@ func (c *Client) ListPermission() (*PermissionList, error) {
 		return listResource[List[Permission]](c, api[c.APIVersion]["list_perm"])
 	}
 	return listResource[V3List[Permission]](c, api[c.APIVersion]["list_perm"])
-	// if c.APIVersion == "v1" {
-	// 	return listV1Resource[Permission](c, api[c.APIVersion]["list_perm"])
-	// }
-	// return listV3Resource[Permission](c, api[c.APIVersion]["list_perm"])
 }
 
 func (c *Client) GetPermission(role, resource, action string) (*Permission, error) {

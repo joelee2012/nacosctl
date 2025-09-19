@@ -143,13 +143,13 @@ type PermissionListV3 = V3List[Permission]
 type RoleListV3 = V3List[Role]
 type UserListV3 = V3List[User]
 
-type Extendable[T any] interface {
-	GetItems() []*T
+type Paginator[T any] interface {
+	AllItems() []*T
 	NextPageNumber() int
 	IsEnd() bool
 }
 
-func listResource[L Extendable[T], T ListTypes](c *Client, endpoint string) (*List[T], error) {
+func listResource[L Paginator[T], T ListTypes](c *Client, endpoint string) (*List[T], error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func listResource[L Extendable[T], T ListTypes](c *Client, endpoint string) (*Li
 		if err := decode(resp, err, &lst); err != nil {
 			return nil, err
 		}
-		all = append(all, lst.GetItems()...)
+		all = append(all, lst.AllItems()...)
 		if lst.IsEnd() {
 			break
 		}
