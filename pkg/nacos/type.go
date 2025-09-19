@@ -113,7 +113,7 @@ func (lst List[T]) IsEnd() bool {
 	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
 }
 
-func (lst List[T]) AllItems() []*T {
+func (lst List[T]) All() []*T {
 	return lst.Items
 }
 
@@ -126,7 +126,7 @@ type V3List[T ListTypes] struct {
 	Data *List[T] `json:"data"`
 }
 
-func (lst V3List[T]) AllItems() []*T {
+func (lst V3List[T]) All() []*T {
 	return lst.Data.Items
 }
 
@@ -144,7 +144,7 @@ type RoleListV3 = V3List[Role]
 type UserListV3 = V3List[User]
 
 type Paginator[T any] interface {
-	AllItems() []*T
+	All() []*T
 	NextPageNumber() int
 	IsEnd() bool
 }
@@ -154,7 +154,7 @@ func listResource[L Paginator[T], T ListTypes](c *Client, endpoint string) (*Lis
 	if err != nil {
 		return nil, err
 	}
-	var all []*T
+	all := new(List[T])
 	v := url.Values{}
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
@@ -167,12 +167,11 @@ func listResource[L Paginator[T], T ListTypes](c *Client, endpoint string) (*Lis
 		if err := decode(resp, err, &lst); err != nil {
 			return nil, err
 		}
-		all = append(all, lst.AllItems()...)
+		all.Items = append(all.Items, lst.All()...)
 		if lst.IsEnd() {
 			break
 		}
 		v.Set("pageNo", strconv.Itoa(lst.NextPageNumber()))
 	}
-	result := List[T]{Items: all}
-	return &result, nil
+	return all, nil
 }
