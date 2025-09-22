@@ -224,7 +224,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	}
 	for _, ns := range nsList.Items {
 		if ns.ID == id {
-			return ns, nil
+			return &ns, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", id)
@@ -444,7 +444,7 @@ func (c *Client) GetUser(name string) (*User, error) {
 
 	for _, user := range users.Items {
 		if user.Name == name {
-			return user, nil
+			return &user, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", name)
