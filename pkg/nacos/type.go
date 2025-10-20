@@ -41,8 +41,10 @@ type Configuration struct {
 	ID               string `json:"id"`
 	DataID           string `json:"dataId"`
 	Group            string `json:"group"`
+	GroupName        string `json:"groupName"`
 	Content          string `json:"content"`
-	NamespaceID      string `json:"tenant"`
+	Tenant           string `json:"tenant"`
+	NamespaceID      string `json:"namespaceId"`
 	Type             string `json:"type"`
 	Md5              string `json:"md5,omitempty"`
 	EncryptedDataKey string `json:"encryptedDataKey,omitempty"`
@@ -51,6 +53,20 @@ type Configuration struct {
 	ModifyTime       int64  `json:"modifyTime,omitempty"`
 	Description      string `json:"desc,omitempty"`
 	Tags             string `json:"configTags,omitempty"`
+}
+
+func (c *Configuration) GetGroup() string {
+	if c.Group != "" {
+		return c.Group
+	}
+	return c.GroupName
+}
+
+func (c *Configuration) GetNamespace() string {
+	if c.Tenant != "" {
+		return c.Tenant
+	}
+	return c.NamespaceID
 }
 
 type User struct {
@@ -80,8 +96,8 @@ type List[T ListTypes] struct {
 	Items          []*T `json:"pageItems"`
 }
 
-func (o *List[T]) Contains(other T) bool {
-	for _, it := range o.Items {
+func (lst *List[T]) Contains(other T) bool {
+	for _, it := range lst.Items {
 		if *it == other {
 			return true
 		}
@@ -89,12 +105,51 @@ func (o *List[T]) Contains(other T) bool {
 	return false
 }
 
+func (lst List[T]) NextPageNumber() int {
+	return lst.PageNumber + 1
+}
+
+func (lst List[T]) IsEnd() bool {
+	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
+}
+
+func (lst List[T]) All() []*T {
+	return lst.Items
+}
+
 type ConfigurationList = List[Configuration]
 type PermissionList = List[Permission]
 type RoleList = List[Role]
 type UserList = List[User]
 
-func listResource[T User | Role | Permission](c *Client, endpoint string) (*List[T], error) {
+type V3List[T ListTypes] struct {
+	Data *List[T] `json:"data"`
+}
+
+func (lst V3List[T]) All() []*T {
+	return lst.Data.All()
+}
+
+func (lst V3List[T]) NextPageNumber() int {
+	return lst.Data.NextPageNumber()
+}
+
+func (lst V3List[T]) IsEnd() bool {
+	return lst.Data.IsEnd()
+}
+
+type ConfigurationListV3 = V3List[Configuration]
+type PermissionListV3 = V3List[Permission]
+type RoleListV3 = V3List[Role]
+type UserListV3 = V3List[User]
+
+type Paginator[T any] interface {
+	All() []*T
+	NextPageNumber() int
+	IsEnd() bool
+}
+
+func listResource[L Paginator[T], T ListTypes](c *Client, endpoint string) (*List[T], error) {
 	token, err := c.GetToken()
 	if err != nil {
 		return nil, err
@@ -106,17 +161,17 @@ func listResource[T User | Role | Permission](c *Client, endpoint string) (*List
 	v.Add("pageNo", "1")
 	v.Add("pageSize", "100")
 	for {
-		l := new(List[T])
-		url := fmt.Sprintf("%s/%s?%s", c.URL, endpoint, v.Encode())
+		var lst L
+		url := fmt.Sprintf("%s%s?%s", c.URL, endpoint, v.Encode())
 		resp, err := http.Get(url)
-		if err := decode(resp, err, l); err != nil {
+		if err := decode(resp, err, &lst); err != nil {
 			return nil, err
 		}
-		all.Items = append(all.Items, l.Items...)
-		if l.PagesAvailable == 0 || l.PagesAvailable == l.PageNumber {
+		all.Items = append(all.Items, lst.All()...)
+		if lst.IsEnd() {
 			break
 		}
-		v.Set("pageNo", strconv.Itoa(l.PageNumber+1))
+		v.Set("pageNo", strconv.Itoa(lst.NextPageNumber()))
 	}
 	return all, nil
 }

@@ -48,15 +48,15 @@ func NewList[T ListTypes, S any](apiVersion string, items []*S, covert func(apiV
 	return list
 }
 
-func (o *List[T]) ToTable(w io.Writer) {
+func (lst *List[T]) ToTable(w io.Writer) {
 	tb := table.NewWriter()
 	tb.SetOutputMirror(w)
-	if len(o.Items) == 0 {
+	if len(lst.Items) == 0 {
 		w.Write([]byte("No resources found"))
 		return
 	}
-	tb.AppendHeader(o.Items[0].TableHeader())
-	for _, it := range o.Items {
+	tb.AppendHeader(lst.Items[0].TableHeader())
+	for _, it := range lst.Items {
 		tb.AppendRow(it.TableRow())
 	}
 	tb.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
@@ -66,8 +66,8 @@ func (o *List[T]) ToTable(w io.Writer) {
 	tb.Render()
 }
 
-func (o *List[T]) WriteToDir(base string) error {
-	for _, it := range o.Items {
+func (lst *List[T]) WriteToDir(base string) error {
+	for _, it := range lst.Items {
 		if err := it.WriteToDir(base); err != nil {
 			return err
 		}

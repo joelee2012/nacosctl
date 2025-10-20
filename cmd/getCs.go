@@ -44,7 +44,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	getCsCmd.Flags().StringVarP(&cmdOpts.NamespaceID, "namespace", "n", "", "namespace id")
-	getCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "", "group name")
+	getCsCmd.Flags().StringVarP(&cmdOpts.Group, "group", "g", "DEFAULT_GROUP", "group name")
 	getCsCmd.Flags().BoolVarP(&cmdOpts.ShowAll, "all", "A", false, "show all configurations")
 
 }
