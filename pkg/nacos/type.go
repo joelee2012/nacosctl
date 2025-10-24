@@ -25,7 +25,7 @@ import (
 type NamespaceList struct {
 	// Code    int          `json:"code,omitempty"`
 	// Message interface{}  `json:"message,omitempty"`
-	Items []*Namespace `json:"data"`
+	Items []Namespace `json:"data"`
 }
 
 type Namespace struct {
@@ -90,15 +90,15 @@ type ListTypes interface {
 }
 
 type List[T ListTypes] struct {
-	TotalCount     int  `json:"totalCount,omitempty"`
-	PageNumber     int  `json:"pageNumber,omitempty"`
-	PagesAvailable int  `json:"pagesAvailable,omitempty"`
-	Items          []*T `json:"pageItems"`
+	TotalCount     int `json:"totalCount,omitempty"`
+	PageNumber     int `json:"pageNumber,omitempty"`
+	PagesAvailable int `json:"pagesAvailable,omitempty"`
+	Items          []T `json:"pageItems"`
 }
 
 func (lst *List[T]) Contains(other T) bool {
 	for _, it := range lst.Items {
-		if *it == other {
+		if it == other {
 			return true
 		}
 	}
@@ -113,7 +113,7 @@ func (lst List[T]) IsEnd() bool {
 	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
 }
 
-func (lst List[T]) All() []*T {
+func (lst List[T]) All() []T {
 	return lst.Items
 }
 
@@ -126,16 +126,16 @@ type V3List[T ListTypes] struct {
 	Data *List[T] `json:"data"`
 }
 
-func (lst V3List[T]) All() []*T {
-	return lst.Data.All()
+func (lst V3List[T]) All() []T {
+	return lst.Data.Items
 }
 
 func (lst V3List[T]) NextPageNumber() int {
-	return lst.Data.NextPageNumber()
+	return lst.Data.PageNumber + 1
 }
 
 func (lst V3List[T]) IsEnd() bool {
-	return lst.Data.IsEnd()
+	return lst.Data.PagesAvailable == 0 || lst.Data.PagesAvailable == lst.Data.PageNumber
 }
 
 type ConfigurationListV3 = V3List[Configuration]
@@ -144,7 +144,7 @@ type RoleListV3 = V3List[Role]
 type UserListV3 = V3List[User]
 
 type Paginator[T any] interface {
-	All() []*T
+	All() []T
 	NextPageNumber() int
 	IsEnd() bool
 }

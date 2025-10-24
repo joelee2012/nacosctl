@@ -12,15 +12,15 @@ import (
 )
 
 var apiVersion = "v1"
-var cs = []*nacos.Configuration{
+var cs = []nacos.Configuration{
 	{NamespaceID: "ns1", DataID: "data1", Group: "group1", Application: "app1", Type: "type1"},
 	{NamespaceID: "ns2", DataID: "data2", Group: "group2", Application: "app2", Type: "type2"},
 }
-var ns = []*nacos.Namespace{
+var ns = []nacos.Namespace{
 	{ID: "ns1", Name: "data1", Description: "group1"},
 }
 
-var us = []*nacos.User{
+var us = []nacos.User{
 	{Name: "user1", Password: "password1"},
 }
 
