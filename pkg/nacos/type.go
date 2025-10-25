@@ -128,28 +128,28 @@ type PermissionList = List[Permission]
 type RoleList = List[Role]
 type UserList = List[User]
 
-type V3List[T ListTypes] struct {
+type ListV3[T ListTypes] struct {
 	Code    int     `json:"code"`
 	Message string  `json:"message"`
 	Data    List[T] `json:"data"`
 }
 
-func (lst V3List[T]) All() []T {
+func (lst ListV3[T]) All() []T {
 	return lst.Data.All()
 }
 
-func (lst V3List[T]) NextPageNumber() int {
+func (lst ListV3[T]) NextPageNumber() int {
 	return lst.Data.NextPageNumber()
 }
 
-func (lst V3List[T]) IsEnd() bool {
+func (lst ListV3[T]) IsEnd() bool {
 	return lst.Data.IsEnd()
 }
 
-type ConfigurationListV3 = V3List[Configuration]
-type PermissionListV3 = V3List[Permission]
-type RoleListV3 = V3List[Role]
-type UserListV3 = V3List[User]
+type ConfigurationListV3 = ListV3[Configuration]
+type PermissionListV3 = ListV3[Permission]
+type RoleListV3 = ListV3[Role]
+type UserListV3 = ListV3[User]
 
 type Paginator[T any] interface {
 	All() []T
