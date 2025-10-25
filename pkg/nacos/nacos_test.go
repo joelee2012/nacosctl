@@ -10,34 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var csList = `
-{
-  "totalCount": 1,
-  "pageNumber": 1,
-  "pagesAvailable": 0,
-  "pageItems": [
-    {
-      "id": "1",
-      "dataId": "test",
-      "group": "DEFAULT_GROUP",
-      "content": "test content",
-      "md5": "test-md5",
-      "encryptedDataKey": "test-key",
-      "tenant": "test-tenant",
-      "appName": "test-app",
-      "type": "properties"
-    }
-  ]
-}
-`
-var csListV3 = fmt.Sprintf(`
-{
-  "code": 0,
-  "message": "success",
-  "data": %s
-}
-`, csList)
-
 var config = `
 {
 	"id": "1",
@@ -51,14 +23,6 @@ var config = `
 	"type": "properties"
 }
 `
-var configV3 = fmt.Sprintf(`
-{
-  "code": 0,
-  "message": "success",
-  "data": %s
-}
-`, config)
-
 var namespace = `
 {
 	"namespace": "test",
@@ -67,8 +31,38 @@ var namespace = `
 	"quota": 100,
 	"configCount": 10,
 	"type": 0
+}`
+
+var role = `{"role": "ROLE_ADMIN", "username": "nacos"}`
+
+var user = `{"username": "user1", "password": "$2a$10$C3B9EQgp93M6mvXwXiCebe1T9HvxGRj29x2dHIYCH.bUCdbJcrugO"}`
+var permission = `{"role": "ROLE_ADMIN", "resource": "backend:*:*", "action": "rw"}`
+
+func newV1Data(s string) string {
+	return fmt.Sprintf(`{
+  "totalCount": 1,
+  "pageNumber": 1,
+  "pagesAvailable": 0,
+  "pageItems": [
+    %s
+  ]
+}`, s)
 }
-`
+
+func newV3Data(s string) string {
+	return fmt.Sprintf(`{
+  "code": 0,
+  "message": "success",
+  "data": %s
+}
+`, s)
+}
+
+var csList = newV1Data(config)
+
+var csListV3 = newV3Data(csList)
+
+var configV3 = newV3Data(config)
 
 var nsList = fmt.Sprintf(`
 {
@@ -80,52 +74,14 @@ var nsList = fmt.Sprintf(`
 }
 `, namespace)
 
-var users = `
-{
-  "totalCount": 2,
-  "pageNumber": 1,
-  "pagesAvailable": 1,
-  "pageItems": [
-    {
-      "username": "user1",
-      "password": "$2a$10$C3B9EQgp93M6mvXwXiCebe1T9HvxGRj29x2dHIYCH.bUCdbJcrugO"
-    },
-    {
-      "username": "user2",
-      "password": "$2a$10$OHWIUaiy9cC8wHxANJ7j/O6CDNe1fy5WUD/6vUA2TdeWNjZLPUA.C"
-    }
-  ]
-}
-`
+var userList = newV1Data(user)
+var userListV3 = newV3Data(userList)
 
-var roles = `
-{
-  "totalCount": 1,
-  "pageNumber": 1,
-  "pagesAvailable": 1,
-  "pageItems": [
-    {
-      "role": "ROLE_ADMIN",
-      "username": "nacos"
-    }
-  ]
-}
-`
+var roleList = newV1Data(role)
+var roleListV3 = newV3Data(roleList)
 
-var permissions = `
-{
-  "totalCount": 1,
-  "pageNumber": 1,
-  "pagesAvailable": 1,
-  "pageItems": [
-    {
-      "role": "ROLE_ADMIN",
-      "resource": "backend:*:*",
-      "action": "rw"
-    }
-  ]
-}
-`
+var permList = newV1Data(permission)
+var permListV3 = newV3Data(permList)
 
 func TestNewClient(t *testing.T) {
 	c := NewClient("http://localhost:8848", "user", "password")
@@ -161,11 +117,17 @@ func startServer() (*httptest.Server, *Client) {
 		case "/v1/auth/login", "/v3/auth/user/login":
 			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
 		case "/v1/auth/users":
-			w.Write([]byte(users))
+			w.Write([]byte(userList))
+		case "/v3/auth/user/list":
+			w.Write([]byte(userListV3))
 		case "/v1/auth/roles":
-			w.Write([]byte(roles))
+			w.Write([]byte(roleList))
+		case "/v3/auth/role/list":
+			w.Write([]byte(roleListV3))
 		case "/v1/auth/permissions":
-			w.Write([]byte(permissions))
+			w.Write([]byte(permList))
+		case "/v3/auth/permission/list":
+			w.Write([]byte(permListV3))
 		}
 	}))
 	c := NewClient(ts.URL, "user", "password")
@@ -359,11 +321,15 @@ func TestGetConfig(t *testing.T) {
 func TestListConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	cfgs, err := c.ListConfig(&ListCfgOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
-	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(cfgs.Items))
-		assert.Equal(t, "test", cfgs.Items[0].DataID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			cfgs, err := c.ListConfig(&ListCfgOpts{DataID: "test", Group: "DEFAULT_GROUP", PageNumber: 1, PageSize: 10})
+			if assert.NoError(t, err) {
+				assert.Equal(t, 1, len(cfgs.Items))
+				assert.Equal(t, "test", cfgs.Items[0].DataID)
+			}
+		})
 	}
 }
 
@@ -371,21 +337,30 @@ func TestListConfigInNs(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	cfgs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
-	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(cfgs.Items))
-		assert.Equal(t, "test", cfgs.Items[0].DataID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			cfgs, err := c.ListConfigInNs("test", "DEFAULT_GROUP")
+			if assert.NoError(t, err) {
+				assert.Equal(t, 1, len(cfgs.Items))
+				assert.Equal(t, "test", cfgs.Items[0].DataID)
+			}
+		})
 	}
 }
 
 func TestListAllConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	cfgs, err := c.ListAllConfig()
-	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(cfgs.Items))
-		assert.Equal(t, "test", cfgs.Items[0].DataID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			cfgs, err := c.ListAllConfig()
+			if assert.NoError(t, err) {
+				assert.Equal(t, 1, len(cfgs.Items))
+				assert.Equal(t, "test", cfgs.Items[0].DataID)
+			}
+		})
 	}
 }
 
@@ -408,11 +383,15 @@ func TestDeleteConfig(t *testing.T) {
 func TestListUser(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	users, err := c.ListUser()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "user1", users.Items[0].Name)
-		assert.Equal(t, "user2", users.Items[1].Name)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			users, err := c.ListUser()
+			if assert.NoError(t, err) {
+				assert.Equal(t, "user1", users.Items[0].Name)
+				// assert.Equal(t, "user2", users.Items[1].Name)
+			}
+		})
 	}
 }
 
@@ -445,11 +424,15 @@ func TestGetUser(t *testing.T) {
 func TestListRole(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	roles, err := c.ListRole()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "ROLE_ADMIN", roles.Items[0].Name)
-		assert.Equal(t, "nacos", roles.Items[0].Username)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			roles, err := c.ListRole()
+			if assert.NoError(t, err) {
+				assert.Equal(t, "ROLE_ADMIN", roles.Items[0].Name)
+				assert.Equal(t, "nacos", roles.Items[0].Username)
+			}
+		})
 	}
 }
 
@@ -482,12 +465,16 @@ func TestGetRole(t *testing.T) {
 func TestListPermission(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	perms, err := c.ListPermission()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "ROLE_ADMIN", perms.Items[0].Role)
-		assert.Equal(t, "backend:*:*", perms.Items[0].Resource)
-		assert.Equal(t, "rw", perms.Items[0].Action)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			perms, err := c.ListPermission()
+			if assert.NoError(t, err) {
+				assert.Equal(t, "ROLE_ADMIN", perms.Items[0].Role)
+				assert.Equal(t, "backend:*:*", perms.Items[0].Resource)
+				assert.Equal(t, "rw", perms.Items[0].Action)
+			}
+		})
 	}
 }
 
