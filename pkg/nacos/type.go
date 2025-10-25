@@ -55,6 +55,12 @@ type Configuration struct {
 	Tags             string `json:"configTags,omitempty"`
 }
 
+type ConfigurationV3 struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Data    Configuration `json:"data"`
+}
+
 func (c *Configuration) GetGroup() string {
 	if c.Group != "" {
 		return c.Group

@@ -83,6 +83,8 @@ var api = map[string]map[string]string{
 	},
 }
 
+var apiVersion = []string{"v3", "v1"}
+
 func NewClient(url, user, password string) *Client {
 	return &Client{
 		URL:        url,
@@ -93,7 +95,7 @@ func NewClient(url, user, password string) *Client {
 }
 
 func (c *Client) DetectAPIVersion() {
-	for ver := range api {
+	for _, ver := range apiVersion {
 		c.APIVersion = ver
 		v, err := c.GetVersion()
 		if err == nil && v != "" {
@@ -251,13 +253,23 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["cs"], v.Encode())
 	resp, err := http.Get(url)
-	config := new(Configuration)
-	err = decode(resp, err, config)
-	// if config not found, nacos server return 200 and empty response
-	if err == io.EOF {
-		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
+	if c.APIVersion == "v3" {
+		config := new(ConfigurationV3)
+		err = decode(resp, err, config)
+		if err == io.EOF {
+			return nil, fmt.Errorf("404 Not Found %s %w", url, err)
+		}
+		return &config.Data, nil
+	} else {
+
+		config := new(Configuration)
+		err = decode(resp, err, config)
+		// if config not found, nacos server return 200 and empty response
+		if err == io.EOF {
+			return nil, fmt.Errorf("404 Not Found %s %w", url, err)
+		}
+		return config, err
 	}
-	return config, err
 }
 
 type ListCfgOpts struct {

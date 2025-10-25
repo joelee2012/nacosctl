@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"os"
-	"slices"
 
 	"github.com/joelee2012/nacosctl/pkg/nacos"
 	"github.com/spf13/cobra"
@@ -57,16 +56,16 @@ func GetCs(args []string) {
 		allCs, err = client.ListAllConfig()
 		cobra.CheckErr(err)
 	} else {
-		cs, err := client.ListConfigInNs(cmdOpts.NamespaceID, cmdOpts.Group)
-		cobra.CheckErr(err)
 		if len(args) > 0 {
-			for _, c := range cs.Items {
-				if slices.Contains(args, c.DataID) {
-					allCs.Items = append(allCs.Items, c)
-				}
+
+			for _, c := range args {
+				cs, err := client.GetConfig(&nacos.GetCfgOpts{NamespaceID: cmdOpts.NamespaceID, Group: cmdOpts.Group, DataID: c})
+				cobra.CheckErr(err)
+				allCs.Items = append(allCs.Items, *cs)
 			}
 		} else {
-			allCs = cs
+			allCs, err = client.ListConfigInNs(cmdOpts.NamespaceID, cmdOpts.Group)
+			cobra.CheckErr(err)
 		}
 	}
 	list := NewList(client.APIVersion, allCs.Items, NewConfiguration)
