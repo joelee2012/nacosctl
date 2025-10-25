@@ -23,8 +23,8 @@ import (
 )
 
 type NamespaceList struct {
-	// Code    int          `json:"code,omitempty"`
-	// Message interface{}  `json:"message,omitempty"`
+	// Code    int         `json:"code,omitempty"`
+	// Message string      `json:"message,omitempty"`
 	Items []Namespace `json:"data"`
 }
 
