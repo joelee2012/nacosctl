@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,13 @@ var csList = `
   ]
 }
 `
+var csListV3 = fmt.Sprintf(`
+{
+  "code": 0,
+  "message": "success",
+  "data": %s
+}
+`, csList)
 
 var config = `
 {
@@ -43,22 +51,14 @@ var config = `
 	"type": "properties"
 }
 `
-var nsList = `
+var configV3 = fmt.Sprintf(`
 {
-  "code": 200,
+  "code": 0,
   "message": "success",
-  "data": [
-    {
-      "namespace": "test",
-      "namespaceShowName": "Test",
-      "namespaceDesc": "Test namespace",
-      "quota": 100,
-      "configCount": 10,
-      "type": 0
-    }
-  ]
+  "data": %s
 }
-`
+`, config)
+
 var namespace = `
 {
 	"namespace": "test",
@@ -69,6 +69,17 @@ var namespace = `
 	"type": 0
 }
 `
+
+var nsList = fmt.Sprintf(`
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    %s
+  ]
+}
+`, namespace)
+
 var users = `
 {
   "totalCount": 2,
@@ -127,7 +138,7 @@ func startServer() (*httptest.Server, *Client) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		switch r.URL.Path {
-		case "/v1/console/namespaces":
+		case "/v1/console/namespaces", "/v3/console/core/namespace/list":
 			if r.URL.Query().Get("show") == "all" {
 				w.Write([]byte(namespace))
 			} else {
@@ -139,9 +150,15 @@ func startServer() (*httptest.Server, *Client) {
 			} else {
 				w.Write([]byte(csList))
 			}
+		case "/v3/console/cs/config":
+			w.Write([]byte(configV3))
+		case "/v3/console/cs/config/list":
+			w.Write([]byte(csListV3))
 		case "/v1/console/server/state":
 			w.Write([]byte(`{"version": "1.0.0"}`))
-		case "/v1/auth/login":
+		case "/v3/console/server/state":
+			w.Write([]byte(`{"version": "3.0.0"}`))
+		case "/v1/auth/login", "/v3/auth/user/login":
 			w.Write([]byte(`{"accessToken": "test-token", "tokenTtl": 3600, "globalAdmin": true}`))
 		case "/v1/auth/users":
 			w.Write([]byte(users))
@@ -154,13 +171,56 @@ func startServer() (*httptest.Server, *Client) {
 	c := NewClient(ts.URL, "user", "password")
 	return ts, c
 }
+
+var apiTests = []struct {
+	apiVersion  string
+	expectValue string
+}{
+	{apiVersion: "v1", expectValue: "1.0.0"},
+	{apiVersion: "v3", expectValue: "3.0.0"},
+}
+
 func TestGetVersion(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-	version, err := c.GetVersion()
-	if assert.NoError(t, err) {
-		assert.Equal(t, "1.0.0", version)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			c.State = nil
+			version, err := c.GetVersion()
+			if assert.NoError(t, err) {
+				assert.Equal(t, tt.expectValue, version)
+			}
+		})
+
 	}
+}
+
+func startAccClient() *Client {
+	return NewClient(os.Getenv("NACOS_HOST"), os.Getenv("NACOS_USER"), os.Getenv("NACOS_PASSWORD"))
+}
+
+func TestDetectAPIVersion(t *testing.T) {
+	ts, c := startServer()
+	defer ts.Close()
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			// mock api version list
+			apiVersions = []string{tt.apiVersion}
+			c.DetectAPIVersion()
+			assert.Equal(t, tt.apiVersion, c.APIVersion)
+		})
+
+	}
+}
+
+func TestAccDetectAPIVersion(t *testing.T) {
+	if os.Getenv("ACC") != "true" {
+		t.Skip("skip as ACC != true ")
+	}
+	ts := startAccClient()
+	ts.DetectAPIVersion()
+	assert.Equal(t, "v1", ts.APIVersion)
 }
 
 func TestGetToken(t *testing.T) {
@@ -201,10 +261,15 @@ func TestListNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	ns, err := c.ListNamespace()
-	if assert.NoError(t, err) {
-		assert.Equal(t, 1, len(ns.Items))
-		assert.Equal(t, "test", ns.Items[0].ID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			ns, err := c.ListNamespace()
+			if assert.NoError(t, err) {
+				assert.Equal(t, 1, len(ns.Items))
+				assert.Equal(t, "test", ns.Items[0].ID)
+			}
+		})
 	}
 }
 
@@ -212,34 +277,51 @@ func TestCreateNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
 
-	err := c.CreateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
-	assert.NoError(t, err)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			err := c.CreateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
+			assert.NoError(t, err)
+		})
+	}
 }
 
 func TestGetNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	n, err := c.GetNamespace("test")
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test", n.ID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			n, err := c.GetNamespace("test")
+			if assert.NoError(t, err) {
+				assert.Equal(t, "test", n.ID)
+			}
+		})
 	}
 }
 
 func TestDeleteNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	err := c.DeleteNamespace("test-id")
-	assert.NoError(t, err)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			err := c.DeleteNamespace("test-id")
+			assert.NoError(t, err)
+		})
+	}
 }
 
 func TestUpdateNamespace(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	err := c.UpdateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
-	assert.NoError(t, err)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			err := c.UpdateNamespace(&CreateNsOpts{Name: "test", Description: "Test namespace", ID: "test-id"})
+			assert.NoError(t, err)
+		})
+	}
 }
 func TestCreateOrUpdateNamespace(t *testing.T) {
 	ts, c := startServer()
@@ -263,10 +345,14 @@ func TestCreateOrUpdateNamespace(t *testing.T) {
 func TestGetConfig(t *testing.T) {
 	ts, c := startServer()
 	defer ts.Close()
-
-	cfg, err := c.GetConfig(&GetCfgOpts{DataID: "test", Group: "DEFAULT_GROUP"})
-	if assert.NoError(t, err) {
-		assert.Equal(t, "test", cfg.DataID)
+	for _, tt := range apiTests {
+		t.Run(tt.apiVersion, func(t *testing.T) {
+			c.APIVersion = tt.apiVersion
+			cfg, err := c.GetConfig(&GetCfgOpts{DataID: "test", Group: "DEFAULT_GROUP"})
+			if assert.NoError(t, err) {
+				assert.Equal(t, "test", cfg.DataID)
+			}
+		})
 	}
 }
 
