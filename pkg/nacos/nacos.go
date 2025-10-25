@@ -253,23 +253,17 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["cs"], v.Encode())
 	resp, err := http.Get(url)
+	cfg := new(ConfigurationV3)
 	if c.APIVersion == "v3" {
-		config := new(ConfigurationV3)
-		err = decode(resp, err, config)
-		if err == io.EOF {
-			return nil, fmt.Errorf("404 Not Found %s %w", url, err)
-		}
-		return &config.Data, nil
+		err = decode(resp, err, cfg)
 	} else {
-
-		config := new(Configuration)
-		err = decode(resp, err, config)
-		// if config not found, nacos server return 200 and empty response
-		if err == io.EOF {
-			return nil, fmt.Errorf("404 Not Found %s %w", url, err)
-		}
-		return config, err
+		err = decode(resp, err, &cfg.Data)
 	}
+	// if config not found, nacos server return 200 and empty response
+	if err == io.EOF {
+		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
+	}
+	return &cfg.Data, err
 }
 
 type ListCfgOpts struct {
@@ -308,17 +302,14 @@ func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["list_cs"], v.Encode())
-	if c.APIVersion == "v1" {
-		configs := new(ConfigurationList)
-		resp, err := http.Get(url)
-		err = decode(resp, err, configs)
-		return configs, err
+	resp, err := http.Get(url)
+	cfgList := new(ConfigurationListV3)
+	if c.APIVersion == "v3" {
+		err = decode(resp, err, cfgList)
 	} else {
-		configs := new(ConfigurationListV3)
-		resp, err := http.Get(url)
-		err = decode(resp, err, configs)
-		return configs.Data, err
+		err = decode(resp, err, &cfgList.Data)
 	}
+	return &cfgList.Data, err
 }
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
