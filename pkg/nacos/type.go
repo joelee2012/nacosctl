@@ -25,7 +25,7 @@ import (
 type NamespaceList struct {
 	// Code    int          `json:"code,omitempty"`
 	// Message interface{}  `json:"message,omitempty"`
-	Items []*Namespace `json:"data"`
+	Items []Namespace `json:"data"`
 }
 
 type Namespace struct {
@@ -53,6 +53,12 @@ type Configuration struct {
 	ModifyTime       int64  `json:"modifyTime,omitempty"`
 	Description      string `json:"desc,omitempty"`
 	Tags             string `json:"configTags,omitempty"`
+}
+
+type ConfigurationV3 struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Data    Configuration `json:"data"`
 }
 
 func (c *Configuration) GetGroup() string {
@@ -90,15 +96,15 @@ type ListTypes interface {
 }
 
 type List[T ListTypes] struct {
-	TotalCount     int  `json:"totalCount,omitempty"`
-	PageNumber     int  `json:"pageNumber,omitempty"`
-	PagesAvailable int  `json:"pagesAvailable,omitempty"`
-	Items          []*T `json:"pageItems"`
+	TotalCount     int `json:"totalCount,omitempty"`
+	PageNumber     int `json:"pageNumber,omitempty"`
+	PagesAvailable int `json:"pagesAvailable,omitempty"`
+	Items          []T `json:"pageItems"`
 }
 
 func (lst *List[T]) Contains(other T) bool {
 	for _, it := range lst.Items {
-		if *it == other {
+		if it == other {
 			return true
 		}
 	}
@@ -113,7 +119,7 @@ func (lst List[T]) IsEnd() bool {
 	return lst.PagesAvailable == 0 || lst.PagesAvailable == lst.PageNumber
 }
 
-func (lst List[T]) All() []*T {
+func (lst List[T]) All() []T {
 	return lst.Items
 }
 
@@ -122,29 +128,31 @@ type PermissionList = List[Permission]
 type RoleList = List[Role]
 type UserList = List[User]
 
-type V3List[T ListTypes] struct {
-	Data *List[T] `json:"data"`
+type ListV3[T ListTypes] struct {
+	Code    int     `json:"code"`
+	Message string  `json:"message"`
+	Data    List[T] `json:"data"`
 }
 
-func (lst V3List[T]) All() []*T {
+func (lst ListV3[T]) All() []T {
 	return lst.Data.All()
 }
 
-func (lst V3List[T]) NextPageNumber() int {
+func (lst ListV3[T]) NextPageNumber() int {
 	return lst.Data.NextPageNumber()
 }
 
-func (lst V3List[T]) IsEnd() bool {
+func (lst ListV3[T]) IsEnd() bool {
 	return lst.Data.IsEnd()
 }
 
-type ConfigurationListV3 = V3List[Configuration]
-type PermissionListV3 = V3List[Permission]
-type RoleListV3 = V3List[Role]
-type UserListV3 = V3List[User]
+type ConfigurationListV3 = ListV3[Configuration]
+type PermissionListV3 = ListV3[Permission]
+type RoleListV3 = ListV3[Role]
+type UserListV3 = ListV3[User]
 
 type Paginator[T any] interface {
-	All() []*T
+	All() []T
 	NextPageNumber() int
 	IsEnd() bool
 }

@@ -38,12 +38,12 @@ type PermissionList = List[Permission]
 type RoleList = List[Role]
 type UserList = List[User]
 
-func NewList[T ListTypes, S any](apiVersion string, items []*S, covert func(apiVersion string, s *S) *T) *List[T] {
+func NewList[T ListTypes, S any](apiVersion string, items []S, covert func(apiVersion string, s S) T) *List[T] {
 	list := new(List[T])
 	list.Kind = "List"
 	list.APIVersion = apiVersion
 	for _, item := range items {
-		list.Items = append(list.Items, *covert(apiVersion, item))
+		list.Items = append(list.Items, covert(apiVersion, item))
 	}
 	return list
 }

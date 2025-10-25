@@ -83,6 +83,8 @@ var api = map[string]map[string]string{
 	},
 }
 
+var apiVersions = []string{"v3", "v1"}
+
 func NewClient(url, user, password string) *Client {
 	return &Client{
 		URL:        url,
@@ -93,7 +95,7 @@ func NewClient(url, user, password string) *Client {
 }
 
 func (c *Client) DetectAPIVersion() {
-	for ver := range api {
+	for _, ver := range apiVersions {
 		c.APIVersion = ver
 		v, err := c.GetVersion()
 		if err == nil && v != "" {
@@ -224,7 +226,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	}
 	for _, ns := range nsList.Items {
 		if ns.ID == id {
-			return ns, nil
+			return &ns, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", id)
@@ -251,13 +253,17 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["cs"], v.Encode())
 	resp, err := http.Get(url)
-	config := new(Configuration)
-	err = decode(resp, err, config)
+	cfg := new(ConfigurationV3)
+	if c.APIVersion == "v3" {
+		err = decode(resp, err, cfg)
+	} else {
+		err = decode(resp, err, &cfg.Data)
+	}
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
 		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
 	}
-	return config, err
+	return &cfg.Data, err
 }
 
 type ListCfgOpts struct {
@@ -296,17 +302,14 @@ func (c *Client) ListConfig(opts *ListCfgOpts) (*ConfigurationList, error) {
 	v.Add("search", "accurate")
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["list_cs"], v.Encode())
-	if c.APIVersion == "v1" {
-		configs := new(ConfigurationList)
-		resp, err := http.Get(url)
-		err = decode(resp, err, configs)
-		return configs, err
+	resp, err := http.Get(url)
+	cfgList := new(ConfigurationListV3)
+	if c.APIVersion == "v3" {
+		err = decode(resp, err, cfgList)
 	} else {
-		configs := new(ConfigurationListV3)
-		resp, err := http.Get(url)
-		err = decode(resp, err, configs)
-		return configs.Data, err
+		err = decode(resp, err, &cfgList.Data)
 	}
+	return &cfgList.Data, err
 }
 
 func (c *Client) ListConfigInNs(namespace, group string) (*ConfigurationList, error) {
@@ -444,7 +447,7 @@ func (c *Client) GetUser(name string) (*User, error) {
 
 	for _, user := range users.Items {
 		if user.Name == name {
-			return user, nil
+			return &user, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", name)
