@@ -129,7 +129,9 @@ type RoleList = List[Role]
 type UserList = List[User]
 
 type V3List[T ListTypes] struct {
-	Data List[T] `json:"data"`
+	Code    int     `json:"code"`
+	Message string  `json:"message"`
+	Data    List[T] `json:"data"`
 }
 
 func (lst V3List[T]) All() []T {
