@@ -62,22 +62,22 @@ type Configuration struct {
 	} `json:"status"`
 }
 
-func NewConfiguration(apiVersion string, nc nacos.Configuration) *Configuration {
+func NewConfiguration(apiVersion string, cfg nacos.Configuration) *Configuration {
 	c := new(Configuration)
 	c.APIVersion = apiVersion
 	c.Kind = "Configuration"
-	c.Metadata.DataID = nc.DataID
-	c.Metadata.Namespace = nc.GetNamespace()
-	c.Metadata.Group = nc.GetGroup()
-	c.Spec.Application = nc.Application
-	c.Spec.Type = nc.Type
-	c.Spec.Tags = nc.Tags
-	c.Spec.Description = nc.Description
-	c.Spec.Content = nc.Content
-	c.Status.Md5 = nc.Md5
-	c.Status.CreateTime = nc.CreateTime
-	c.Status.ModifyTime = nc.ModifyTime
-	c.Status.EncryptedDataKey = nc.EncryptedDataKey
+	c.Metadata.DataID = cfg.DataID
+	c.Metadata.Namespace = cfg.GetNamespace()
+	c.Metadata.Group = cfg.GetGroup()
+	c.Spec.Application = cfg.Application
+	c.Spec.Type = cfg.Type
+	c.Spec.Tags = cfg.Tags
+	c.Spec.Description = cfg.Description
+	c.Spec.Content = cfg.Content
+	c.Status.Md5 = cfg.Md5
+	c.Status.CreateTime = cfg.CreateTime
+	c.Status.ModifyTime = cfg.ModifyTime
+	c.Status.EncryptedDataKey = cfg.EncryptedDataKey
 	return c
 }
 
@@ -113,16 +113,16 @@ type Namespace struct {
 	} `json:"status"`
 }
 
-func NewNamespace(apiVersion string, e nacos.Namespace) *Namespace {
+func NewNamespace(apiVersion string, ns nacos.Namespace) *Namespace {
 	n := new(Namespace)
 	n.APIVersion = apiVersion
 	n.Kind = "Namespace"
-	n.Metadata.Name = e.Name
-	n.Metadata.ID = e.ID
-	n.Metadata.Description = e.Description
-	n.Status.ConfigCount = e.ConfigCount
-	n.Status.Quota = e.Quota
-	n.Status.Type = e.Type
+	n.Metadata.Name = ns.Name
+	n.Metadata.ID = ns.ID
+	n.Metadata.Description = ns.Description
+	n.Status.ConfigCount = ns.ConfigCount
+	n.Status.Quota = ns.Quota
+	n.Status.Type = ns.Type
 	return n
 }
 func (n Namespace) TableHeader() table.Row {
@@ -176,12 +176,12 @@ type Role struct {
 	} `json:"metadata"`
 }
 
-func NewRole(apiVersion string, user nacos.Role) *Role {
+func NewRole(apiVersion string, role nacos.Role) *Role {
 	r := new(Role)
 	r.APIVersion = apiVersion
 	r.Kind = "Role"
-	r.Metadata.Name = user.Name
-	r.Metadata.Username = user.Username
+	r.Metadata.Name = role.Name
+	r.Metadata.Username = role.Username
 	return r
 }
 

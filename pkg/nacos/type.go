@@ -127,15 +127,15 @@ type V3List[T ListTypes] struct {
 }
 
 func (lst V3List[T]) All() []T {
-	return lst.Data.Items
+	return lst.Data.All()
 }
 
 func (lst V3List[T]) NextPageNumber() int {
-	return lst.Data.PageNumber + 1
+	return lst.Data.NextPageNumber()
 }
 
 func (lst V3List[T]) IsEnd() bool {
-	return lst.Data.PagesAvailable == 0 || lst.Data.PagesAvailable == lst.Data.PageNumber
+	return lst.Data.IsEnd()
 }
 
 type ConfigurationListV3 = V3List[Configuration]
