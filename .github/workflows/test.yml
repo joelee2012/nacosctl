@@ -19,7 +19,7 @@ jobs:
           # - windows-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: setup go
         uses: actions/setup-go@v6
