@@ -191,6 +191,7 @@ func (c *Client) UpdateNamespace(opts *CreateNsOpts) error {
 	}
 	v := url.Values{}
 	v.Add("namespace", opts.ID)
+	v.Add("namespaceId ", opts.ID)
 	v.Add("namespaceShowName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
