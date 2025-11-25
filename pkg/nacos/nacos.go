@@ -83,19 +83,18 @@ var api = map[string]map[string]string{
 	},
 }
 
-var apiVersions = []string{"v3", "v1"}
-
 func NewClient(url, user, password string) *Client {
-	return &Client{
-		URL:        url,
-		User:       user,
-		Password:   password,
-		APIVersion: "v1",
+	client := &Client{
+		URL:      url,
+		User:     user,
+		Password: password,
 	}
+	client.DetectAPIVersion()
+	return client
 }
 
 func (c *Client) DetectAPIVersion() {
-	for _, ver := range apiVersions {
+	for _, ver := range []string{"v3", "v1"} {
 		c.APIVersion = ver
 		v, err := c.GetVersion()
 		if err == nil && v != "" {
