@@ -193,6 +193,7 @@ func (c *Client) UpdateNamespace(opts *CreateNsOpts) error {
 	v.Add("namespace", opts.ID)
 	v.Add("namespaceId", opts.ID)
 	v.Add("namespaceShowName", opts.Name)
+	v.Add("namespaceName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["ns"], v.Encode())
