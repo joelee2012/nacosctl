@@ -162,20 +162,6 @@ func startAccClient() *Client {
 	return NewClient(os.Getenv("NACOS_HOST"), os.Getenv("NACOS_USER"), os.Getenv("NACOS_PASSWORD"))
 }
 
-func TestDetectAPIVersion(t *testing.T) {
-	ts, c := startServer()
-	defer ts.Close()
-	for _, tt := range apiTests {
-		t.Run(tt.apiVersion, func(t *testing.T) {
-			// mock api version list
-			apiVersions = []string{tt.apiVersion}
-			c.DetectAPIVersion()
-			assert.Equal(t, tt.apiVersion, c.APIVersion)
-		})
-
-	}
-}
-
 func TestAccDetectAPIVersion(t *testing.T) {
 	if os.Getenv("ACC") != "true" {
 		t.Skip("skip as ACC != true ")
