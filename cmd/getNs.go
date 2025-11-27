@@ -52,7 +52,7 @@ func GetNamespace(args []string) {
 	nss, err := client.ListNamespace()
 	cobra.CheckErr(err)
 	if len(args) > 0 {
-		var items []nacos.Namespace
+		var items []*nacos.Namespace
 		for _, ns := range nss.Items {
 			if slices.Contains(args, ns.ID) {
 				items = append(items, ns)

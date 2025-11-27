@@ -62,7 +62,7 @@ type Configuration struct {
 	} `json:"status"`
 }
 
-func NewConfiguration(apiVersion string, cfg nacos.Configuration) *Configuration {
+func NewConfiguration(apiVersion string, cfg *nacos.Configuration) *Configuration {
 	c := new(Configuration)
 	c.APIVersion = apiVersion
 	c.Kind = "Configuration"
@@ -113,7 +113,7 @@ type Namespace struct {
 	} `json:"status"`
 }
 
-func NewNamespace(apiVersion string, ns nacos.Namespace) *Namespace {
+func NewNamespace(apiVersion string, ns *nacos.Namespace) *Namespace {
 	n := new(Namespace)
 	n.APIVersion = apiVersion
 	n.Kind = "Namespace"
@@ -148,7 +148,7 @@ type User struct {
 	} `json:"metadata"`
 }
 
-func NewUser(apiVersion string, user nacos.User) *User {
+func NewUser(apiVersion string, user *nacos.User) *User {
 	u := new(User)
 	u.APIVersion = apiVersion
 	u.Kind = "User"
@@ -176,7 +176,7 @@ type Role struct {
 	} `json:"metadata"`
 }
 
-func NewRole(apiVersion string, role nacos.Role) *Role {
+func NewRole(apiVersion string, role *nacos.Role) *Role {
 	r := new(Role)
 	r.APIVersion = apiVersion
 	r.Kind = "Role"
@@ -205,7 +205,7 @@ type Permission struct {
 	} `json:"metadata"`
 }
 
-func NewPermission(apiVersion string, perm nacos.Permission) *Permission {
+func NewPermission(apiVersion string, perm *nacos.Permission) *Permission {
 	p := new(Permission)
 	p.APIVersion = apiVersion
 	p.Kind = "Permission"

@@ -227,7 +227,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	}
 	for _, ns := range nsList.Items {
 		if ns.ID == id {
-			return &ns, nil
+			return ns, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", id)
@@ -258,13 +258,14 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	if c.APIVersion == "v3" {
 		err = decode(resp, err, cfg)
 	} else {
-		err = decode(resp, err, &cfg.Data)
+		cfg.Data = new(Configuration)
+		err = decode(resp, err, cfg.Data)
 	}
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
 		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
 	}
-	return &cfg.Data, err
+	return cfg.Data, err
 }
 
 type ListCfgOpts struct {
@@ -448,7 +449,7 @@ func (c *Client) GetUser(name string) (*User, error) {
 
 	for _, user := range users.Items {
 		if user.Name == name {
-			return &user, nil
+			return user, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", name)

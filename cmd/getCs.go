@@ -61,7 +61,7 @@ func GetCs(args []string) {
 			for _, c := range args {
 				cs, err := client.GetConfig(&nacos.GetCfgOpts{NamespaceID: cmdOpts.NamespaceID, Group: cmdOpts.Group, DataID: c})
 				cobra.CheckErr(err)
-				allCs.Items = append(allCs.Items, *cs)
+				allCs.Items = append(allCs.Items, cs)
 			}
 		} else {
 			allCs, err = client.ListConfigInNs(cmdOpts.NamespaceID, cmdOpts.Group)
