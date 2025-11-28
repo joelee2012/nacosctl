@@ -374,6 +374,7 @@ func (c *Client) CreateConfig(opts *CreateCfgOpts) error {
 	v.Add("appName", opts.Application)
 	v.Add("desc", opts.Description)
 	v.Add("config_tags", opts.Tags)
+	v.Add("configTags", opts.Tags)
 	v.Add("accessToken", token)
 	resp, err := http.PostForm(c.URL+api[c.APIVersion]["cs"], v)
 	return checkErr(resp, err)
