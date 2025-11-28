@@ -273,3 +273,57 @@ func WriteFormat(fw FormatWriter, format string, w io.Writer) error {
 	}
 	return nil
 }
+
+type ListTypes interface {
+	TableRow
+	DirWriter
+}
+
+type List[T ListTypes] struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Items      []T    `json:"items"`
+}
+
+type ConfigurationList = List[Configuration]
+type NamespaceList = List[Namespace]
+type PermissionList = List[Permission]
+type RoleList = List[Role]
+type UserList = List[User]
+
+func NewList[T ListTypes, S any](apiVersion string, items []S, covert func(apiVersion string, s S) *T) *List[T] {
+	list := new(List[T])
+	list.Kind = "List"
+	list.APIVersion = apiVersion
+	for _, item := range items {
+		list.Items = append(list.Items, *covert(apiVersion, item))
+	}
+	return list
+}
+
+func (lst *List[T]) ToTable(w io.Writer) {
+	tb := table.NewWriter()
+	tb.SetOutputMirror(w)
+	if len(lst.Items) == 0 {
+		w.Write([]byte("No resources found"))
+		return
+	}
+	tb.AppendHeader(lst.Items[0].TableHeader())
+	for _, it := range lst.Items {
+		tb.AppendRow(it.TableRow())
+	}
+	tb.SortBy([]table.SortBy{{Name: "NAME", Mode: table.Asc}, {Name: "ID", Mode: table.Asc}})
+	s := table.StyleLight
+	s.Options = table.OptionsNoBordersAndSeparators
+	tb.SetStyle(s)
+	tb.Render()
+}
+
+func (lst *List[T]) WriteToDir(base string) error {
+	for _, it := range lst.Items {
+		if err := it.WriteToDir(base); err != nil {
+			return err
+		}
+	}
+	return nil
+}
