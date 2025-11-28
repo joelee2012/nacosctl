@@ -2,12 +2,10 @@
 [![goreleaser](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml/badge.svg)](https://github.com/joelee2012/nacosctl/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/joelee2012/nacosctl/graph/badge.svg?token=PY470EX7J6)](https://codecov.io/gh/joelee2012/nacosctl)
 # nctl
-Command line tools for [Nacos](https://nacos.io/) version must be compatible with [api v1](https://nacos.io/docs/v1/open-api/?spm=5238cd80.2ef5001f.0.0.3f613b7cibLcyN)
-  - v2.1.x
-  - v2.2.x
-  - v2.3.x
-  - v2.4.x
-  - v2.5.x
+
+Command line tools for [Nacos](https://nacos.io/)
+
+
 # Usage
 
 ```sh
