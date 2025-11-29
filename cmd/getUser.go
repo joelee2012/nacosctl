@@ -51,7 +51,7 @@ func getUser(args []string) {
 	users, err := client.ListUser()
 	cobra.CheckErr(err)
 	if len(args) > 0 {
-		var us []nacos.User
+		var us []*nacos.User
 		for _, u := range users.Items {
 			if slices.Contains(args, u.Name) {
 				us = append(us, u)

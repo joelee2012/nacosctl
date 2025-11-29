@@ -191,7 +191,9 @@ func (c *Client) UpdateNamespace(opts *CreateNsOpts) error {
 	}
 	v := url.Values{}
 	v.Add("namespace", opts.ID)
+	v.Add("namespaceId", opts.ID)
 	v.Add("namespaceShowName", opts.Name)
+	v.Add("namespaceName", opts.Name)
 	v.Add("namespaceDesc", opts.Description)
 	v.Add("accessToken", token)
 	url := fmt.Sprintf("%s%s?%s", c.URL, api[c.APIVersion]["ns"], v.Encode())
@@ -225,7 +227,7 @@ func (c *Client) GetNamespace(id string) (*Namespace, error) {
 	}
 	for _, ns := range nsList.Items {
 		if ns.ID == id {
-			return &ns, nil
+			return ns, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", id)
@@ -256,13 +258,14 @@ func (c *Client) GetConfig(opts *GetCfgOpts) (*Configuration, error) {
 	if c.APIVersion == "v3" {
 		err = decode(resp, err, cfg)
 	} else {
-		err = decode(resp, err, &cfg.Data)
+		cfg.Data = new(Configuration)
+		err = decode(resp, err, cfg.Data)
 	}
 	// if config not found, nacos server return 200 and empty response
 	if err == io.EOF {
 		return nil, fmt.Errorf("404 Not Found %s %w", url, err)
 	}
-	return &cfg.Data, err
+	return cfg.Data, err
 }
 
 type ListCfgOpts struct {
@@ -371,6 +374,7 @@ func (c *Client) CreateConfig(opts *CreateCfgOpts) error {
 	v.Add("appName", opts.Application)
 	v.Add("desc", opts.Description)
 	v.Add("config_tags", opts.Tags)
+	v.Add("configTags", opts.Tags)
 	v.Add("accessToken", token)
 	resp, err := http.PostForm(c.URL+api[c.APIVersion]["cs"], v)
 	return checkErr(resp, err)
@@ -446,7 +450,7 @@ func (c *Client) GetUser(name string) (*User, error) {
 
 	for _, user := range users.Items {
 		if user.Name == name {
-			return &user, nil
+			return user, nil
 		}
 	}
 	return nil, fmt.Errorf("404 Not Found %s", name)
